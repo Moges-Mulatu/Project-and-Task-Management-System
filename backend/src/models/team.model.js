@@ -1,7 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDBConnection } from '../config/db.config.js';
 
+/**
+ * Team Model
+ * Manages team structures, departments, and member tracking.
+ */
 class Team {
+  /**
+   * Create a new Team instance
+   * @param {Object} data - Team data object
+   */
   constructor(data) {
     this.id = data.id || uuidv4();
     this.name = data.name;
@@ -15,6 +23,11 @@ class Team {
     this.updatedAt = data.updatedAt || new Date();
   }
 
+  /**
+   * Create a new team in the database
+   * @param {Object} teamData - Data for the new team
+   * @returns {Promise<Team>} The created Team instance
+   */
   static async create(teamData) {
     const connection = getDBConnection();
     const team = new Team(teamData);
@@ -40,6 +53,11 @@ class Team {
     }
   }
 
+  /**
+   * Find a team by its ID
+   * @param {string} id - The team ID
+   * @returns {Promise<Team|null>} The team instance or null if not found
+   */
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM teams WHERE id = ? AND isActive = 1';
@@ -52,6 +70,11 @@ class Team {
     }
   }
 
+  /**
+   * Get all active teams with optional filtering
+   * @param {Object} options - Filter options (department, teamLeadId, limit)
+   * @returns {Promise<Team[]>} Array of Team instances
+   */
   static async findAll(options = {}) {
     const connection = getDBConnection();
     let query = 'SELECT * FROM teams WHERE isActive = 1';
@@ -82,6 +105,11 @@ class Team {
     }
   }
 
+  /**
+   * Update team details
+   * @param {Object} updateData - Key-value pairs to update
+   * @returns {Promise<Team>} The updated team instance
+   */
   async update(updateData) {
     const connection = getDBConnection();
     updateData.updatedAt = new Date();
@@ -101,6 +129,10 @@ class Team {
     }
   }
 
+  /**
+   * Soft delete a team (mark as inactive)
+   * @returns {Promise<boolean>} Success status
+   */
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE teams SET isActive = 0, updatedAt = ? WHERE id = ?';
@@ -114,6 +146,10 @@ class Team {
     }
   }
 
+  /**
+   * Refresh the current member count for this team
+   * @returns {Promise<Team>} This team instance with updated count
+   */
   async updateMemberCount() {
     const connection = getDBConnection();
     const query = `
@@ -140,5 +176,6 @@ class Team {
     }
   }
 }
+
 
 export default Team;

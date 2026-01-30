@@ -1,13 +1,21 @@
-import { v4 as uuidv4 } from 'uuid';
-import { getDBConnection } from '../config/db.config.js';
-import Team from './team.model.js';
+import { v4 as uuidv4 } from "uuid";
+import { getDBConnection } from "../config/db.config.js";
+import Team from "./team.model.js";
 
+/**
+ * TeamMember Model
+ * Represents the association between a User and a Team.
+ */
 class TeamMember {
+  /**
+   * Create a new TeamMember instance
+   * @param {Object} data - TeamMember data object
+   */
   constructor(data) {
     this.id = data.id || uuidv4();
     this.teamId = data.teamId;
     this.userId = data.userId;
-    this.role = data.role || 'member';
+    this.role = data.role || "member";
     this.joinedAt = data.joinedAt || new Date();
     this.leftAt = data.leftAt || null;
     this.isActive = data.isActive !== undefined ? data.isActive : true;
@@ -16,6 +24,11 @@ class TeamMember {
     this.updatedAt = data.updatedAt || new Date();
   }
 
+  /**
+   * Add a member to a team
+   * @param {Object} memberData - Association data
+   * @returns {Promise<TeamMember>} The created TeamMember instance
+   */
   static async create(memberData) {
     const connection = getDBConnection();
     const member = new TeamMember(memberData);
@@ -28,8 +41,16 @@ class TeamMember {
     `;
 
     const values = [
-      member.id, member.teamId, member.userId, member.role, member.joinedAt,
-      member.leftAt, member.isActive, member.assignedBy, member.createdAt, member.updatedAt
+      member.id,
+      member.teamId,
+      member.userId,
+      member.role,
+      member.joinedAt,
+      member.leftAt,
+      member.isActive,
+      member.assignedBy,
+      member.createdAt,
+      member.updatedAt,
     ];
 
     try {
@@ -47,9 +68,14 @@ class TeamMember {
     }
   }
 
+  /**
+   * Find a membership record by ID
+   * @param {string} id - The record ID
+   * @returns {Promise<TeamMember|null>} The membership instance or null if not found
+   */
   static async findById(id) {
     const connection = getDBConnection();
-    const query = 'SELECT * FROM team_members WHERE id = ? AND isActive = 1';
+    const query = "SELECT * FROM team_members WHERE id = ? AND isActive = 1";
 
     try {
       const [rows] = await connection.execute(query, [id]);
@@ -59,6 +85,11 @@ class TeamMember {
     }
   }
 
+  /**
+   * Get all active members for a specific team
+   * @param {string} teamId - The team ID
+   * @returns {Promise<TeamMember[]>} Array of TeamMember instances
+   */
   static async findByTeam(teamId) {
     const connection = getDBConnection();
     const query = `
@@ -71,12 +102,17 @@ class TeamMember {
 
     try {
       const [rows] = await connection.execute(query, [teamId]);
-      return rows.map(row => new TeamMember(row));
+      return rows.map((row) => new TeamMember(row));
     } catch (error) {
       throw new Error(`Failed to find team members: ${error.message}`);
     }
   }
 
+  /**
+   * Get all team memberships for a specific user
+   * @param {string} userId - The user ID
+   * @returns {Promise<TeamMember[]>} Array of TeamMember instances
+   */
   static async findByUser(userId) {
     const connection = getDBConnection();
     const query = `
@@ -89,15 +125,22 @@ class TeamMember {
 
     try {
       const [rows] = await connection.execute(query, [userId]);
-      return rows.map(row => new TeamMember(row));
+      return rows.map((row) => new TeamMember(row));
     } catch (error) {
       throw new Error(`Failed to find user team memberships: ${error.message}`);
     }
   }
 
+  /**
+   * Check if a user is already in a team
+   * @param {string} teamId - The team ID
+   * @param {string} userId - The user ID
+   * @returns {Promise<TeamMember|null>} The membership instance if it exists
+   */
   static async findMembership(teamId, userId) {
     const connection = getDBConnection();
-    const query = 'SELECT * FROM team_members WHERE teamId = ? AND userId = ? AND isActive = 1';
+    const query =
+      "SELECT * FROM team_members WHERE teamId = ? AND userId = ? AND isActive = 1";
 
     try {
       const [rows] = await connection.execute(query, [teamId, userId]);
@@ -107,11 +150,18 @@ class TeamMember {
     }
   }
 
+  /**
+   * Update membership details (like role)
+   * @param {Object} updateData - Key-value pairs to update
+   * @returns {Promise<TeamMember>} The updated membership instance
+   */
   async update(updateData) {
     const connection = getDBConnection();
     updateData.updatedAt = new Date();
 
-    const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+    const setClause = Object.keys(updateData)
+      .map((key) => `${key} = ?`)
+      .join(", ");
     const values = Object.values(updateData);
     values.push(this.id);
 
@@ -126,9 +176,14 @@ class TeamMember {
     }
   }
 
+  /**
+   * Mark a member as having left the team
+   * @returns {Promise<boolean>} Success status
+   */
   async leave() {
     const connection = getDBConnection();
-    const query = 'UPDATE team_members SET isActive = 0, leftAt = ?, updatedAt = ? WHERE id = ?';
+    const query =
+      "UPDATE team_members SET isActive = 0, leftAt = ?, updatedAt = ? WHERE id = ?";
 
     try {
       await connection.execute(query, [new Date(), new Date(), this.id]);
@@ -147,6 +202,10 @@ class TeamMember {
     }
   }
 
+  /**
+   * Completely remove or deactivate a team member
+   * @returns {Promise<boolean>} Success status
+   */
   async delete() {
     return await this.leave();
   }
