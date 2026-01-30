@@ -2,7 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDBConnection } from '../config/db.config.js';
 import Project from './project.model.js';
 
+/**
+ * Task Model
+ * Manages individual tasks within a project, including assignment and progress tracking.
+ */
 class Task {
+  /**
+   * Create a new Task instance
+   * @param {Object} data - Task data object
+   */
   constructor(data) {
     this.id = data.id || uuidv4();
     this.title = data.title;
@@ -28,6 +36,11 @@ class Task {
     this.updatedAt = data.updatedAt || new Date();
   }
 
+  /**
+   * Create a new task in the database
+   * @param {Object} taskData - Data for the new task
+   * @returns {Promise<Task>} The created Task instance
+   */
   static async create(taskData) {
     const connection = getDBConnection();
     const task = new Task(taskData);
@@ -64,6 +77,11 @@ class Task {
     }
   }
 
+  /**
+   * Find a task by its ID
+   * @param {string} id - The task ID
+   * @returns {Promise<Task|null>} The task instance or null if not found
+   */
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM tasks WHERE id = ? AND isActive = 1';
@@ -83,6 +101,11 @@ class Task {
     }
   }
 
+  /**
+   * Get all active tasks with optional filtering
+   * @param {Object} options - Filter options (projectId, assignedTo, status, etc.)
+   * @returns {Promise<Task[]>} Array of Task instances
+   */
   static async findAll(options = {}) {
     const connection = getDBConnection();
     let query = 'SELECT * FROM tasks WHERE isActive = 1';
@@ -138,6 +161,11 @@ class Task {
     }
   }
 
+  /**
+   * Update task details
+   * @param {Object} updateData - Key-value pairs to update
+   * @returns {Promise<Task>} The updated task instance
+   */
   async update(updateData) {
     const connection = getDBConnection();
     updateData.updatedAt = new Date();
@@ -170,13 +198,13 @@ class Task {
       Object.assign(this, updateData);
 
       // Parse JSON fields back to objects
-      if (this.tags) {
+      if (this.tags && typeof this.tags === 'string') {
         this.tags = JSON.parse(this.tags);
       }
-      if (this.attachments) {
+      if (this.attachments && typeof this.attachments === 'string') {
         this.attachments = JSON.parse(this.attachments);
       }
-      if (this.comments) {
+      if (this.comments && typeof this.comments === 'string') {
         this.comments = JSON.parse(this.comments);
       }
 
@@ -192,6 +220,10 @@ class Task {
     }
   }
 
+  /**
+   * Soft delete a task (mark as inactive)
+   * @returns {Promise<boolean>} Success status
+   */
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE tasks SET isActive = 0, updatedAt = ? WHERE id = ?';
@@ -212,6 +244,11 @@ class Task {
     }
   }
 
+  /**
+   * Add a comment to this task
+   * @param {Object} comment - The comment object (text, userId)
+   * @returns {Promise<Task>} The updated task instance
+   */
   async addComment(comment) {
     if (!this.comments) {
       this.comments = [];
@@ -226,6 +263,11 @@ class Task {
     return await this.update({ comments: this.comments });
   }
 
+  /**
+   * Add an attachment to this task
+   * @param {Object} attachment - The attachment object (filename, url, size, uploadedBy)
+   * @returns {Promise<Task>} The updated task instance
+   */
   async addAttachment(attachment) {
     if (!this.attachments) {
       this.attachments = [];
@@ -242,5 +284,6 @@ class Task {
     return await this.update({ attachments: this.attachments });
   }
 }
+
 
 export default Task;
