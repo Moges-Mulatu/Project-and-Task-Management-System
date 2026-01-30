@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
-const { getDBConnection } = require('../config/db.config');
+import { v4 as uuidv4 } from 'uuid';
+import { getDBConnection } from '../config/db.config.js';
 
 class Report {
   constructor(data) {
@@ -28,7 +28,7 @@ class Report {
   static async create(reportData) {
     const connection = getDBConnection();
     const report = new Report(reportData);
-    
+
     const query = `
       INSERT INTO reports (
         id, title, description, type, generatedBy, projectId, teamId,
@@ -58,7 +58,7 @@ class Report {
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM reports WHERE id = ?';
-    
+
     try {
       const [rows] = await connection.execute(query, [id]);
       if (rows.length > 0) {
@@ -153,7 +153,7 @@ class Report {
     try {
       await connection.execute(query, values);
       Object.assign(this, updateData);
-      
+
       // Parse JSON fields back to objects
       if (this.reportData) {
         this.reportData = JSON.parse(this.reportData);
@@ -167,7 +167,7 @@ class Report {
       if (this.recipients) {
         this.recipients = JSON.parse(this.recipients);
       }
-      
+
       return this;
     } catch (error) {
       throw new Error(`Failed to update report: ${error.message}`);
@@ -177,7 +177,7 @@ class Report {
   async delete() {
     const connection = getDBConnection();
     const query = 'DELETE FROM reports WHERE id = ?';
-    
+
     try {
       await connection.execute(query, [this.id]);
       return true;
@@ -210,7 +210,7 @@ class Report {
       AND status != 'generating'
       ORDER BY nextRunDate ASC
     `;
-    
+
     try {
       const [rows] = await connection.execute(query);
       return rows.map(row => {
@@ -252,4 +252,4 @@ class Report {
   }
 }
 
-module.exports = Report;
+export default Report;

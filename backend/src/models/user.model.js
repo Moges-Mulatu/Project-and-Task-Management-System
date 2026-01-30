@@ -1,7 +1,7 @@
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt');
-const { v4: uuidv4 } = require('uuid');
-const { getDBConnection } = require('../config/db.config');
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import { getDBConnection } from '../config/db.config.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 class User {
   constructor(data) {
@@ -10,7 +10,7 @@ class User {
     this.lastName = data.lastName;
     this.email = data.email;
     this.password = data.password;
-    this.role = data.role || 'developer';
+    this.role = data.role || ROLES.TEAM_MEMBER;
     this.department = data.department || null;
     this.position = data.position || null;
     this.avatar = data.avatar || null;
@@ -23,14 +23,14 @@ class User {
 
   static async create(userData) {
     const connection = getDBConnection();
-    
+
     // Hash password before storing
     if (userData.password) {
       userData.password = await bcrypt.hash(userData.password, 12);
     }
 
     const user = new User(userData);
-    
+
     const query = `
       INSERT INTO users (
         id, firstName, lastName, email, password, role, department, 
@@ -55,7 +55,7 @@ class User {
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM users WHERE id = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [id]);
       return rows.length > 0 ? new User(rows[0]) : null;
@@ -67,7 +67,7 @@ class User {
   static async findByEmail(email) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM users WHERE email = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [email]);
       return rows.length > 0 ? new User(rows[0]) : null;
@@ -108,7 +108,7 @@ class User {
 
   async update(updateData) {
     const connection = getDBConnection();
-    
+
     // Hash password if it's being updated
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 12);
@@ -134,7 +134,7 @@ class User {
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE users SET isActive = 0, updatedAt = ? WHERE id = ?';
-    
+
     try {
       await connection.execute(query, [new Date(), this.id]);
       this.isActive = false;
@@ -154,4 +154,4 @@ class User {
   }
 }
 
-module.exports = User;
+export default User;

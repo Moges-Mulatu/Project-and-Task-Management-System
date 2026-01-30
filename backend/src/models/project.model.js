@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
-const { getDBConnection } = require('../config/db.config');
+import { v4 as uuidv4 } from 'uuid';
+import { getDBConnection } from '../config/db.config.js';
 
 class Project {
   constructor(data) {
@@ -26,7 +26,7 @@ class Project {
   static async create(projectData) {
     const connection = getDBConnection();
     const project = new Project(projectData);
-    
+
     const query = `
       INSERT INTO projects (
         id, name, description, teamId, projectManagerId, status, priority,
@@ -53,7 +53,7 @@ class Project {
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM projects WHERE id = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [id]);
       if (rows.length > 0) {
@@ -128,12 +128,12 @@ class Project {
     try {
       await connection.execute(query, values);
       Object.assign(this, updateData);
-      
+
       // Parse JSON fields back to objects
       if (this.tags) {
         this.tags = JSON.parse(this.tags);
       }
-      
+
       return this;
     } catch (error) {
       throw new Error(`Failed to update project: ${error.message}`);
@@ -143,7 +143,7 @@ class Project {
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE projects SET isActive = 0, updatedAt = ? WHERE id = ?';
-    
+
     try {
       await connection.execute(query, [new Date(), this.id]);
       this.isActive = false;
@@ -165,11 +165,11 @@ class Project {
       p.updatedAt = ?
       WHERE p.id = ?
     `;
-    
+
     try {
       await connection.execute(query, [new Date(), this.id]);
       const [rows] = await connection.execute(
-        'SELECT progress FROM projects WHERE id = ?', 
+        'SELECT progress FROM projects WHERE id = ?',
         [this.id]
       );
       this.progress = rows[0].progress;
@@ -180,4 +180,4 @@ class Project {
   }
 }
 
-module.exports = Project;
+export default Project;

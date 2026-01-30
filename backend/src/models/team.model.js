@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
-const { getDBConnection } = require('../config/db.config');
+import { v4 as uuidv4 } from 'uuid';
+import { getDBConnection } from '../config/db.config.js';
 
 class Team {
   constructor(data) {
@@ -18,7 +18,7 @@ class Team {
   static async create(teamData) {
     const connection = getDBConnection();
     const team = new Team(teamData);
-    
+
     const query = `
       INSERT INTO teams (
         id, name, description, department, teamLeadId, isActive, 
@@ -28,7 +28,7 @@ class Team {
 
     const values = [
       team.id, team.name, team.description, team.department, team.teamLeadId,
-      team.isActive, team.maxMembers, team.currentMemberCount, 
+      team.isActive, team.maxMembers, team.currentMemberCount,
       team.createdAt, team.updatedAt
     ];
 
@@ -43,7 +43,7 @@ class Team {
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM teams WHERE id = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [id]);
       return rows.length > 0 ? new Team(rows[0]) : null;
@@ -104,7 +104,7 @@ class Team {
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE teams SET isActive = 0, updatedAt = ? WHERE id = ?';
-    
+
     try {
       await connection.execute(query, [new Date(), this.id]);
       this.isActive = false;
@@ -126,11 +126,11 @@ class Team {
       t.updatedAt = ?
       WHERE t.id = ?
     `;
-    
+
     try {
       await connection.execute(query, [new Date(), this.id]);
       const [rows] = await connection.execute(
-        'SELECT currentMemberCount FROM teams WHERE id = ?', 
+        'SELECT currentMemberCount FROM teams WHERE id = ?',
         [this.id]
       );
       this.currentMemberCount = rows[0].currentMemberCount;
@@ -141,4 +141,4 @@ class Team {
   }
 }
 
-module.exports = Team;
+export default Team;

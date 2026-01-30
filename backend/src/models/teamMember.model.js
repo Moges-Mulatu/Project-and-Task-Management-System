@@ -1,5 +1,6 @@
-const { v4: uuidv4 } = require('uuid');
-const { getDBConnection } = require('../config/db.config');
+import { v4 as uuidv4 } from 'uuid';
+import { getDBConnection } from '../config/db.config.js';
+import Team from './team.model.js';
 
 class TeamMember {
   constructor(data) {
@@ -18,7 +19,7 @@ class TeamMember {
   static async create(memberData) {
     const connection = getDBConnection();
     const member = new TeamMember(memberData);
-    
+
     const query = `
       INSERT INTO team_members (
         id, teamId, userId, role, joinedAt, leftAt, isActive, 
@@ -33,14 +34,13 @@ class TeamMember {
 
     try {
       await connection.execute(query, values);
-      
+
       // Update team member count
-      const Team = require('./team.model');
       const team = await Team.findById(member.teamId);
       if (team) {
         await team.updateMemberCount();
       }
-      
+
       return member;
     } catch (error) {
       throw new Error(`Failed to create team member: ${error.message}`);
@@ -50,7 +50,7 @@ class TeamMember {
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM team_members WHERE id = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [id]);
       return rows.length > 0 ? new TeamMember(rows[0]) : null;
@@ -68,7 +68,7 @@ class TeamMember {
       WHERE tm.teamId = ? AND tm.isActive = 1 AND u.isActive = 1
       ORDER BY tm.joinedAt ASC
     `;
-    
+
     try {
       const [rows] = await connection.execute(query, [teamId]);
       return rows.map(row => new TeamMember(row));
@@ -86,7 +86,7 @@ class TeamMember {
       WHERE tm.userId = ? AND tm.isActive = 1 AND t.isActive = 1
       ORDER BY tm.joinedAt DESC
     `;
-    
+
     try {
       const [rows] = await connection.execute(query, [userId]);
       return rows.map(row => new TeamMember(row));
@@ -98,7 +98,7 @@ class TeamMember {
   static async findMembership(teamId, userId) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM team_members WHERE teamId = ? AND userId = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [teamId, userId]);
       return rows.length > 0 ? new TeamMember(rows[0]) : null;
@@ -129,19 +129,18 @@ class TeamMember {
   async leave() {
     const connection = getDBConnection();
     const query = 'UPDATE team_members SET isActive = 0, leftAt = ?, updatedAt = ? WHERE id = ?';
-    
+
     try {
       await connection.execute(query, [new Date(), new Date(), this.id]);
       this.isActive = false;
       this.leftAt = new Date();
-      
+
       // Update team member count
-      const Team = require('./team.model');
       const team = await Team.findById(this.teamId);
       if (team) {
         await team.updateMemberCount();
       }
-      
+
       return true;
     } catch (error) {
       throw new Error(`Failed to leave team: ${error.message}`);
@@ -153,4 +152,4 @@ class TeamMember {
   }
 }
 
-module.exports = TeamMember;
+export default TeamMember;

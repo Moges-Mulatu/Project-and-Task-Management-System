@@ -1,5 +1,6 @@
-const { v4: uuidv4 } = require('uuid');
-const { getDBConnection } = require('../config/db.config');
+import { v4 as uuidv4 } from 'uuid';
+import { getDBConnection } from '../config/db.config.js';
+import Project from './project.model.js';
 
 class Task {
   constructor(data) {
@@ -30,7 +31,7 @@ class Task {
   static async create(taskData) {
     const connection = getDBConnection();
     const task = new Task(taskData);
-    
+
     const query = `
       INSERT INTO tasks (
         id, title, description, projectId, assignedTo, assignedBy, status,
@@ -50,14 +51,13 @@ class Task {
 
     try {
       await connection.execute(query, values);
-      
+
       // Update project progress
-      const Project = require('./project.model');
       const project = await Project.findById(task.projectId);
       if (project) {
         await project.updateProgress();
       }
-      
+
       return task;
     } catch (error) {
       throw new Error(`Failed to create task: ${error.message}`);
@@ -67,7 +67,7 @@ class Task {
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM tasks WHERE id = ? AND isActive = 1';
-    
+
     try {
       const [rows] = await connection.execute(query, [id]);
       if (rows.length > 0) {
@@ -168,7 +168,7 @@ class Task {
     try {
       await connection.execute(query, values);
       Object.assign(this, updateData);
-      
+
       // Parse JSON fields back to objects
       if (this.tags) {
         this.tags = JSON.parse(this.tags);
@@ -179,14 +179,13 @@ class Task {
       if (this.comments) {
         this.comments = JSON.parse(this.comments);
       }
-      
+
       // Update project progress
-      const Project = require('./project.model');
       const project = await Project.findById(this.projectId);
       if (project) {
         await project.updateProgress();
       }
-      
+
       return this;
     } catch (error) {
       throw new Error(`Failed to update task: ${error.message}`);
@@ -196,18 +195,17 @@ class Task {
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE tasks SET isActive = 0, updatedAt = ? WHERE id = ?';
-    
+
     try {
       await connection.execute(query, [new Date(), this.id]);
       this.isActive = false;
-      
+
       // Update project progress
-      const Project = require('./project.model');
       const project = await Project.findById(this.projectId);
       if (project) {
         await project.updateProgress();
       }
-      
+
       return true;
     } catch (error) {
       throw new Error(`Failed to delete task: ${error.message}`);
@@ -224,7 +222,7 @@ class Task {
       userId: comment.userId,
       createdAt: new Date()
     });
-    
+
     return await this.update({ comments: this.comments });
   }
 
@@ -240,9 +238,9 @@ class Task {
       uploadedBy: attachment.uploadedBy,
       uploadedAt: new Date()
     });
-    
+
     return await this.update({ attachments: this.attachments });
   }
 }
 
-module.exports = Task;
+export default Task;
