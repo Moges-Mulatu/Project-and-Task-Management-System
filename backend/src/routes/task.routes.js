@@ -1,3 +1,4 @@
+import express from 'express';
 import TaskController from '../controllers/task.controller.js';
 import TaskValidator from '../validators/task.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';

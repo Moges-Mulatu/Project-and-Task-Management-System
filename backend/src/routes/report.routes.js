@@ -1,3 +1,4 @@
+import express from 'express';
 import ReportController from '../controllers/report.controller.js';
 import ReportValidator from '../validators/report.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';

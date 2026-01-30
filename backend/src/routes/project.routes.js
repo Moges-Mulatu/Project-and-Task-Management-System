@@ -1,3 +1,4 @@
+import express from 'express';
 import ProjectController from '../controllers/project.controller.js';
 import ProjectValidator from '../validators/project.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';

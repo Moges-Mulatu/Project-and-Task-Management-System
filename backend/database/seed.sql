@@ -1,60 +1,53 @@
 USE project_management;
 
+-- Disable checks for clean data population
+SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM team_members;
+DELETE FROM tasks;
+DELETE FROM reports;
+DELETE FROM projects;
+DELETE FROM teams;
+DELETE FROM users;
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- =========================================
--- USERS (Admin + Project Managers + Team Members)
+-- USERS (Admin + PM + Member)
+-- Passwords are hashed 'password123'
 -- =========================================
-INSERT INTO users (full_name, email, password, role, phone_number, status)
+INSERT INTO users (id, firstName, lastName, email, password, role, department, position, isActive)
 VALUES
-('Admin User', 'admin@debo.com', '$2a$10$hashedpasswordhere', 'ADMIN', '+251900000001', 'ACTIVE'),
-('Project Manager 1', 'pm1@debo.com', '$2a$10$hashedpasswordhere', 'PROJECT_MANAGER', '+251900000002', 'ACTIVE'),
-('Project Manager 2', 'pm2@debo.com', '$2a$10$hashedpasswordhere', 'PROJECT_MANAGER', '+251900000003', 'ACTIVE'),
-('Team Member 1', 'tm1@debo.com', '$2a$10$hashedpasswordhere', 'TEAM_MEMBER', '+251900000004', 'ACTIVE'),
-('Team Member 2', 'tm2@debo.com', '$2a$10$hashedpasswordhere', 'TEAM_MEMBER', '+251900000005', 'ACTIVE'),
-('Team Member 3', 'tm3@debo.com', '$2a$10$hashedpasswordhere', 'TEAM_MEMBER', '+251900000006', 'ACTIVE');
+('u1-admin-001', 'System', 'Admin', 'admin@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.iG8pMv0vK0vK0vK0vK0vK0vK0vK0vK', 'admin', 'Management', 'System Administrator', 1),
+('u2-pm-001', 'Alex', 'Projector', 'pm@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.iG8pMv0vK0vK0vK0vK0vK0vK0vK0vK', 'project_manager', 'Engineering', 'Project Lead', 1),
+('u3-member-001', 'John', 'Coder', 'member@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.iG8pMv0vK0vK0vK0vK0vK0vK0vK0vK', 'team_member', 'Engineering', 'Software Engineer', 1);
 
 -- =========================================
 -- TEAMS
 -- =========================================
-INSERT INTO teams (team_name, description, created_by)
+INSERT INTO teams (id, name, description, department, teamLeadId, maxMembers, currentMemberCount)
 VALUES
-('Backend Team', 'Handles all backend APIs and database design', 1),
-('Frontend Team', 'Responsible for web UI and dashboards', 1),
-('Mobile Team', 'Builds cross-platform mobile application', 1);
+('t1-backend-01', 'Backend Devs', 'Developing core API and DB services.', 'Engineering', 'u2-pm-001', 10, 2),
+('t2-frontend-01', 'Frontend Devs', 'Building the React Management Board.', 'Engineering', 'u2-pm-001', 10, 1);
 
 -- =========================================
 -- TEAM_MEMBERS
 -- =========================================
-INSERT INTO team_members (team_id, user_id, member_role)
+INSERT INTO team_members (id, teamId, userId, role, assignedBy)
 VALUES
-(1, 2, 'Lead'), -- PM1 in Backend Team
-(1, 4, 'Member'), -- TM1 in Backend Team
-(1, 5, 'Member'), -- TM2 in Backend Team
-(2, 3, 'Lead'), -- PM2 in Frontend Team
-(2, 6, 'Member'); -- TM3 in Frontend Team
+('tm1-01', 't1-backend-01', 'u2-pm-001', 'lead', 'u1-admin-001'),
+('tm1-02', 't1-backend-01', 'u3-member-001', 'member', 'u2-pm-001'),
+('tm2-01', 't2-frontend-01', 'u2-pm-001', 'lead', 'u1-admin-001');
 
 -- =========================================
 -- PROJECTS
 -- =========================================
-INSERT INTO projects (project_name, description, start_date, end_date, status, team_id, created_by)
+INSERT INTO projects (id, name, description, teamId, projectManagerId, status, priority, progress, tags)
 VALUES
-('Project & Task Management System', 'Two-week internship project', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'NOT_STARTED', 1, 2),
-('Frontend Dashboard Revamp', 'Improve UI of web dashboard', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'NOT_STARTED', 2, 3);
+('p1-mgmt-sys', 'Project Management System', 'Internship core project for Debo Engineering.', 't1-backend-01', 'u2-pm-001', 'active', 'high', 25, '["internship", "backend", "fullstack"]');
 
 -- =========================================
 -- TASKS
 -- =========================================
-INSERT INTO tasks (task_title, description, project_id, assigned_to, deadline, status, progress_percentage, created_by)
+INSERT INTO tasks (id, title, description, projectId, assignedTo, assignedBy, status, priority, type, storyPoints, progress, tags, attachments, comments)
 VALUES
-('Design Database Schema', 'Create all tables and relationships', 1, 4, DATE_ADD(CURDATE(), INTERVAL 3 DAY), 'NOT_STARTED', 0, 2),
-('Setup Backend Server', 'Initialize Express server and routes', 1, 5, DATE_ADD(CURDATE(), INTERVAL 4 DAY), 'NOT_STARTED', 0, 2),
-('Implement Authentication', 'JWT login, register, and role-based access', 1, 4, DATE_ADD(CURDATE(), INTERVAL 5 DAY), 'NOT_STARTED', 0, 2),
-('Create Web UI Layout', 'Build dashboard and task pages', 2, 6, DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'NOT_STARTED', 0, 3),
-('Integrate APIs', 'Connect frontend with backend endpoints', 2, 6, DATE_ADD(CURDATE(), INTERVAL 8 DAY), 'NOT_STARTED', 0, 3);
-
--- =========================================
--- REPORTS (optional, if stored)
--- =========================================
-INSERT INTO reports (report_type, generated_by, filters_applied)
-VALUES
-('PROJECT', 2, '{"project_id":1, "team_id":1}'),
-('TASK', 3, '{"project_id":2}');
+('ts1-db-001', 'Database Alignment', 'Update MySQL schema to match UUID/CamelCase models.', 'p1-mgmt-sys', 'u3-member-001', 'u2-pm-001', 'in_progress', 'critical', 'feature', 5, 100, '["database", "migration"]', '[]', '[]'),
+('ts1-api-001', 'Verify Auth Endpoints', 'Perform manual Postman testing for JWT flows.', 'p1-mgmt-sys', 'u3-member-001', 'u2-pm-001', 'todo', 'high', 'task', 3, 0, '["testing", "auth"]', '[]', '[]');

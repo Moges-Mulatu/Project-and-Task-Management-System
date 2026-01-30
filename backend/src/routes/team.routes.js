@@ -1,3 +1,4 @@
+import express from 'express';
 import TeamController from '../controllers/team.controller.js';
 import TeamValidator from '../validators/team.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';

@@ -1,3 +1,4 @@
+import express from 'express';
 import UserController from '../controllers/user.controller.js';
 import UserValidator from '../validators/user.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';
