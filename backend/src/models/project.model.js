@@ -1,7 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDBConnection } from '../config/db.config.js';
 
+/**
+ * Project Model
+ * Manages project data, including tracking status, priority, and overall progress.
+ */
 class Project {
+  /**
+   * Create a new Project instance
+   * @param {Object} data - Project data object
+   */
   constructor(data) {
     this.id = data.id || uuidv4();
     this.name = data.name;
@@ -23,6 +31,11 @@ class Project {
     this.updatedAt = data.updatedAt || new Date();
   }
 
+  /**
+   * Create a new project in the database
+   * @param {Object} projectData - Data for the new project
+   * @returns {Promise<Project>} The created Project instance
+   */
   static async create(projectData) {
     const connection = getDBConnection();
     const project = new Project(projectData);
@@ -50,6 +63,11 @@ class Project {
     }
   }
 
+  /**
+   * Find a project by its ID
+   * @param {string} id - The project ID
+   * @returns {Promise<Project|null>} The project instance or null if not found
+   */
   static async findById(id) {
     const connection = getDBConnection();
     const query = 'SELECT * FROM projects WHERE id = ? AND isActive = 1';
@@ -67,6 +85,11 @@ class Project {
     }
   }
 
+  /**
+   * Get all active projects with optional filtering
+   * @param {Object} options - Filter and pagination options
+   * @returns {Promise<Project[]>} Array of Project instances
+   */
   static async findAll(options = {}) {
     const connection = getDBConnection();
     let query = 'SELECT * FROM projects WHERE isActive = 1';
@@ -110,6 +133,11 @@ class Project {
     }
   }
 
+  /**
+   * Update project details
+   * @param {Object} updateData - Key-value pairs to update
+   * @returns {Promise<Project>} The updated project instance
+   */
   async update(updateData) {
     const connection = getDBConnection();
     updateData.updatedAt = new Date();
@@ -140,6 +168,10 @@ class Project {
     }
   }
 
+  /**
+   * Soft delete a project (mark as inactive)
+   * @returns {Promise<boolean>} Success status
+   */
   async delete() {
     const connection = getDBConnection();
     const query = 'UPDATE projects SET isActive = 0, updatedAt = ? WHERE id = ?';
@@ -153,6 +185,10 @@ class Project {
     }
   }
 
+  /**
+   * Refresh project progress based on the average progress of its tasks
+   * @returns {Promise<Project>} This project instance with updated progress
+   */
   async updateProgress() {
     const connection = getDBConnection();
     const query = `
@@ -179,5 +215,6 @@ class Project {
     }
   }
 }
+
 
 export default Project;
