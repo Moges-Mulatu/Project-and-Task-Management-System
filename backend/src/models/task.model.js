@@ -24,7 +24,7 @@ class Task {
     this.estimatedHours = data.estimatedHours || null;
     this.actualHours = data.actualHours || 0;
     this.startDate = data.startDate || null;
-    this.dueDate = data.dueDate || null;
+    this.dueDate = data.dueDate || data.deadline || null;
     this.completedAt = data.completedAt || null;
     this.parentTaskId = data.parentTaskId || null;
     this.storyPoints = data.storyPoints || null;
@@ -169,6 +169,12 @@ class Task {
   async update(updateData) {
     const connection = getDBConnection();
     updateData.updatedAt = new Date();
+
+    // Map deadline to dueDate if it exists
+    if (updateData.deadline) {
+      updateData.dueDate = updateData.deadline;
+      delete updateData.deadline;
+    }
 
     // Handle JSON fields
     if (updateData.tags) {
