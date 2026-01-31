@@ -3,6 +3,8 @@ import UserController from '../controllers/user.controller.js';
 import UserValidator from '../validators/user.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
+import express from "express";
+
 
 const router = express.Router();
 
