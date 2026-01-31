@@ -158,7 +158,7 @@ class Project {
       Object.assign(this, updateData);
 
       // Parse JSON fields back to objects
-      if (this.tags) {
+      if (this.tags && typeof this.tags === 'string') {
         this.tags = JSON.parse(this.tags);
       }
 

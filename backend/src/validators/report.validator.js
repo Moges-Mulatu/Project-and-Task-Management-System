@@ -8,7 +8,7 @@ class ReportValidator {
      */
     static get create() {
         return [
-            { field: 'name', required: true, type: 'string' },
+            { field: 'title', required: true, type: 'string' },
             { field: 'type', required: true, enum: ['project_summary', 'team_performance', 'task_bottlenecks'] },
             { field: 'projectId', required: false }
         ];
