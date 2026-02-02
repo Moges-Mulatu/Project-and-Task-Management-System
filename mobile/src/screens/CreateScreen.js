@@ -46,7 +46,7 @@ const CreateScreen = ({ navigation, user }) => {
       title: "New Report",
       subtitle: "Generate a project report",
       color: theme.colors.accentOrange,
-      screen: "CreateReport",
+      screen: "Reports",
       roles: ["admin", "project_manager"],
     },
   ];

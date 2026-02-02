@@ -13,6 +13,7 @@ import CreateTaskScreen from "../screens/CreateTaskScreen";
 import ReportsScreen from "../screens/ReportsScreen";
 import TeamDetailScreen from "../screens/TeamDetailScreen";
 import CreateTeamScreen from "../screens/CreateTeamScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +63,9 @@ const RootNavigator = ({ user, onLogin, onRegister, onLogout }) => {
             </Stack.Screen>
             <Stack.Screen name="CreateTeam">
               {(props) => <CreateTeamScreen {...props} user={user} />}
+            </Stack.Screen>
+            <Stack.Screen name="Search">
+              {(props) => <SearchScreen {...props} user={user} />}
             </Stack.Screen>
           </>
         )}

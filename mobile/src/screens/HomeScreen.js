@@ -121,9 +121,12 @@ const HomeScreen = ({ navigation, user }) => {
         </View>
 
         {/* Search Bar */}
-        <TouchableOpacity style={styles.searchBar}>
+        <TouchableOpacity 
+          style={styles.searchBar}
+          onPress={() => navigation.navigate("Search")}
+        >
           <Ionicons name="search" size={18} color={theme.colors.textMuted} />
-          <AppText style={styles.searchText}>Search task ...</AppText>
+          <AppText style={styles.searchText}>Search tasks and projects...</AppText>
         </TouchableOpacity>
 
         {/* Projects Section */}

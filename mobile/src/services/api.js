@@ -113,9 +113,31 @@ const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  getReports: () => request("/reports"),
-  getUsers: () => request("/users"),
+  // Reports
+  getReports: (params) => request(`/reports${buildQuery(params)}`),
+  getReport: (id) => request(`/reports/${id}`),
+  createReport: (payload) =>
+    request("/reports", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  deleteReport: (id) =>
+    request(`/reports/${id}`, {
+      method: "DELETE",
+    }),
+  generateProjectSummary: (projectId) =>
+    request(`/reports/projects/${projectId}/summary`, {
+      method: "POST",
+    }),
+  
+  // Users
+  getUsers: (params) => request(`/users${buildQuery(params)}`),
+  getUser: (id) => request(`/users/${id}`),
   searchUsers: (query) => request(`/users/search${buildQuery({ q: query })}`),
+  deactivateUser: (id) =>
+    request(`/users/${id}`, {
+      method: "DELETE",
+    }),
 };
 
 export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth };
