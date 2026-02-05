@@ -123,7 +123,12 @@ const Teams = () => {
                                         <div className="h-8 w-8 rounded-full border-2 border-card-background bg-brand-green flex items-center justify-center text-[10px] text-white font-bold">AS</div>
                                         <div className="h-8 w-8 rounded-full border-2 border-card-background bg-purple-500 flex items-center justify-center text-[10px] text-white font-bold">+5</div>
                                     </div>
-                                    <Button variant="outline" size="sm" className="text-[10px] uppercase font-bold tracking-wider py-1">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-[10px] uppercase font-bold tracking-wider py-1"
+                                        onClick={() => alert(`Team management for "${team.name}" - Feature coming soon!`)}
+                                    >
                                         Manage Members
                                     </Button>
                                 </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLE_PERMISSIONS } from '../constants/roles';
 import { apiService } from '../services/api';
@@ -8,6 +9,7 @@ import CreateTaskModal from '../components/modals/CreateTaskModal';
 import EditTaskModal from '../components/modals/EditTaskModal';
 
 const Tasks = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const permissions = ROLE_PERMISSIONS[user?.role];
   const [filter, setFilter] = useState('all');
@@ -274,7 +276,7 @@ const Tasks = () => {
                               variant="outline"
                               size="sm"
                               className="border-brand-green/30 text-brand-green hover:bg-brand-green/10"
-                              onClick={() => window.location.href = `/tasks/${task.id}`}
+                              onClick={() => navigate(`/tasks/${task.id}`)}
                             >
                               View
                             </Button>

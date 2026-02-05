@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLE_PERMISSIONS } from '../constants/roles';
 import { apiService } from '../services/api';
@@ -6,6 +7,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
 const Users = () => {
+    const navigate = useNavigate();
     const { user: currentUser } = useAuth();
     const permissions = ROLE_PERMISSIONS[currentUser?.role];
     const [users, setUsers] = useState([]);
@@ -160,6 +162,7 @@ const Users = () => {
                                                         variant="outline"
                                                         size="sm"
                                                         className="border-brand-blue/30 text-brand-blue hover:bg-brand-blue/10"
+                                                        onClick={() => navigate('/profile')}
                                                     >
                                                         Profile
                                                     </Button>

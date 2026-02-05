@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../constants/roles';
 import Button from '../ui/Button';
@@ -43,7 +43,7 @@ const Layout = () => {
               </div>
               <div className="hidden sm:flex sm:space-x-1">
                 {filteredNavigation.map((item) => (
-                  <Link
+                  <NavLink
                     key={item.name}
                     to={item.href}
                     className={({ isActive }) =>
@@ -53,11 +53,15 @@ const Layout = () => {
                       }`
                     }
                   >
-                    {item.name}
-                    {({ isActive }) => isActive && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-brand-blue to-brand-green rounded-lg opacity-20 blur-sm"></div>
+                    {({ isActive }) => (
+                      <>
+                        {item.name}
+                        {isActive && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-brand-blue to-brand-green rounded-lg opacity-20 blur-sm"></div>
+                        )}
+                      </>
                     )}
-                  </Link>
+                  </NavLink>
                 ))}
               </div>
             </div>

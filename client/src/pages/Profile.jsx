@@ -75,8 +75,8 @@ const Profile = () => {
                                         value={formData.firstName}
                                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                         className={`w-full px-4 py-2 rounded-xl text-sm transition-all duration-200 border ${isEditing
-                                                ? 'bg-background-tertiary border-brand-blue/50 text-text-primary focus:ring-2 focus:ring-brand-blue/20'
-                                                : 'bg-background-secondary/20 border-card-border/50 text-text-secondary cursor-not-allowed'
+                                            ? 'bg-background-tertiary border-brand-blue/50 text-text-primary focus:ring-2 focus:ring-brand-blue/20'
+                                            : 'bg-background-secondary/20 border-card-border/50 text-text-secondary cursor-not-allowed'
                                             }`}
                                     />
                                 </div>
@@ -88,8 +88,8 @@ const Profile = () => {
                                         value={formData.lastName}
                                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                         className={`w-full px-4 py-2 rounded-xl text-sm transition-all duration-200 border ${isEditing
-                                                ? 'bg-background-tertiary border-brand-blue/50 text-text-primary focus:ring-2 focus:ring-brand-blue/20'
-                                                : 'bg-background-secondary/20 border-card-border/50 text-text-secondary cursor-not-allowed'
+                                            ? 'bg-background-tertiary border-brand-blue/50 text-text-primary focus:ring-2 focus:ring-brand-blue/20'
+                                            : 'bg-background-secondary/20 border-card-border/50 text-text-secondary cursor-not-allowed'
                                             }`}
                                     />
                                 </div>
@@ -103,8 +103,8 @@ const Profile = () => {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     className={`w-full px-4 py-2 rounded-xl text-sm transition-all duration-200 border ${isEditing
-                                            ? 'bg-background-tertiary border-brand-blue/50 text-text-primary focus:ring-2 focus:ring-brand-blue/20'
-                                            : 'bg-background-secondary/20 border-card-border/50 text-text-secondary cursor-not-allowed'
+                                        ? 'bg-background-tertiary border-brand-blue/50 text-text-primary focus:ring-2 focus:ring-brand-blue/20'
+                                        : 'bg-background-secondary/20 border-card-border/50 text-text-secondary cursor-not-allowed'
                                         }`}
                                 />
                             </div>
@@ -121,8 +121,20 @@ const Profile = () => {
                         <div className="mt-12 pt-12 border-t border-card-border/50 space-y-6">
                             <h4 className="text-sm font-bold text-text-primary uppercase tracking-tighter italic">Security Settings</h4>
                             <div className="flex flex-col md:flex-row gap-4">
-                                <Button variant="outline" className="flex-1 border-card-border">Change Password</Button>
-                                <Button variant="outline" className="flex-1 border-card-border">Setup 2FA</Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 border-card-border"
+                                    onClick={() => alert('Password change feature - Coming soon!')}
+                                >
+                                    Change Password
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 border-card-border"
+                                    onClick={() => alert('Two-Factor Authentication setup - Coming soon!')}
+                                >
+                                    Setup 2FA
+                                </Button>
                             </div>
                         </div>
                     </Card.Body>

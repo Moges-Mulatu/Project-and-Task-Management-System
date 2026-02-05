@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLE_PERMISSIONS } from '../constants/roles';
 import { apiService } from '../services/api';
@@ -8,6 +9,7 @@ import CreateProjectModal from '../components/modals/CreateProjectModal';
 import CreateTaskModal from '../components/modals/CreateTaskModal';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const permissions = ROLE_PERMISSIONS[user?.role];
   const [loading, setLoading] = useState(true);
@@ -143,15 +145,15 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold text-text-secondary">{stat.name}</p>
                 <div className={`h - 2 w - 2 rounded - full ${index === 0 ? 'bg-brand-blue' :
-                    index === 1 ? 'bg-brand-green' :
-                      index === 2 ? 'bg-brand-green-light' :
-                        'bg-brand-blue-light'
+                  index === 1 ? 'bg-brand-green' :
+                    index === 2 ? 'bg-brand-green-light' :
+                      'bg-brand-blue-light'
                   } animate - pulse`}></div>
               </div>
               <p className="mt-2 text-3xl font-bold text-text-primary">{stat.value}</p>
               <p className={`mt - 2 text - sm font - medium flex items - center ${stat.changeType === 'positive' ? 'text-brand-green' :
-                  stat.changeType === 'negative' ? 'text-error' :
-                    'text-text-muted'
+                stat.changeType === 'negative' ? 'text-error' :
+                  'text-text-muted'
                 } `}>
                 {stat.changeType === 'positive' && (
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -186,8 +188,8 @@ const Dashboard = () => {
                       </div>
                       <div className="text-right ml-4">
                         <span className={`inline - flex px - 3 py - 1 text - xs font - semibold rounded - full ${task.priority === 'high' ? 'bg-error/20 text-error' :
-                            task.priority === 'medium' ? 'bg-warning/20 text-warning' :
-                              'bg-text-muted/20 text-text-muted'
+                          task.priority === 'medium' ? 'bg-warning/20 text-warning' :
+                            'bg-text-muted/20 text-text-muted'
                           } capitalize`}>
                           {task.priority || 'low'}
                         </span>
@@ -238,7 +240,10 @@ const Dashboard = () => {
                   </div>
                 </button>
               )}
-              <button className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-500/10 to-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg hover:from-purple-500/20 hover:to-purple-500/30 transition-all duration-200 group">
+              <button
+                onClick={() => navigate('/projects')}
+                className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-500/10 to-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg hover:from-purple-500/20 hover:to-purple-500/30 transition-all duration-200 group"
+              >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">View All Projects</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +251,10 @@ const Dashboard = () => {
                   </svg>
                 </div>
               </button>
-              <button className="w-full text-left px-4 py-3 bg-gradient-to-r from-orange-500/10 to-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg hover:from-orange-500/20 hover:to-orange-500/30 transition-all duration-200 group">
+              <button
+                onClick={() => navigate('/tasks')}
+                className="w-full text-left px-4 py-3 bg-gradient-to-r from-orange-500/10 to-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg hover:from-orange-500/20 hover:to-orange-500/30 transition-all duration-200 group"
+              >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">View My Tasks</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,6 +262,45 @@ const Dashboard = () => {
                   </svg>
                 </div>
               </button>
+              {(user?.role === ROLES.ADMIN || user?.role === ROLES.PROJECT_MANAGER) && (
+                <button
+                  onClick={() => navigate('/reports')}
+                  className="w-full text-left px-4 py-3 bg-gradient-to-r from-teal-500/10 to-teal-500/20 text-teal-400 border border-teal-500/30 rounded-lg hover:from-teal-500/20 hover:to-teal-500/30 transition-all duration-200 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">View Performance Reports</span>
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+              )}
+              {user?.role === ROLES.ADMIN && (
+                <>
+                  <button
+                    onClick={() => navigate('/users')}
+                    className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-500/10 to-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:from-blue-500/20 hover:to-blue-500/30 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Manage Users</span>
+                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => navigate('/teams')}
+                    className="w-full text-left px-4 py-3 bg-gradient-to-r from-pink-500/10 to-pink-500/20 text-pink-400 border border-pink-500/30 rounded-lg hover:from-pink-500/20 hover:to-pink-500/30 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Manage Teams</span>
+                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                </>
+              )}
             </div>
           </Card.Body>
         </Card>

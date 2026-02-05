@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLE_PERMISSIONS } from '../constants/roles';
 import { apiService } from '../services/api';
@@ -8,6 +9,7 @@ import CreateProjectModal from '../components/modals/CreateProjectModal';
 import EditProjectModal from '../components/modals/EditProjectModal';
 
 const Projects = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const permissions = ROLE_PERMISSIONS[user?.role];
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -188,7 +190,7 @@ const Projects = () => {
                   variant="outline"
                   size="sm"
                   className="border-brand-blue/30 text-brand-blue hover:bg-brand-blue/10"
-                  onClick={() => window.location.href = `/projects/${project.id}`}
+                  onClick={() => navigate(`/projects/${project.id}`)}
                 >
                   Manage
                 </Button>
