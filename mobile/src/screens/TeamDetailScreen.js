@@ -32,40 +32,43 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
         api.getProjects().catch(() => ({ data: [] })),
         api.getTasks().catch(() => ({ data: [] })),
       ]);
-      
+
       // Get the raw team members (which have userId but not user details)
       const teamMemberRecords = membersRes.data || [];
       const allUsers = usersRes.data || [];
-      
+
       // Create a map of users by ID for quick lookup
       const userMap = {};
-      allUsers.forEach(user => {
+      allUsers.forEach((user) => {
         userMap[user.id] = user;
       });
-      
+
       // Merge team member records with user details
-      const enrichedMembers = teamMemberRecords.map(memberRecord => {
+      const enrichedMembers = teamMemberRecords.map((memberRecord) => {
         const userInfo = userMap[memberRecord.userId] || {};
         return {
           ...memberRecord,
           id: memberRecord.userId || memberRecord.id, // Use userId for key
-          firstName: userInfo.firstName || memberRecord.firstName || '',
-          lastName: userInfo.lastName || memberRecord.lastName || '',
-          email: userInfo.email || memberRecord.email || '',
-          role: userInfo.role || memberRecord.role || 'team_member',
+          firstName: userInfo.firstName || memberRecord.firstName || "",
+          lastName: userInfo.lastName || memberRecord.lastName || "",
+          email: userInfo.email || memberRecord.email || "",
+          role: userInfo.role || memberRecord.role || "team_member",
         };
       });
-      
+
       setMembers(enrichedMembers);
-      
+
       // Filter projects and tasks that might be associated with this team
-      const teamProjects = (projectsRes.data || []).filter(p => p.teamId === team.id);
-      const teamTasks = (tasksRes.data || []).filter(t => {
-        // Check if task belongs to a project in this team
-        const projectIds = teamProjects.map(p => p.id);
+      const teamProjects = (projectsRes.data || []).filter(
+        (p) => p.teamId === team.id,
+      );
+      const teamTasks = (tasksRes.data || []).filter((t) => {
+        // Check if task is directly assigned to this team OR belongs to a project in this team
+        if (t.teamId === team.id) return true;
+        const projectIds = teamProjects.map((p) => p.id);
         return projectIds.includes(t.projectId);
       });
-      
+
       setProjects(teamProjects);
       setTasks(teamTasks);
     } catch (err) {
@@ -79,7 +82,7 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
   useFocusEffect(
     useCallback(() => {
       loadTeamData();
-    }, [loadTeamData])
+    }, [loadTeamData]),
   );
 
   const getRoleBadgeColor = (role) => {
@@ -114,10 +117,19 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={theme.colors.textPrimary}
+            />
           </TouchableOpacity>
-          <AppText variant="h3" style={styles.headerTitle}>Team Details</AppText>
+          <AppText variant="h3" style={styles.headerTitle}>
+            Team Details
+          </AppText>
           <View style={{ width: 40 }} />
         </View>
 
@@ -125,7 +137,11 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
         <AppCard accentColor={theme.colors.brandBlue} glowIntensity="high">
           <View style={styles.teamHeader}>
             <View style={styles.teamIcon}>
-              <Ionicons name="people" size={32} color={theme.colors.textPrimary} />
+              <Ionicons
+                name="people"
+                size={32}
+                color={theme.colors.textPrimary}
+              />
             </View>
             <View style={styles.teamInfo}>
               <AppText variant="h2" style={styles.teamName}>
@@ -139,24 +155,40 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
 
           {team.department && (
             <View style={styles.departmentRow}>
-              <Ionicons name="business-outline" size={16} color={theme.colors.textMuted} />
+              <Ionicons
+                name="business-outline"
+                size={16}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.departmentText}>{team.department}</AppText>
             </View>
           )}
 
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Ionicons name="briefcase-outline" size={18} color={theme.colors.brandBlue} />
+              <Ionicons
+                name="briefcase-outline"
+                size={18}
+                color={theme.colors.brandBlue}
+              />
               <AppText style={styles.statValue}>{projectCount}</AppText>
               <AppText style={styles.statLabel}>Projects</AppText>
             </View>
             <View style={styles.statItem}>
-              <Ionicons name="checkbox-outline" size={18} color={theme.colors.brandGreen} />
+              <Ionicons
+                name="checkbox-outline"
+                size={18}
+                color={theme.colors.brandGreen}
+              />
               <AppText style={styles.statValue}>{taskCount}</AppText>
               <AppText style={styles.statLabel}>Tasks</AppText>
             </View>
             <View style={styles.statItem}>
-              <Ionicons name="people-outline" size={18} color={theme.colors.accentPink} />
+              <Ionicons
+                name="people-outline"
+                size={18}
+                color={theme.colors.accentPink}
+              />
               <AppText style={styles.statValue}>{memberCount}</AppText>
               <AppText style={styles.statLabel}>Members</AppText>
             </View>
@@ -164,7 +196,11 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
 
           {team.createdAt && (
             <View style={styles.createdRow}>
-              <Ionicons name="calendar-outline" size={14} color={theme.colors.textMuted} />
+              <Ionicons
+                name="calendar-outline"
+                size={14}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.createdText}>
                 Created {new Date(team.createdAt).toLocaleDateString()}
               </AppText>
@@ -174,15 +210,24 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
 
         {/* Team Members Section */}
         <View style={styles.sectionHeader}>
-          <AppText variant="h3" style={styles.sectionTitle}>Team Members</AppText>
+          <AppText variant="h3" style={styles.sectionTitle}>
+            Team Members
+          </AppText>
           <AppText style={styles.memberCount}>{memberCount} members</AppText>
         </View>
 
         {loading ? (
-          <ActivityIndicator color={theme.colors.brandBlue} style={{ marginTop: 20 }} />
+          <ActivityIndicator
+            color={theme.colors.brandBlue}
+            style={{ marginTop: 20 }}
+          />
         ) : members.length === 0 ? (
           <View style={styles.emptyMembers}>
-            <Ionicons name="people-outline" size={40} color={theme.colors.textMuted} />
+            <Ionicons
+              name="people-outline"
+              size={40}
+              color={theme.colors.textMuted}
+            />
             <AppText style={styles.emptyText}>No members in this team</AppText>
           </View>
         ) : (
@@ -195,11 +240,15 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
               >
                 <View style={styles.memberRow}>
                   <LinearGradient
-                    colors={[getRoleBadgeColor(member.role), theme.colors.brandBlue]}
+                    colors={[
+                      getRoleBadgeColor(member.role),
+                      theme.colors.brandBlue,
+                    ]}
                     style={styles.memberAvatar}
                   >
                     <AppText style={styles.avatarText}>
-                      {member.firstName?.[0] || "U"}{member.lastName?.[0] || ""}
+                      {member.firstName?.[0] || "U"}
+                      {member.lastName?.[0] || ""}
                     </AppText>
                   </LinearGradient>
 
@@ -210,8 +259,20 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
                     <AppText style={styles.memberEmail}>{member.email}</AppText>
                   </View>
 
-                  <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(member.role) + "25" }]}>
-                    <AppText style={[styles.roleText, { color: getRoleBadgeColor(member.role) }]}>
+                  <View
+                    style={[
+                      styles.roleBadge,
+                      {
+                        backgroundColor: getRoleBadgeColor(member.role) + "25",
+                      },
+                    ]}
+                  >
+                    <AppText
+                      style={[
+                        styles.roleText,
+                        { color: getRoleBadgeColor(member.role) },
+                      ]}
+                    >
                       {getRoleLabel(member.role)}
                     </AppText>
                   </View>
@@ -225,24 +286,190 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
         {projects.length > 0 && (
           <>
             <View style={styles.sectionHeader}>
-              <AppText variant="h3" style={styles.sectionTitle}>Team Projects</AppText>
-              <AppText style={styles.memberCount}>{projectCount} projects</AppText>
+              <AppText variant="h3" style={styles.sectionTitle}>
+                Team Projects
+              </AppText>
+              <AppText style={styles.memberCount}>
+                {projectCount} projects
+              </AppText>
             </View>
             {projects.map((project) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={project.id}
-                onPress={() => navigation.navigate("ProjectDetail", { project })}
+                onPress={() =>
+                  navigation.navigate("ProjectDetail", { project })
+                }
               >
-                <AppCard accentColor={theme.colors.brandBlue} glowIntensity="low">
+                <AppCard
+                  accentColor={theme.colors.brandBlue}
+                  glowIntensity="low"
+                >
                   <View style={styles.projectRow}>
                     <View style={styles.projectIcon}>
-                      <Ionicons name="folder" size={20} color={theme.colors.brandBlue} />
+                      <Ionicons
+                        name="folder"
+                        size={20}
+                        color={theme.colors.brandBlue}
+                      />
                     </View>
                     <View style={styles.projectInfo}>
-                      <AppText style={styles.projectName}>{project.name}</AppText>
-                      <AppText style={styles.projectStatus}>{project.status || "active"}</AppText>
+                      <AppText style={styles.projectName}>
+                        {project.name}
+                      </AppText>
+                      <AppText style={styles.projectStatus}>
+                        {project.status || "active"}
+                      </AppText>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color={theme.colors.textMuted}
+                    />
+                  </View>
+                </AppCard>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+
+        {/* Tasks Section */}
+        {tasks.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <AppText variant="h3" style={styles.sectionTitle}>
+                Team Tasks
+              </AppText>
+              <AppText style={styles.memberCount}>{taskCount} tasks</AppText>
+            </View>
+            {tasks.map((task) => (
+              <TouchableOpacity
+                key={task.id}
+                onPress={() => navigation.navigate("TaskDetail", { task })}
+              >
+                <AppCard
+                  accentColor={
+                    task.priority === "critical"
+                      ? theme.colors.danger
+                      : task.priority === "high"
+                        ? theme.colors.accentOrange
+                        : task.priority === "medium"
+                          ? theme.colors.warning
+                          : theme.colors.brandGreen
+                  }
+                  glowIntensity="low"
+                >
+                  <View style={styles.taskRow}>
+                    <View
+                      style={[
+                        styles.taskIcon,
+                        {
+                          backgroundColor:
+                            (task.priority === "critical"
+                              ? theme.colors.danger
+                              : task.priority === "high"
+                                ? theme.colors.accentOrange
+                                : task.priority === "medium"
+                                  ? theme.colors.warning
+                                  : theme.colors.brandGreen) + "25",
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={
+                          task.type === "bug"
+                            ? "bug"
+                            : task.type === "feature"
+                              ? "sparkles"
+                              : "checkbox"
+                        }
+                        size={20}
+                        color={
+                          task.priority === "critical"
+                            ? theme.colors.danger
+                            : task.priority === "high"
+                              ? theme.colors.accentOrange
+                              : task.priority === "medium"
+                                ? theme.colors.warning
+                                : theme.colors.brandGreen
+                        }
+                      />
+                    </View>
+                    <View style={styles.taskInfo}>
+                      <AppText style={styles.taskTitle}>{task.title}</AppText>
+                      <View style={styles.taskMeta}>
+                        <View
+                          style={[
+                            styles.priorityBadge,
+                            {
+                              backgroundColor:
+                                (task.priority === "critical"
+                                  ? theme.colors.danger
+                                  : task.priority === "high"
+                                    ? theme.colors.accentOrange
+                                    : task.priority === "medium"
+                                      ? theme.colors.warning
+                                      : theme.colors.brandGreen) + "25",
+                            },
+                          ]}
+                        >
+                          <AppText
+                            style={[
+                              styles.priorityText,
+                              {
+                                color:
+                                  task.priority === "critical"
+                                    ? theme.colors.danger
+                                    : task.priority === "high"
+                                      ? theme.colors.accentOrange
+                                      : task.priority === "medium"
+                                        ? theme.colors.warning
+                                        : theme.colors.brandGreen,
+                              },
+                            ]}
+                          >
+                            {task.priority}
+                          </AppText>
+                        </View>
+                        <View
+                          style={[
+                            styles.statusBadge,
+                            {
+                              backgroundColor:
+                                (task.status === "completed"
+                                  ? theme.colors.brandGreen
+                                  : task.status === "in_progress"
+                                    ? theme.colors.brandBlue
+                                    : task.status === "review"
+                                      ? theme.colors.accentPink
+                                      : theme.colors.textMuted) + "25",
+                            },
+                          ]}
+                        >
+                          <AppText
+                            style={[
+                              styles.statusText,
+                              {
+                                color:
+                                  task.status === "completed"
+                                    ? theme.colors.brandGreen
+                                    : task.status === "in_progress"
+                                      ? theme.colors.brandBlue
+                                      : task.status === "review"
+                                        ? theme.colors.accentPink
+                                        : theme.colors.textMuted,
+                              },
+                            ]}
+                          >
+                            {task.status?.replace("_", " ")}
+                          </AppText>
+                        </View>
+                      </View>
+                    </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color={theme.colors.textMuted}
+                    />
                   </View>
                 </AppCard>
               </TouchableOpacity>
@@ -434,6 +661,50 @@ const styles = StyleSheet.create({
   projectStatus: {
     color: theme.colors.textMuted,
     fontSize: 12,
+    textTransform: "capitalize",
+  },
+  taskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  taskIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  taskInfo: {
+    flex: 1,
+    marginLeft: theme.spacing.md,
+  },
+  taskTitle: {
+    fontWeight: "500",
+    fontSize: 14,
+  },
+  taskMeta: {
+    flexDirection: "row",
+    marginTop: 4,
+    gap: 8,
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  priorityText: {
+    fontSize: 10,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "600",
     textTransform: "capitalize",
   },
 });

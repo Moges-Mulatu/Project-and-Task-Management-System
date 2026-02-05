@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Formik } from "formik";
+import * as Yup from "yup";
 import AppText from "../components/AppText";
 import AppCard from "../components/AppCard";
 import ScreenContainer from "../components/ScreenContainer";
@@ -17,24 +19,207 @@ import { api } from "../services/api";
 
 const PRIORITIES = ["low", "medium", "high"];
 
+const CreateProjectSchema = Yup.object()
+  .shape({
+    name: Yup.string()
+      .trim()
+      .min(3, "Project name must be at least 3 characters")
+      .max(100, "Project name cannot exceed 100 characters")
+      .required("Project name is required"),
+    description: Yup.string()
+      .trim()
+      .max(500, "Description cannot exceed 500 characters"),
+    priority: Yup.string()
+      .oneOf(["low", "medium", "high"], "Invalid priority")
+      .required("Priority is required"),
+    teamId: Yup.string().required("Please assign a team to this project"),
+    startDate: Yup.object().shape({
+      day: Yup.string()
+        .test("valid-day", "Day must be between 1 and 31", function (value) {
+          if (!value) return true;
+          const { month, year } = this.parent;
+          if (value || month || year) {
+            if (!value || !month || !year) {
+              return this.createError({
+                message: "Complete the start date (DD/MM/YYYY)",
+              });
+            }
+            const d = parseInt(value);
+            return d >= 1 && d <= 31;
+          }
+          return true;
+        })
+        .test(
+          "not-in-past",
+          "Start date cannot be in the past",
+          function (value) {
+            if (!value) return true;
+            const { month, year } = this.parent;
+            if (!value || !month || !year) return true;
+
+            const selectedDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(value),
+            );
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDate < today) {
+              return this.createError({
+                message: "Start date must be today or in the future",
+              });
+            }
+            return true;
+          },
+        ),
+      month: Yup.string().test(
+        "valid-month",
+        "Month must be between 1 and 12",
+        function (value) {
+          if (!value) return true;
+          const { day, year } = this.parent;
+          if (value || day || year) {
+            if (!value || !day || !year) {
+              return this.createError({
+                message: "Complete the start date (DD/MM/YYYY)",
+              });
+            }
+            const m = parseInt(value);
+            return m >= 1 && m <= 12;
+          }
+          return true;
+        },
+      ),
+      year: Yup.string().test(
+        "valid-year",
+        "Year must be between 2024 and 2030",
+        function (value) {
+          if (!value) return true;
+          const { day, month } = this.parent;
+          if (value || day || month) {
+            if (!value || !day || !month) {
+              return this.createError({
+                message: "Complete the start date (DD/MM/YYYY)",
+              });
+            }
+            const y = parseInt(value);
+            return y >= 2024 && y <= 2030;
+          }
+          return true;
+        },
+      ),
+    }),
+    endDate: Yup.object().shape({
+      day: Yup.string()
+        .test("valid-day", "Day must be between 1 and 31", function (value) {
+          if (!value) return true;
+          const { month, year } = this.parent;
+          if (value || month || year) {
+            if (!value || !month || !year) {
+              return this.createError({
+                message: "Complete the end date (DD/MM/YYYY)",
+              });
+            }
+            const d = parseInt(value);
+            return d >= 1 && d <= 31;
+          }
+          return true;
+        })
+        .test(
+          "not-before-tomorrow",
+          "End date must be at least tomorrow",
+          function (value) {
+            if (!value) return true;
+            const { month, year } = this.parent;
+            if (!value || !month || !year) return true;
+
+            const selectedDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(value),
+            );
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            if (selectedDate < tomorrow) {
+              return this.createError({
+                message: "End date must be tomorrow or later",
+              });
+            }
+            return true;
+          },
+        ),
+      month: Yup.string().test(
+        "valid-month",
+        "Month must be between 1 and 12",
+        function (value) {
+          if (!value) return true;
+          const { day, year } = this.parent;
+          if (value || day || year) {
+            if (!value || !day || !year) {
+              return this.createError({
+                message: "Complete the end date (DD/MM/YYYY)",
+              });
+            }
+            const m = parseInt(value);
+            return m >= 1 && m <= 12;
+          }
+          return true;
+        },
+      ),
+      year: Yup.string().test(
+        "valid-year",
+        "Year must be between 2024 and 2030",
+        function (value) {
+          if (!value) return true;
+          const { day, month } = this.parent;
+          if (value || day || month) {
+            if (!value || !day || !month) {
+              return this.createError({
+                message: "Complete the end date (DD/MM/YYYY)",
+              });
+            }
+            const y = parseInt(value);
+            return y >= 2024 && y <= 2030;
+          }
+          return true;
+        },
+      ),
+    }),
+  })
+  .test(
+    "end-after-start",
+    "End date must be after start date",
+    function (values) {
+      const { startDate, endDate } = values;
+      if (!startDate.year || !startDate.month || !startDate.day) return true;
+      if (!endDate.year || !endDate.month || !endDate.day) return true;
+
+      const start = new Date(
+        parseInt(startDate.year),
+        parseInt(startDate.month) - 1,
+        parseInt(startDate.day),
+      );
+      const end = new Date(
+        parseInt(endDate.year),
+        parseInt(endDate.month) - 1,
+        parseInt(endDate.day),
+      );
+
+      if (end < start) {
+        return this.createError({
+          path: "endDate.year",
+          message: "End date must be after start date",
+        });
+      }
+      return true;
+    },
+  );
+
 const CreateProjectScreen = ({ navigation, user }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium");
-  const [teamId, setTeamId] = useState("");
   const [teams, setTeams] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  // Start date state
-  const [startDay, setStartDay] = useState("");
-  const [startMonth, setStartMonth] = useState("");
-  const [startYear, setStartYear] = useState("");
-
-  // End date state
-  const [endDay, setEndDay] = useState("");
-  const [endMonth, setEndMonth] = useState("");
-  const [endYear, setEndYear] = useState("");
 
   useEffect(() => {
     const loadTeams = async () => {
@@ -57,101 +242,19 @@ const CreateProjectScreen = ({ navigation, user }) => {
   };
 
   // Set date from Date object
-  const setDateFromObj = (date, type) => {
+  const setDateFromObj = (date, type, setFieldValue) => {
     const d = date.getDate().toString();
     const m = (date.getMonth() + 1).toString();
     const y = date.getFullYear().toString();
-    
+
     if (type === "start") {
-      setStartDay(d);
-      setStartMonth(m);
-      setStartYear(y);
+      setFieldValue("startDate.day", d);
+      setFieldValue("startDate.month", m);
+      setFieldValue("startDate.year", y);
     } else {
-      setEndDay(d);
-      setEndMonth(m);
-      setEndYear(y);
-    }
-  };
-
-  // Quick date presets
-  const setStartToday = () => setDateFromObj(new Date(), "start");
-  
-  const setEndPreset = (daysFromNow) => {
-    const date = new Date();
-    date.setDate(date.getDate() + daysFromNow);
-    setDateFromObj(date, "end");
-  };
-
-  // Validation
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!name.trim()) {
-      newErrors.name = "Project name is required";
-    } else if (name.length < 3) {
-      newErrors.name = "Name must be at least 3 characters";
-    }
-
-    // Validate start date if any field is filled
-    if (startDay || startMonth || startYear) {
-      if (!startDay || !startMonth || !startYear) {
-        newErrors.startDate = "Please complete all date fields";
-      } else {
-        const d = parseInt(startDay);
-        const m = parseInt(startMonth);
-        const y = parseInt(startYear);
-        if (d < 1 || d > 31) newErrors.startDate = "Invalid day (1-31)";
-        else if (m < 1 || m > 12) newErrors.startDate = "Invalid month (1-12)";
-        else if (y < 2024 || y > 2030) newErrors.startDate = "Invalid year";
-      }
-    }
-
-    // Validate end date if any field is filled
-    if (endDay || endMonth || endYear) {
-      if (!endDay || !endMonth || !endYear) {
-        newErrors.endDate = "Please complete all date fields";
-      } else {
-        const d = parseInt(endDay);
-        const m = parseInt(endMonth);
-        const y = parseInt(endYear);
-        if (d < 1 || d > 31) newErrors.endDate = "Invalid day (1-31)";
-        else if (m < 1 || m > 12) newErrors.endDate = "Invalid month (1-12)";
-        else if (y < 2024 || y > 2030) newErrors.endDate = "Invalid year";
-      }
-    }
-
-    // Validate end date is after start date
-    const startDate = formatDate(startDay, startMonth, startYear);
-    const endDate = formatDate(endDay, endMonth, endYear);
-    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-      newErrors.endDate = "End date must be after start date";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleCreate = async () => {
-    if (!validateForm()) return;
-
-    setLoading(true);
-    try {
-      const startDate = formatDate(startDay, startMonth, startYear);
-      const endDate = formatDate(endDay, endMonth, endYear);
-
-      await api.createProject({
-        name: name.trim(),
-        description: description.trim(),
-        priority,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        teamId: teamId || undefined,
-      });
-      navigation.goBack();
-    } catch (err) {
-      setErrors({ general: err.message || "Failed to create project" });
-    } finally {
-      setLoading(false);
+      setFieldValue("endDate.day", d);
+      setFieldValue("endDate.month", m);
+      setFieldValue("endDate.year", y);
     }
   };
 
@@ -181,281 +284,476 @@ const CreateProjectScreen = ({ navigation, user }) => {
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-          <AppText variant="h3" style={styles.headerTitle}>New Project</AppText>
+          <AppText variant="h3" style={styles.headerTitle}>
+            New Project
+          </AppText>
           <View style={{ width: 40 }} />
         </View>
 
-        <AppCard accentColor={theme.colors.brandGreen}>
-          {/* Project Name */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Project Name</AppText>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter project name..."
-                placeholderTextColor={theme.colors.textMuted}
-                value={name}
-                onChangeText={(text) => {
-                  setName(text);
-                  if (text.length >= 3) {
-                    setErrors((prev) => ({ ...prev, name: "" }));
-                  }
-                }}
-                maxLength={100}
-              />
-              <AppText style={styles.charCount}>{name.length}/100</AppText>
-            </View>
-            {errors.name ? <AppText style={styles.errorText}>{errors.name}</AppText> : null}
-          </View>
+        <Formik
+          initialValues={{
+            name: "",
+            description: "",
+            priority: "medium",
+            teamId: "",
+            startDate: { day: "", month: "", year: "" },
+            endDate: { day: "", month: "", year: "" },
+          }}
+          validationSchema={CreateProjectSchema}
+          validateOnChange={false}
+          validateOnBlur={false}
+          onSubmit={async (values, { setSubmitting, setStatus }) => {
+            setStatus("");
+            try {
+              const startDate = formatDate(
+                values.startDate.day,
+                values.startDate.month,
+                values.startDate.year,
+              );
+              const endDate = formatDate(
+                values.endDate.day,
+                values.endDate.month,
+                values.endDate.year,
+              );
 
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Description</AppText>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Describe your project goals and scope..."
-                placeholderTextColor={theme.colors.textMuted}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-                maxLength={500}
-              />
-              <AppText style={styles.charCount}>{description.length}/500</AppText>
-            </View>
-          </View>
-
-          {/* Priority */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Priority</AppText>
-            <View style={styles.chipRow}>
-              {PRIORITIES.map((p) => (
-                <TouchableOpacity
-                  key={p}
-                  style={[
-                    styles.priorityChip,
-                    priority === p && { 
-                      backgroundColor: getPriorityColor(p) + "25", 
-                      borderColor: getPriorityColor(p) 
-                    },
-                  ]}
-                  onPress={() => setPriority(p)}
-                >
-                  <Ionicons
-                    name={getPriorityIcon(p)}
-                    size={16}
-                    color={priority === p ? getPriorityColor(p) : theme.colors.textMuted}
-                    style={{ marginRight: 6 }}
+              await api.createProject({
+                name: values.name.trim(),
+                description: values.description.trim(),
+                priority: values.priority,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                teamId: values.teamId || undefined,
+              });
+              navigation.goBack();
+            } catch (err) {
+              setStatus(err.message || "Failed to create project");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+            status,
+            setFieldValue,
+          }) => (
+            <AppCard accentColor={theme.colors.brandGreen}>
+              {/* Project Name */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Project Name</AppText>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter project name..."
+                    placeholderTextColor={theme.colors.textMuted}
+                    value={values.name}
+                    onChangeText={handleChange("name")}
+                    onBlur={handleBlur("name")}
+                    maxLength={100}
                   />
-                  <AppText
-                    style={[
-                      styles.chipText, 
-                      priority === p && { color: getPriorityColor(p), fontWeight: "600" }
-                    ]}
-                  >
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  <AppText style={styles.charCount}>
+                    {values.name.length}/100
                   </AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+                </View>
+                {touched.name && errors.name ? (
+                  <AppText style={styles.errorText}>{errors.name}</AppText>
+                ) : null}
+              </View>
 
-          {/* Start Date */}
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <AppText style={styles.label}>Start Date</AppText>
-              <TouchableOpacity onPress={setStartToday} style={styles.todayButton}>
-                <Ionicons name="today" size={14} color={theme.colors.brandBlue} />
-                <AppText style={styles.todayText}>Today</AppText>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.dateInputRow}>
-              <View style={styles.dateInputWrapper}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="DD"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={startDay}
-                  onChangeText={(text) => setStartDay(text.replace(/[^0-9]/g, "").slice(0, 2))}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <AppText style={styles.dateLabel}>Day</AppText>
+              {/* Description */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Description</AppText>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Describe your project goals and scope..."
+                    placeholderTextColor={theme.colors.textMuted}
+                    value={values.description}
+                    onChangeText={handleChange("description")}
+                    onBlur={handleBlur("description")}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    maxLength={500}
+                  />
+                  <AppText style={styles.charCount}>
+                    {values.description.length}/500
+                  </AppText>
+                </View>
+                {touched.description && errors.description ? (
+                  <AppText style={styles.errorText}>
+                    {errors.description}
+                  </AppText>
+                ) : null}
               </View>
-              <AppText style={styles.dateSeparator}>/</AppText>
-              <View style={styles.dateInputWrapper}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="MM"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={startMonth}
-                  onChangeText={(text) => setStartMonth(text.replace(/[^0-9]/g, "").slice(0, 2))}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <AppText style={styles.dateLabel}>Month</AppText>
-              </View>
-              <AppText style={styles.dateSeparator}>/</AppText>
-              <View style={[styles.dateInputWrapper, { flex: 1.5 }]}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="YYYY"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={startYear}
-                  onChangeText={(text) => setStartYear(text.replace(/[^0-9]/g, "").slice(0, 4))}
-                  keyboardType="numeric"
-                  maxLength={4}
-                />
-                <AppText style={styles.dateLabel}>Year</AppText>
-              </View>
-            </View>
-            {errors.startDate ? <AppText style={styles.errorText}>{errors.startDate}</AppText> : null}
-          </View>
 
-          {/* End Date */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>End Date</AppText>
-            <View style={styles.dateInputRow}>
-              <View style={styles.dateInputWrapper}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="DD"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={endDay}
-                  onChangeText={(text) => setEndDay(text.replace(/[^0-9]/g, "").slice(0, 2))}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <AppText style={styles.dateLabel}>Day</AppText>
-              </View>
-              <AppText style={styles.dateSeparator}>/</AppText>
-              <View style={styles.dateInputWrapper}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="MM"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={endMonth}
-                  onChangeText={(text) => setEndMonth(text.replace(/[^0-9]/g, "").slice(0, 2))}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <AppText style={styles.dateLabel}>Month</AppText>
-              </View>
-              <AppText style={styles.dateSeparator}>/</AppText>
-              <View style={[styles.dateInputWrapper, { flex: 1.5 }]}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="YYYY"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={endYear}
-                  onChangeText={(text) => setEndYear(text.replace(/[^0-9]/g, "").slice(0, 4))}
-                  keyboardType="numeric"
-                  maxLength={4}
-                />
-                <AppText style={styles.dateLabel}>Year</AppText>
-              </View>
-            </View>
-            <View style={styles.datePresetsRow}>
-              <TouchableOpacity 
-                style={styles.datePreset} 
-                onPress={() => setEndPreset(7)}
-              >
-                <AppText style={styles.datePresetText}>+1 Week</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.datePreset} 
-                onPress={() => setEndPreset(14)}
-              >
-                <AppText style={styles.datePresetText}>+2 Weeks</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.datePreset} 
-                onPress={() => setEndPreset(30)}
-              >
-                <AppText style={styles.datePresetText}>+1 Month</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.datePreset} 
-                onPress={() => setEndPreset(90)}
-              >
-                <AppText style={styles.datePresetText}>+3 Months</AppText>
-              </TouchableOpacity>
-            </View>
-            {errors.endDate ? <AppText style={styles.errorText}>{errors.endDate}</AppText> : null}
-          </View>
-
-          {/* Assign Team */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Assign Team</AppText>
-            {teams.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {teams.map((t) => (
-                  <TouchableOpacity
-                    key={t.id}
-                    style={[styles.teamChip, teamId === t.id && styles.teamChipActive]}
-                    onPress={() => setTeamId(teamId === t.id ? "" : t.id)}
-                  >
-                    <View style={[styles.teamIcon, teamId === t.id && styles.teamIconActive]}>
-                      <Ionicons
-                        name="people"
-                        size={18}
-                        color={teamId === t.id ? theme.colors.textPrimary : theme.colors.textSecondary}
-                      />
-                    </View>
-                    <AppText
-                      style={[styles.teamName, teamId === t.id && styles.teamNameActive]}
-                      numberOfLines={1}
+              {/* Priority */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Priority</AppText>
+                <View style={styles.chipRow}>
+                  {PRIORITIES.map((p) => (
+                    <TouchableOpacity
+                      key={p}
+                      style={[
+                        styles.priorityChip,
+                        values.priority === p && {
+                          backgroundColor: getPriorityColor(p) + "25",
+                          borderColor: getPriorityColor(p),
+                        },
+                      ]}
+                      onPress={() => setFieldValue("priority", p)}
                     >
-                      {t.name}
-                    </AppText>
-                    {teamId === t.id && (
+                      <Ionicons
+                        name={getPriorityIcon(p)}
+                        size={16}
+                        color={
+                          values.priority === p
+                            ? getPriorityColor(p)
+                            : theme.colors.textMuted
+                        }
+                        style={{ marginRight: 6 }}
+                      />
+                      <AppText
+                        style={[
+                          styles.chipText,
+                          values.priority === p && {
+                            color: getPriorityColor(p),
+                            fontWeight: "600",
+                          },
+                        ]}
+                      >
+                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Start Date */}
+              <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
+                  <AppText style={styles.label}>Start Date</AppText>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setDateFromObj(new Date(), "start", setFieldValue)
+                    }
+                    style={styles.todayButton}
+                  >
+                    <Ionicons
+                      name="today"
+                      size={14}
+                      color={theme.colors.brandBlue}
+                    />
+                    <AppText style={styles.todayText}>Today</AppText>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.dateInputRow}>
+                  <View style={styles.dateInputWrapper}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="DD"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.startDate.day}
+                      onChangeText={(text) =>
+                        setFieldValue(
+                          "startDate.day",
+                          text.replace(/[^0-9]/g, "").slice(0, 2),
+                        )
+                      }
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                    <AppText style={styles.dateLabel}>Day</AppText>
+                  </View>
+                  <AppText style={styles.dateSeparator}>/</AppText>
+                  <View style={styles.dateInputWrapper}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="MM"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.startDate.month}
+                      onChangeText={(text) =>
+                        setFieldValue(
+                          "startDate.month",
+                          text.replace(/[^0-9]/g, "").slice(0, 2),
+                        )
+                      }
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                    <AppText style={styles.dateLabel}>Month</AppText>
+                  </View>
+                  <AppText style={styles.dateSeparator}>/</AppText>
+                  <View style={[styles.dateInputWrapper, { flex: 1.5 }]}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="YYYY"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.startDate.year}
+                      onChangeText={(text) =>
+                        setFieldValue(
+                          "startDate.year",
+                          text.replace(/[^0-9]/g, "").slice(0, 4),
+                        )
+                      }
+                      keyboardType="numeric"
+                      maxLength={4}
+                    />
+                    <AppText style={styles.dateLabel}>Year</AppText>
+                  </View>
+                </View>
+                {touched.startDate &&
+                errors.startDate &&
+                typeof errors.startDate === "string" ? (
+                  <AppText style={styles.errorText}>{errors.startDate}</AppText>
+                ) : touched.startDate?.day && errors.startDate?.day ? (
+                  <AppText style={styles.errorText}>
+                    {errors.startDate.day}
+                  </AppText>
+                ) : null}
+              </View>
+
+              {/* End Date */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>End Date</AppText>
+                <View style={styles.dateInputRow}>
+                  <View style={styles.dateInputWrapper}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="DD"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.endDate.day}
+                      onChangeText={(text) =>
+                        setFieldValue(
+                          "endDate.day",
+                          text.replace(/[^0-9]/g, "").slice(0, 2),
+                        )
+                      }
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                    <AppText style={styles.dateLabel}>Day</AppText>
+                  </View>
+                  <AppText style={styles.dateSeparator}>/</AppText>
+                  <View style={styles.dateInputWrapper}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="MM"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.endDate.month}
+                      onChangeText={(text) =>
+                        setFieldValue(
+                          "endDate.month",
+                          text.replace(/[^0-9]/g, "").slice(0, 2),
+                        )
+                      }
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                    <AppText style={styles.dateLabel}>Month</AppText>
+                  </View>
+                  <AppText style={styles.dateSeparator}>/</AppText>
+                  <View style={[styles.dateInputWrapper, { flex: 1.5 }]}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="YYYY"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.endDate.year}
+                      onChangeText={(text) =>
+                        setFieldValue(
+                          "endDate.year",
+                          text.replace(/[^0-9]/g, "").slice(0, 4),
+                        )
+                      }
+                      keyboardType="numeric"
+                      maxLength={4}
+                    />
+                    <AppText style={styles.dateLabel}>Year</AppText>
+                  </View>
+                </View>
+                <View style={styles.datePresetsRow}>
+                  <TouchableOpacity
+                    style={styles.datePreset}
+                    onPress={() => {
+                      const date = new Date();
+                      date.setDate(date.getDate() + 7);
+                      setDateFromObj(date, "end", setFieldValue);
+                    }}
+                  >
+                    <AppText style={styles.datePresetText}>+1 Week</AppText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.datePreset}
+                    onPress={() => {
+                      const date = new Date();
+                      date.setDate(date.getDate() + 14);
+                      setDateFromObj(date, "end", setFieldValue);
+                    }}
+                  >
+                    <AppText style={styles.datePresetText}>+2 Weeks</AppText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.datePreset}
+                    onPress={() => {
+                      const date = new Date();
+                      date.setDate(date.getDate() + 30);
+                      setDateFromObj(date, "end", setFieldValue);
+                    }}
+                  >
+                    <AppText style={styles.datePresetText}>+1 Month</AppText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.datePreset}
+                    onPress={() => {
+                      const date = new Date();
+                      date.setDate(date.getDate() + 90);
+                      setDateFromObj(date, "end", setFieldValue);
+                    }}
+                  >
+                    <AppText style={styles.datePresetText}>+3 Months</AppText>
+                  </TouchableOpacity>
+                </View>
+                {touched.endDate &&
+                errors.endDate &&
+                typeof errors.endDate === "string" ? (
+                  <AppText style={styles.errorText}>{errors.endDate}</AppText>
+                ) : touched.endDate?.day && errors.endDate?.day ? (
+                  <AppText style={styles.errorText}>
+                    {errors.endDate.day}
+                  </AppText>
+                ) : touched.endDate?.year && errors.endDate?.year ? (
+                  <AppText style={styles.errorText}>
+                    {errors.endDate.year}
+                  </AppText>
+                ) : null}
+              </View>
+
+              {/* Assign Team */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Assign Team *</AppText>
+                {teams.length > 0 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {teams.map((t) => (
+                      <TouchableOpacity
+                        key={t.id}
+                        style={[
+                          styles.teamChip,
+                          values.teamId === t.id && styles.teamChipActive,
+                        ]}
+                        onPress={() =>
+                          setFieldValue(
+                            "teamId",
+                            values.teamId === t.id ? "" : t.id,
+                          )
+                        }
+                      >
+                        <View
+                          style={[
+                            styles.teamIcon,
+                            values.teamId === t.id && styles.teamIconActive,
+                          ]}
+                        >
+                          <Ionicons
+                            name="people"
+                            size={18}
+                            color={
+                              values.teamId === t.id
+                                ? theme.colors.textPrimary
+                                : theme.colors.textSecondary
+                            }
+                          />
+                        </View>
+                        <AppText
+                          style={[
+                            styles.teamName,
+                            values.teamId === t.id && styles.teamNameActive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {t.name}
+                        </AppText>
+                        {values.teamId === t.id && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color={theme.colors.brandGreen}
+                            style={{ marginTop: 4 }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <View style={styles.noTeamsContainer}>
+                    <Ionicons
+                      name="people-outline"
+                      size={24}
+                      color={theme.colors.textMuted}
+                    />
+                    <AppText style={styles.noTeams}>No teams available</AppText>
+                  </View>
+                )}
+                {touched.teamId && errors.teamId ? (
+                  <AppText style={styles.errorText}>{errors.teamId}</AppText>
+                ) : null}
+              </View>
+
+              {status ? (
+                <View style={styles.errorContainer}>
+                  <Ionicons
+                    name="alert-circle"
+                    size={18}
+                    color={theme.colors.danger}
+                  />
+                  <AppText style={styles.error}>{status}</AppText>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                style={[
+                  styles.createButton,
+                  isSubmitting && styles.createButtonDisabled,
+                ]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                <LinearGradient
+                  colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color={theme.colors.textPrimary} />
+                  ) : (
+                    <>
                       <Ionicons
                         name="checkmark-circle"
-                        size={16}
-                        color={theme.colors.brandGreen}
-                        style={{ marginTop: 4 }}
+                        size={22}
+                        color={theme.colors.textPrimary}
                       />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.noTeamsContainer}>
-                <Ionicons name="people-outline" size={24} color={theme.colors.textMuted} />
-                <AppText style={styles.noTeams}>No teams available</AppText>
-              </View>
-            )}
-          </View>
-
-          {errors.general ? <AppText style={styles.error}>{errors.general}</AppText> : null}
-        </AppCard>
-
-        <TouchableOpacity
-          style={[styles.createButton, loading && styles.createButtonDisabled]}
-          onPress={handleCreate}
-          disabled={loading}
-        >
-          <LinearGradient
-            colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.buttonGradient}
-          >
-            {loading ? (
-              <ActivityIndicator color={theme.colors.textPrimary} />
-            ) : (
-              <>
-                <Ionicons name="folder-open" size={22} color={theme.colors.textPrimary} />
-                <AppText style={styles.createButtonText}>Create Project</AppText>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+                      <AppText style={styles.createButtonText}>
+                        Create Project
+                      </AppText>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </AppCard>
+          )}
+        </Formik>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -659,10 +957,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
   },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.danger + "15",
+    borderRadius: 10,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  },
   error: {
     color: theme.colors.danger,
-    textAlign: "center",
-    marginTop: theme.spacing.sm,
+    fontSize: 13,
+    marginLeft: theme.spacing.sm,
+    flex: 1,
   },
   createButton: {
     borderRadius: 14,

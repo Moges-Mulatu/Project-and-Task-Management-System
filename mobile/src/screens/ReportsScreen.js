@@ -26,6 +26,17 @@ const REPORT_TYPES = [
 ];
 
 const ReportsScreen = ({ navigation, user }) => {
+  // Restrict access to admin and project_manager only
+  React.useEffect(() => {
+    if (user?.role === "team_member") {
+      Alert.alert(
+        "Access Denied",
+        "Only admins and project managers can access reports.",
+        [{ text: "OK", onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [user, navigation]);
+
   const [reports, setReports] = useState([]);
   const [projects, setProjects] = useState([]);
   const [teams, setTeams] = useState([]);

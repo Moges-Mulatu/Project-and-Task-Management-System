@@ -5,6 +5,7 @@ import {
   SectionList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -20,19 +21,51 @@ const TasksScreen = ({ navigation, user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [collapsedSections, setCollapsedSections] = useState({});
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+
+  const getMemberTeamIds = useCallback(async (teamsList) => {
+    if (!user?.id) return [];
+    const membershipChecks = await Promise.all(
+      teamsList.map(async (team) => {
+        try {
+          const membersRes = await api.getTeamMembers(team.id);
+          const members = membersRes.data || [];
+          const isMember = members.some(
+            (m) => m.userId === user.id || m.id === user.id
+          );
+          return isMember ? team.id : null;
+        } catch (err) {
+          return null;
+        }
+      })
+    );
+    return membershipChecks.filter(Boolean);
+  }, [getMemberTeamIds, user]);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       // Load tasks and projects in parallel
-      const [tasksRes, projectsRes] = await Promise.all([
-        api.getTasks(user?.role === "team_member" ? { assignedTo: user?.id } : {}),
+      const [tasksRes, projectsRes, teamsRes] = await Promise.all([
+        api.getTasks(),
         api.getProjects().catch(() => ({ data: [] })),
+        api.getTeams().catch(() => ({ data: [] })),
       ]);
 
-      const tasks = tasksRes.data || [];
+      let tasks = tasksRes.data || [];
       const projects = projectsRes.data || [];
+      const teamsList = teamsRes.data || [];
+
+      if (user?.role === "team_member") {
+        const memberTeamIds = await getMemberTeamIds(teamsList);
+        tasks = tasks.filter((task) => {
+          const isDirectAssignment = task.assignedTo === user.id;
+          const isUserAssignment = Array.isArray(task.assignedToUsers) && task.assignedToUsers.includes(user.id);
+          const isTeamAssignment = Array.isArray(task.assignedToTeams) && task.assignedToTeams.some((teamId) => memberTeamIds.includes(teamId));
+          return isDirectAssignment || isUserAssignment || isTeamAssignment;
+        });
+      }
 
       // Create a map of projects by ID
       const projectMap = {};
@@ -97,8 +130,41 @@ const TasksScreen = ({ navigation, user }) => {
   useFocusEffect(
     useCallback(() => {
       loadTasks();
-    }, [loadTasks])
+    }, [loadTasks]),
   );
+
+  const handleDeleteTask = (task) => {
+    Alert.alert(
+      "Delete Task",
+      `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteTask(task.id);
+              // Remove task from sections locally
+              setSections((prevSections) =>
+                prevSections
+                  .map((section) => ({
+                    ...section,
+                    data: section.data.filter((t) => t.id !== task.id),
+                    taskCount: section.data.filter((t) => t.id !== task.id)
+                      .length,
+                  }))
+                  .filter((section) => section.data.length > 0),
+              );
+              setSelectedTaskId(null);
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to delete task");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const toggleSection = (sectionId) => {
     setCollapsedSections((prev) => ({
@@ -151,10 +217,13 @@ const TasksScreen = ({ navigation, user }) => {
 
   const renderSectionHeader = ({ section }) => {
     const isCollapsed = collapsedSections[section.id];
-    const completedTasks = section.data.filter((t) => t.status === "completed").length;
-    const progress = section.taskCount > 0 
-      ? Math.round((completedTasks / section.taskCount) * 100) 
-      : 0;
+    const completedTasks = section.data.filter(
+      (t) => t.status === "completed",
+    ).length;
+    const progress =
+      section.taskCount > 0
+        ? Math.round((completedTasks / section.taskCount) * 100)
+        : 0;
 
     return (
       <TouchableOpacity
@@ -163,19 +232,23 @@ const TasksScreen = ({ navigation, user }) => {
         activeOpacity={0.7}
       >
         <View style={styles.sectionHeaderLeft}>
-          <View style={[
-            styles.projectIcon,
-            { backgroundColor: section.project 
-              ? getProjectStatusColor(section.project.status) + "25" 
-              : theme.colors.glass 
-            }
-          ]}>
+          <View
+            style={[
+              styles.projectIcon,
+              {
+                backgroundColor: section.project
+                  ? getProjectStatusColor(section.project.status) + "25"
+                  : theme.colors.glass,
+              },
+            ]}
+          >
             <Ionicons
               name={section.project ? "folder" : "documents-outline"}
               size={18}
-              color={section.project 
-                ? getProjectStatusColor(section.project.status) 
-                : theme.colors.textMuted
+              color={
+                section.project
+                  ? getProjectStatusColor(section.project.status)
+                  : theme.colors.textMuted
               }
             />
           </View>
@@ -189,17 +262,19 @@ const TasksScreen = ({ navigation, user }) => {
               </AppText>
               <View style={styles.sectionProgressContainer}>
                 <View style={styles.sectionProgressBar}>
-                  <View 
+                  <View
                     style={[
-                      styles.sectionProgressFill, 
-                      { 
+                      styles.sectionProgressFill,
+                      {
                         width: `${progress}%`,
                         backgroundColor: theme.colors.brandGreen,
-                      }
-                    ]} 
+                      },
+                    ]}
                   />
                 </View>
-                <AppText style={styles.sectionProgressText}>{progress}%</AppText>
+                <AppText style={styles.sectionProgressText}>
+                  {progress}%
+                </AppText>
               </View>
             </View>
           </View>
@@ -210,10 +285,16 @@ const TasksScreen = ({ navigation, user }) => {
               style={styles.viewProjectButton}
               onPress={(e) => {
                 e.stopPropagation();
-                navigation.navigate("ProjectDetail", { project: section.project });
+                navigation.navigate("ProjectDetail", {
+                  project: section.project,
+                });
               }}
             >
-              <Ionicons name="open-outline" size={16} color={theme.colors.brandBlue} />
+              <Ionicons
+                name="open-outline"
+                size={16}
+                color={theme.colors.brandBlue}
+              />
             </TouchableOpacity>
           )}
           <Ionicons
@@ -231,27 +312,53 @@ const TasksScreen = ({ navigation, user }) => {
       return null;
     }
 
+    const canDelete =
+      user?.role === "admin" ||
+      user?.role === "project_manager" ||
+      item.assignedBy === user?.id;
+    const isSelected = selectedTaskId === item.id;
+
     return (
       <TouchableOpacity
         onPress={() => navigation.navigate("TaskDetail", { task: item })}
+        onLongPress={() => canDelete && setSelectedTaskId(item.id)}
         activeOpacity={0.8}
         style={styles.taskItemContainer}
       >
         <AppCard
           accentColor={getStatusColor(item.status)}
-          glowIntensity={item.priority === "critical" || item.priority === "high" ? "high" : "low"}
+          glowIntensity={
+            item.priority === "critical" || item.priority === "high"
+              ? "high"
+              : "low"
+          }
           style={styles.taskCard}
         >
           <View style={styles.cardHeader}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: getStatusColor(item.status) },
+              ]}
+            />
             <AppText variant="h3" style={styles.taskTitle} numberOfLines={2}>
               {item.title}
             </AppText>
           </View>
 
           <View style={styles.tagsRow}>
-            <View style={[styles.tag, { backgroundColor: getPriorityColor(item.priority) + "30" }]}>
-              <AppText style={[styles.tagText, { color: getPriorityColor(item.priority) }]}>
+            <View
+              style={[
+                styles.tag,
+                { backgroundColor: getPriorityColor(item.priority) + "30" },
+              ]}
+            >
+              <AppText
+                style={[
+                  styles.tagText,
+                  { color: getPriorityColor(item.priority) },
+                ]}
+              >
                 {item.priority}
               </AppText>
             </View>
@@ -263,22 +370,60 @@ const TasksScreen = ({ navigation, user }) => {
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
               <AppText style={styles.progressLabel}>Progress</AppText>
-              <AppText style={styles.progressValue}>{item.progress || 0}%</AppText>
+              <AppText style={styles.progressValue}>
+                {item.progress || 0}%
+              </AppText>
             </View>
-            <ProgressBar value={item.progress || 0} color={getStatusColor(item.status)} />
+            <ProgressBar
+              value={item.progress || 0}
+              color={getStatusColor(item.status)}
+            />
           </View>
 
           <View style={styles.cardFooter}>
             <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={14} color={theme.colors.textMuted} />
+              <Ionicons
+                name="calendar-outline"
+                size={14}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.metaText}>
-                {item.dueDate ? new Date(item.dueDate).toLocaleDateString() : "No due date"}
+                {item.dueDate
+                  ? new Date(item.dueDate).toLocaleDateString()
+                  : "No due date"}
               </AppText>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + "30" }]}>
-              <AppText style={[styles.statusBadgeText, { color: getStatusColor(item.status) }]}>
-                {item.status?.replace("_", " ")}
-              </AppText>
+            <View style={styles.cardFooterRight}>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(item.status) + "30" },
+                ]}
+              >
+                <AppText
+                  style={[
+                    styles.statusBadgeText,
+                    { color: getStatusColor(item.status) },
+                  ]}
+                >
+                  {item.status?.replace("_", " ")}
+                </AppText>
+              </View>
+              {canDelete && (
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTask(item);
+                  }}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={18}
+                    color={theme.colors.danger}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </AppCard>
@@ -286,15 +431,21 @@ const TasksScreen = ({ navigation, user }) => {
     );
   };
 
-  const totalTasks = sections.reduce((sum, section) => sum + section.taskCount, 0);
+  const totalTasks = sections.reduce(
+    (sum, section) => sum + section.taskCount,
+    0,
+  );
 
   return (
     <ScreenContainer>
       <View style={styles.header}>
         <View>
-          <AppText variant="h2" style={styles.title}>Tasks</AppText>
+          <AppText variant="h2" style={styles.title}>
+            Tasks
+          </AppText>
           <AppText style={styles.subtitle}>
-            {totalTasks} task{totalTasks !== 1 ? "s" : ""} across {sections.length} project{sections.length !== 1 ? "s" : ""}
+            {totalTasks} task{totalTasks !== 1 ? "s" : ""} across{" "}
+            {sections.length} project{sections.length !== 1 ? "s" : ""}
           </AppText>
         </View>
         {(user?.role === "admin" || user?.role === "project_manager") && (
@@ -320,7 +471,11 @@ const TasksScreen = ({ navigation, user }) => {
         </View>
       ) : sections.length === 0 ? (
         <View style={styles.empty}>
-          <Ionicons name="checkbox-outline" size={48} color={theme.colors.textMuted} />
+          <Ionicons
+            name="checkbox-outline"
+            size={48}
+            color={theme.colors.textMuted}
+          />
           <AppText style={styles.emptyText}>No tasks assigned</AppText>
         </View>
       ) : (
@@ -528,6 +683,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     textTransform: "capitalize",
+  },
+  cardFooterRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: theme.colors.danger + "20",
+    alignItems: "center",
+    justifyContent: "center",
   },
   center: {
     flex: 1,

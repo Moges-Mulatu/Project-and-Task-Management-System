@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Formik } from "formik";
+import * as Yup from "yup";
 import AppText from "../components/AppText";
 import ScreenContainer from "../components/ScreenContainer";
 import theme from "../theme";
@@ -23,15 +25,26 @@ const DEPARTMENTS = [
   "Other",
 ];
 
+const CreateTeamSchema = Yup.object().shape({
+  name: Yup.string()
+    .trim()
+    .min(2, "Team name must be at least 2 characters")
+    .max(50, "Team name cannot exceed 50 characters")
+    .required("Team name is required"),
+  description: Yup.string()
+    .trim()
+    .max(200, "Description cannot exceed 200 characters"),
+  department: Yup.string()
+    .oneOf(DEPARTMENTS, "Please select a valid department")
+    .required("Department is required"),
+  teamLeadId: Yup.string().required("Team lead is required"),
+  selectedMembers: Yup.array()
+    .min(1, "At least 1 team member is required")
+    .required("At least 1 team member is required"),
+});
+
 const CreateTeamScreen = ({ navigation, user }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [department, setDepartment] = useState("");
-  const [teamLeadId, setTeamLeadId] = useState("");
-  const [selectedMembers, setSelectedMembers] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -45,74 +58,9 @@ const CreateTeamScreen = ({ navigation, user }) => {
     loadUsers();
   }, []);
 
-  const toggleMember = (userId) => {
-    if (selectedMembers.includes(userId)) {
-      setSelectedMembers(selectedMembers.filter((id) => id !== userId));
-    } else {
-      setSelectedMembers([...selectedMembers, userId]);
-    }
-  };
-
-  const handleCreate = async () => {
-    setError("");
-    if (!name.trim()) {
-      setError("Please enter a team name");
-      return;
-    }
-    if (!department) {
-      setError("Please select a department");
-      return;
-    }
-    if (!teamLeadId) {
-      setError("Please select a team lead");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Create the team
-      const response = await api.createTeam({
-        name: name.trim(),
-        description: description.trim() || null,
-        department,
-        teamLeadId,
-      });
-
-      // If we have the team ID and selected members, add them
-      if (response.data?.id && selectedMembers.length > 0) {
-        for (const memberId of selectedMembers) {
-          if (memberId !== teamLeadId) {
-            try {
-              await api.addTeamMember(response.data.id, { userId: memberId });
-            } catch (err) {
-              console.log("Failed to add member:", memberId);
-            }
-          }
-        }
-      }
-
-      navigation.goBack();
-    } catch (err) {
-      setError(err.message || "Failed to create team");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "admin":
-        return theme.colors.accentPink;
-      case "project_manager":
-        return theme.colors.brandBlue;
-      default:
-        return theme.colors.brandGreen;
-    }
-  };
-
   // Filter users who can be team leads (admins and PMs)
   const potentialLeads = users.filter(
-    (u) => u.role === "admin" || u.role === "project_manager"
+    (u) => u.role === "admin" || u.role === "project_manager",
   );
 
   return (
@@ -120,170 +68,317 @@ const CreateTeamScreen = ({ navigation, user }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-          <AppText variant="h3" style={styles.headerTitle}>New Team</AppText>
+          <AppText variant="h3" style={styles.headerTitle}>
+            New Team
+          </AppText>
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Team Name */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Team Name</AppText>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter team name..."
-              placeholderTextColor={theme.colors.textMuted}
-              value={name}
-              onChangeText={setName}
-              maxLength={50}
-            />
-          </View>
+        <Formik
+          initialValues={{
+            name: "",
+            description: "",
+            department: "",
+            teamLeadId: "",
+            selectedMembers: [],
+          }}
+          validationSchema={CreateTeamSchema}
+          validateOnChange={false}
+          validateOnBlur={false}
+          onSubmit={async (values, { setSubmitting, setStatus }) => {
+            setStatus("");
+            try {
+              // Create the team
+              const response = await api.createTeam({
+                name: values.name.trim(),
+                description: values.description.trim() || null,
+                department: values.department,
+                teamLeadId: values.teamLeadId,
+              });
 
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Description</AppText>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="What does this team work on?"
-              placeholderTextColor={theme.colors.textMuted}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              maxLength={200}
-            />
-          </View>
+              // If we have the team ID and selected members, add them
+              if (response.data?.id && values.selectedMembers.length > 0) {
+                for (const memberId of values.selectedMembers) {
+                  if (memberId !== values.teamLeadId) {
+                    try {
+                      await api.addTeamMember(response.data.id, {
+                        userId: memberId,
+                      });
+                    } catch (err) {
+                      console.log("Failed to add member:", memberId);
+                    }
+                  }
+                }
+              }
 
-          {/* Department */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Department</AppText>
-            <View style={styles.optionsRow}>
-              {DEPARTMENTS.map((dept) => (
-                <TouchableOpacity
-                  key={dept}
-                  style={[styles.deptChip, department === dept && styles.deptChipActive]}
-                  onPress={() => setDepartment(dept)}
-                >
-                  <AppText
-                    style={[styles.deptText, department === dept && styles.deptTextActive]}
-                  >
-                    {dept}
+              navigation.goBack();
+            } catch (err) {
+              setStatus(err.message || "Failed to create team");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+            status,
+            setFieldValue,
+            setFieldTouched,
+          }) => (
+            <View style={styles.form}>
+              {/* Team Name */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Team Name</AppText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter team name..."
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={values.name}
+                  onChangeText={handleChange("name")}
+                  onBlur={handleBlur("name")}
+                  maxLength={50}
+                />
+                {touched.name && errors.name && (
+                  <AppText style={styles.fieldError}>{errors.name}</AppText>
+                )}
+              </View>
+
+              {/* Description */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Description</AppText>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="What does this team work on?"
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={values.description}
+                  onChangeText={handleChange("description")}
+                  onBlur={handleBlur("description")}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                  maxLength={200}
+                />
+                {touched.description && errors.description && (
+                  <AppText style={styles.fieldError}>
+                    {errors.description}
                   </AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+                )}
+              </View>
 
-          {/* Team Lead */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Team Lead</AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {potentialLeads.map((u) => {
-                const isSelected = teamLeadId === u.id;
-                return (
-                  <TouchableOpacity
-                    key={u.id}
-                    style={[styles.leadCard, isSelected && styles.leadCardSelected]}
-                    onPress={() => setTeamLeadId(u.id)}
-                  >
-                    <LinearGradient
-                      colors={isSelected 
-                        ? [theme.colors.brandBlue, theme.colors.brandGreen]
-                        : [theme.colors.glassDark, theme.colors.glassDark]
-                      }
-                      style={styles.leadAvatar}
+              {/* Department */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Department</AppText>
+                <View style={styles.optionsRow}>
+                  {DEPARTMENTS.map((dept) => (
+                    <TouchableOpacity
+                      key={dept}
+                      style={[
+                        styles.deptChip,
+                        values.department === dept && styles.deptChipActive,
+                      ]}
+                      onPress={() => {
+                        setFieldValue("department", dept);
+                        setFieldTouched("department", true);
+                      }}
                     >
-                      <AppText style={styles.leadAvatarText}>
-                        {u.firstName?.[0]}{u.lastName?.[0]}
+                      <AppText
+                        style={[
+                          styles.deptText,
+                          values.department === dept && styles.deptTextActive,
+                        ]}
+                      >
+                        {dept}
                       </AppText>
-                    </LinearGradient>
-                    <AppText style={[styles.leadName, isSelected && styles.leadNameActive]}>
-                      {u.firstName}
-                    </AppText>
-                    <AppText style={styles.leadRole}>
-                      {u.role === "project_manager" ? "PM" : "Admin"}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-              {potentialLeads.length === 0 && (
-                <AppText style={styles.noUsers}>No eligible team leads</AppText>
-              )}
-            </ScrollView>
-          </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {touched.department && errors.department && (
+                  <AppText style={styles.fieldError}>
+                    {errors.department}
+                  </AppText>
+                )}
+              </View>
 
-          {/* Add Members (Optional) */}
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <AppText style={styles.label}>Add Members (Optional)</AppText>
-              <AppText style={styles.selectedCount}>
-                {selectedMembers.length} selected
-              </AppText>
-            </View>
-            
-            <View style={styles.membersGrid}>
-              {users.filter(u => u.id !== teamLeadId).map((u) => {
-                const isSelected = selectedMembers.includes(u.id);
-                return (
-                  <TouchableOpacity
-                    key={u.id}
-                    style={[styles.memberCard, isSelected && styles.memberCardSelected]}
-                    onPress={() => toggleMember(u.id)}
-                  >
-                    {isSelected && (
-                      <View style={styles.memberCheckbox}>
-                        <Ionicons name="checkmark" size={12} color={theme.colors.textPrimary} />
-                      </View>
-                    )}
-                    <View style={[styles.memberAvatar, isSelected && styles.memberAvatarSelected]}>
-                      <AppText style={styles.memberAvatarText}>
-                        {u.firstName?.[0]}
+              {/* Team Lead */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Team Lead</AppText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {potentialLeads.map((u) => {
+                    const isSelected = values.teamLeadId === u.id;
+                    return (
+                      <TouchableOpacity
+                        key={u.id}
+                        style={[
+                          styles.leadCard,
+                          isSelected && styles.leadCardSelected,
+                        ]}
+                        onPress={() => {
+                          setFieldValue("teamLeadId", u.id);
+                          setFieldTouched("teamLeadId", true);
+                        }}
+                      >
+                        <LinearGradient
+                          colors={
+                            isSelected
+                              ? [
+                                  theme.colors.brandBlue,
+                                  theme.colors.brandGreen,
+                                ]
+                              : [theme.colors.glassDark, theme.colors.glassDark]
+                          }
+                          style={styles.leadAvatar}
+                        >
+                          <AppText style={styles.leadAvatarText}>
+                            {u.firstName?.[0]}
+                            {u.lastName?.[0]}
+                          </AppText>
+                        </LinearGradient>
+                        <AppText
+                          style={[
+                            styles.leadName,
+                            isSelected && styles.leadNameActive,
+                          ]}
+                        >
+                          {u.firstName}
+                        </AppText>
+                        <AppText style={styles.leadRole}>
+                          {u.role === "project_manager" ? "PM" : "Admin"}
+                        </AppText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  {potentialLeads.length === 0 && (
+                    <AppText style={styles.noUsers}>
+                      No eligible team leads
+                    </AppText>
+                  )}
+                </ScrollView>
+                {touched.teamLeadId && errors.teamLeadId && (
+                  <AppText style={styles.fieldError}>
+                    {errors.teamLeadId}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Add Members */}
+              <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
+                  <AppText style={styles.label}>Add Members</AppText>
+                  <AppText style={styles.selectedCount}>
+                    {values.selectedMembers.length} selected
+                  </AppText>
+                </View>
+
+                <View style={styles.membersGrid}>
+                  {users
+                    .filter((u) => u.id !== values.teamLeadId)
+                    .map((u) => {
+                      const isSelected = values.selectedMembers.includes(u.id);
+                      return (
+                        <TouchableOpacity
+                          key={u.id}
+                          style={[
+                            styles.memberCard,
+                            isSelected && styles.memberCardSelected,
+                          ]}
+                          onPress={() => {
+                            const newMembers = isSelected
+                              ? values.selectedMembers.filter(
+                                  (id) => id !== u.id,
+                                )
+                              : [...values.selectedMembers, u.id];
+                            setFieldValue("selectedMembers", newMembers);
+                            setFieldTouched("selectedMembers", true);
+                          }}
+                        >
+                          {isSelected && (
+                            <View style={styles.memberCheckbox}>
+                              <Ionicons
+                                name="checkmark"
+                                size={12}
+                                color={theme.colors.textPrimary}
+                              />
+                            </View>
+                          )}
+                          <View
+                            style={[
+                              styles.memberAvatar,
+                              isSelected && styles.memberAvatarSelected,
+                            ]}
+                          >
+                            <AppText style={styles.memberAvatarText}>
+                              {u.firstName?.[0]}
+                            </AppText>
+                          </View>
+                          <AppText style={styles.memberName} numberOfLines={1}>
+                            {u.firstName}
+                          </AppText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                </View>
+                {touched.selectedMembers && errors.selectedMembers && (
+                  <AppText style={styles.fieldError}>
+                    {errors.selectedMembers}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Error Message */}
+              {status ? (
+                <View style={styles.errorContainer}>
+                  <Ionicons
+                    name="alert-circle"
+                    size={18}
+                    color={theme.colors.danger}
+                  />
+                  <AppText style={styles.errorText}>{status}</AppText>
+                </View>
+              ) : null}
+
+              {/* Create Button */}
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                <LinearGradient
+                  colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color={theme.colors.textPrimary} />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="people"
+                        size={22}
+                        color={theme.colors.textPrimary}
+                      />
+                      <AppText style={styles.createButtonText}>
+                        Create Team
                       </AppText>
-                    </View>
-                    <AppText style={styles.memberName} numberOfLines={1}>
-                      {u.firstName}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Error Message */}
-          {error ? (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={18} color={theme.colors.danger} />
-              <AppText style={styles.errorText}>{error}</AppText>
-            </View>
-          ) : null}
-
-          {/* Create Button */}
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={handleCreate}
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradient}
-            >
-              {loading ? (
-                <ActivityIndicator color={theme.colors.textPrimary} />
-              ) : (
-                <>
-                  <Ionicons name="people" size={22} color={theme.colors.textPrimary} />
-                  <AppText style={styles.createButtonText}>Create Team</AppText>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+          )}
+        </Formik>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -346,6 +441,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  fieldError: {
+    color: theme.colors.danger,
+    fontSize: 12,
+    marginTop: theme.spacing.xs,
+    marginLeft: theme.spacing.xs,
   },
   textArea: {
     minHeight: 80,

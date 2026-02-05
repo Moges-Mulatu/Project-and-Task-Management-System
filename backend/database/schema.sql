@@ -125,6 +125,7 @@ CREATE TABLE tasks (
     projectId VARCHAR(36) NOT NULL,
     assignedTo VARCHAR(36),
     assignedBy VARCHAR(36),
+    teamId VARCHAR(36),
     status ENUM('todo', 'in_progress', 'review', 'completed', 'blocked') DEFAULT 'todo',
     priority ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
     type ENUM('task', 'bug', 'feature') DEFAULT 'feature',

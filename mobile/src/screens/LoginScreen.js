@@ -1,48 +1,53 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AppText from "../components/AppText";
 import theme from "../theme";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+const LoginSchema = Yup.object().shape({
+  email: Yup.string()
+    .email("Enter a valid email address")
+    .required("Email is required"),
+  password: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
+});
 
 const LoginScreen = ({ onLogin, navigation }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleLogin = async () => {
-    setError("");
-    if (!email || !password) {
-      setError("Please enter email and password");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onLogin({ email, password });
-    } catch (err) {
-      setError(err.message || "Login failed. Check credentials.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={0}
+    >
       <LinearGradient
-        colors={[theme.colors.background, theme.colors.surface, theme.colors.background]}
+        colors={[
+          theme.colors.background,
+          theme.colors.surface,
+          theme.colors.background,
+        ]}
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.glowTop} />
       <View style={styles.glowBottom} />
 
-      <View style={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
         <View style={styles.logoContainer}>
           <View style={styles.logoGlow} />
           <View style={styles.logo}>
@@ -55,65 +60,107 @@ const LoginScreen = ({ onLogin, navigation }) => {
         </AppText>
         <AppText style={styles.subtitle}>Sign in to Debo Engineering</AppText>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <AppText style={styles.label}>Email</AppText>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              placeholderTextColor={theme.colors.textMuted}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
+        <Formik
+          initialValues={{ email: "", password: "" }}
+          validationSchema={LoginSchema}
+          validateOnChange={false}
+          validateOnBlur={false}
+          onSubmit={async (
+            values,
+            { setSubmitting, setStatus, setFieldError },
+          ) => {
+            setStatus("");
+            try {
+              await onLogin(values);
+            } catch (err) {
+              setStatus(err.message || "Login failed. Check credentials.");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+            status,
+          }) => (
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <AppText style={styles.label}>Email</AppText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={values.email}
+                  onChangeText={handleChange("email")}
+                  onBlur={handleBlur("email")}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+                {touched.email && errors.email && (
+                  <AppText style={styles.error}>{errors.email}</AppText>
+                )}
+              </View>
 
-          <View style={styles.inputContainer}>
-            <AppText style={styles.label}>Password</AppText>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor={theme.colors.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
+              <View style={styles.inputContainer}>
+                <AppText style={styles.label}>Password</AppText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={values.password}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  secureTextEntry
+                />
+                {touched.password && errors.password && (
+                  <AppText style={styles.error}>{errors.password}</AppText>
+                )}
+              </View>
 
-          {error ? <AppText style={styles.error}>{error}</AppText> : null}
+              {status ? <AppText style={styles.error}>{status}</AppText> : null}
 
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradient}
-            >
-              {loading ? (
-                <ActivityIndicator color={theme.colors.textPrimary} />
-              ) : (
-                <AppText style={styles.loginButtonText}>Sign In</AppText>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                <LinearGradient
+                  colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color={theme.colors.textPrimary} />
+                  ) : (
+                    <AppText style={styles.loginButtonText}>Sign In</AppText>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.registerLink}
-            onPress={() => navigation.navigate("Register")}
-          >
-            <AppText style={styles.registerText}>
-              Don't have an account?{" "}
-              <AppText style={styles.registerHighlight}>Create Account</AppText>
-            </AppText>
-          </TouchableOpacity>
-        </View>
+              <TouchableOpacity
+                style={styles.registerLink}
+                onPress={() => navigation.navigate("Register")}
+              >
+                <AppText style={styles.registerText}>
+                  Don't have an account?{" "}
+                  <AppText style={styles.registerHighlight}>
+                    Create Account
+                  </AppText>
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </Formik>
       </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -121,6 +168,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   glowTop: {
     position: "absolute",

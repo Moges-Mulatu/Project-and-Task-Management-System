@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://10.0.2.2:5000/api/v1";
 
 const TOKEN_KEY = "debo_auth_token";
 const USER_KEY = "debo_auth_user";
@@ -31,14 +31,14 @@ const request = async (path, options = {}) => {
     "Content-Type": "application/json",
     ...(options.headers || {}),
   };
-  
+
   // Add auth token if available
   if (auth.token) {
     headers["Authorization"] = `Bearer ${auth.token}`;
   }
 
   const url = `${API_BASE_URL}${path}`;
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -46,7 +46,7 @@ const request = async (path, options = {}) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       // If unauthorized, token might be expired - clear it
       if (response.status === 401) {
@@ -54,7 +54,7 @@ const request = async (path, options = {}) => {
       }
       throw new Error(data.message || "Request failed");
     }
-    
+
     return data;
   } catch (error) {
     if (error.message === "Network request failed") {
@@ -89,8 +89,10 @@ const api = {
     request("/projects", {
       method: "POST",
       body: JSON.stringify(payload),
-    }),
-  getTasks: (params) => request(`/tasks${buildQuery(params)}`),
+    }),  deleteProject: (id) =>
+    request(`/projects/${id}`, {
+      method: "DELETE",
+    }),  getTasks: (params) => request(`/tasks${buildQuery(params)}`),
   createTask: (payload) =>
     request("/tasks", {
       method: "POST",
@@ -101,12 +103,20 @@ const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
+  deleteTask: (id) =>
+    request(`/tasks/${id}`, {
+      method: "DELETE",
+    }),
   getTeams: () => request("/teams"),
   getTeamMembers: (teamId) => request(`/teams/${teamId}/members`),
   createTeam: (payload) =>
     request("/teams", {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+  deleteTeam: (id) =>
+    request(`/teams/${id}`, {
+      method: "DELETE",
     }),
   addTeamMember: (teamId, payload) =>
     request(`/teams/${teamId}/members`, {
@@ -129,7 +139,7 @@ const api = {
     request(`/reports/projects/${projectId}/summary`, {
       method: "POST",
     }),
-  
+
   // Users
   getUsers: (params) => request(`/users${buildQuery(params)}`),
   getUser: (id) => request(`/users/${id}`),

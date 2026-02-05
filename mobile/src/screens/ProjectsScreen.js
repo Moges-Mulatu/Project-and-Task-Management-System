@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -20,24 +21,110 @@ const ProjectsScreen = ({ navigation, user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const getMemberTeamIds = useCallback(async (teamsList) => {
+    if (!user?.id) return [];
+    const membershipChecks = await Promise.all(
+      teamsList.map(async (team) => {
+        try {
+          const membersRes = await api.getTeamMembers(team.id);
+          const members = membersRes.data || [];
+          const isMember = members.some(
+            (m) => m.userId === user.id || m.id === user.id
+          );
+          return isMember ? team.id : null;
+        } catch (err) {
+          return null;
+        }
+      })
+    );
+    return membershipChecks.filter(Boolean);
+  }, [user]);
+
   const loadProjects = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const response = await api.getProjects();
-      setProjects(response.data || []);
+      let projectsList = response.data || [];
+
+      if (user?.role === "team_member") {
+        const [tasksRes, teamsRes] = await Promise.all([
+          api.getTasks(),
+          api.getTeams(),
+        ]);
+
+        const tasks = tasksRes.data || [];
+        const teamsList = teamsRes.data || [];
+        const memberTeamIds = await getMemberTeamIds(teamsList);
+
+        const assignedTasks = tasks.filter((task) => {
+          const isDirectAssignment = task.assignedTo === user.id;
+          const isUserAssignment = Array.isArray(task.assignedToUsers) && task.assignedToUsers.includes(user.id);
+          const isTeamAssignment = Array.isArray(task.assignedToTeams) && task.assignedToTeams.some((teamId) => memberTeamIds.includes(teamId));
+          return isDirectAssignment || isUserAssignment || isTeamAssignment;
+        });
+
+        const assignedProjectIds = new Set(
+          assignedTasks.map((task) => task.projectId).filter(Boolean)
+        );
+
+        const teamProjectIds = new Set(
+          projectsList
+            .filter((project) => memberTeamIds.includes(project.teamId))
+            .map((project) => project.id)
+        );
+
+        const allowedProjectIds = new Set([
+          ...assignedProjectIds,
+          ...teamProjectIds,
+        ]);
+
+        projectsList = projectsList.filter((project) =>
+          allowedProjectIds.has(project.id)
+        );
+      }
+
+      setProjects(projectsList);
     } catch (err) {
       setError(err.message || "Failed to load projects");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getMemberTeamIds, user]);
 
   useFocusEffect(
     useCallback(() => {
       loadProjects();
     }, [loadProjects])
   );
+
+  const handleDeleteProject = useCallback(async (project) => {
+    Alert.alert(
+      "Delete Project",
+      `Are you sure you want to delete "${project.name}"? This will delete all associated tasks and cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteProject(project.id);
+              setProjects((prevProjects) =>
+                prevProjects.filter((p) => p.id !== project.id)
+              );
+              Alert.alert("Success", "Project deleted successfully");
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to delete project");
+            }
+          },
+        },
+      ]
+    );
+  }, []);
 
   const renderProject = ({ item, index }) => (
     <TouchableOpacity
@@ -52,8 +139,25 @@ const ProjectsScreen = ({ navigation, user }) => {
           <AppText variant="h3" style={styles.projectName}>
             {item.name}
           </AppText>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <AppText style={styles.statusText}>{item.status}</AppText>
+          <View style={styles.headerRight}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+              <AppText style={styles.statusText}>{item.status}</AppText>
+            </View>
+            {user?.role === "admin" && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleDeleteProject(item);
+                }}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color={theme.colors.danger}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <AppText style={styles.projectDesc} numberOfLines={2}>
@@ -176,10 +280,20 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: theme.spacing.sm,
   },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
   projectName: {
     fontWeight: "600",
     flex: 1,
     marginRight: theme.spacing.sm,
+  },
+  deleteButton: {
+    padding: theme.spacing.xs,
+    borderRadius: 8,
+    backgroundColor: theme.colors.danger + "20",
   },
   statusBadge: {
     paddingHorizontal: theme.spacing.sm,

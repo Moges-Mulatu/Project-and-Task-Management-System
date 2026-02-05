@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Formik } from "formik";
+import * as Yup from "yup";
 import AppText from "../components/AppText";
 import AppCard from "../components/AppCard";
 import ScreenContainer from "../components/ScreenContainer";
@@ -32,30 +34,118 @@ const TYPES = [
 
 const HOURS_OPTIONS = [1, 2, 4, 8, 16, 24, 40];
 
+const CreateTaskSchema = Yup.object()
+  .shape({
+    title: Yup.string()
+      .trim()
+      .min(3, "Title must be at least 3 characters")
+      .max(100, "Title cannot exceed 100 characters")
+      .required("Task title is required"),
+    description: Yup.string()
+      .trim()
+      .max(500, "Description cannot exceed 500 characters"),
+    projectId: Yup.string().required("Please select a project"),
+    priority: Yup.string()
+      .oneOf(["low", "medium", "high", "critical"], "Invalid priority")
+      .required("Priority is required"),
+    type: Yup.string()
+      .oneOf(["feature", "bug", "task"], "Invalid task type")
+      .required("Task type is required"),
+    assignedToUsers: Yup.array().of(Yup.string()),
+    assignedToTeams: Yup.array().of(Yup.string()),
+    dueDate: Yup.object().shape({
+      day: Yup.string().test(
+        "valid-day",
+        "Day must be between 1 and 31",
+        function (value) {
+          if (!value) return true; // Optional field
+          const { month, year } = this.parent;
+          // If any date field is filled, all must be filled
+          if (value || month || year) {
+            if (!value || !month || !year) {
+              return this.createError({
+                message: "Complete the date (DD/MM/YYYY)",
+              });
+            }
+            const d = parseInt(value);
+            return d >= 1 && d <= 31;
+          }
+          return true;
+        },
+      ),
+      month: Yup.string().test(
+        "valid-month",
+        "Month must be between 1 and 12",
+        function (value) {
+          if (!value) return true;
+          const { day, year } = this.parent;
+          if (value || day || year) {
+            if (!value || !day || !year) {
+              return this.createError({
+                message: "Complete the date (DD/MM/YYYY)",
+              });
+            }
+            const m = parseInt(value);
+            return m >= 1 && m <= 12;
+          }
+          return true;
+        },
+      ),
+      year: Yup.string().test(
+        "valid-year",
+        "Year must be between 2024 and 2030",
+        function (value) {
+          if (!value) return true;
+          const { day, month } = this.parent;
+          if (value || day || month) {
+            if (!value || !day || !month) {
+              return this.createError({
+                message: "Complete the date (DD/MM/YYYY)",
+              });
+            }
+            const y = parseInt(value);
+            return y >= 2024 && y <= 2030;
+          }
+          return true;
+        },
+      ),
+    }),
+    estimatedHours: Yup.string().test(
+      "valid-hours",
+      "Hours must be between 1 and 999",
+      function (value) {
+        if (!value) return true; // Optional
+        const hours = parseInt(value);
+        return hours >= 1 && hours <= 999;
+      },
+    ),
+  })
+  .test(
+    "assignee-required",
+    "Please assign to at least one individual or team",
+    function (values) {
+      return !!(
+        values.assignedToUsers?.length > 0 || values.assignedToTeams?.length > 0
+      );
+    },
+  );
+
 const CreateTaskScreen = ({ navigation, route, user }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium");
-  const [type, setType] = useState("task");
-  const [projectId, setProjectId] = useState(route.params?.projectId || "");
-  const [assignedTo, setAssignedTo] = useState("");
-  const [dueDate, setDueDate] = useState({ day: "", month: "", year: "" });
-  const [estimatedHours, setEstimatedHours] = useState("");
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showHoursPicker, setShowHoursPicker] = useState(false);
+  const [teams, setTeams] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [projectsRes, usersRes] = await Promise.all([
+        const [projectsRes, usersRes, teamsRes] = await Promise.all([
           api.getProjects(),
           api.getUsers(),
+          api.getTeams(),
         ]);
         setProjects(projectsRes.data || []);
         setUsers(usersRes.data || []);
+        setTeams(teamsRes.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -63,381 +153,614 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
     loadData();
   }, []);
 
-  const formatDate = () => {
-    const { year, month, day } = dueDate;
-    if (year && month && day) {
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    }
-    return "";
-  };
-
-  const validateForm = () => {
-    if (!title.trim()) {
-      setError("Please enter a task title");
-      return false;
-    }
-    if (title.trim().length < 3) {
-      setError("Title must be at least 3 characters");
-      return false;
-    }
-    if (!projectId) {
-      setError("Please select a project");
-      return false;
-    }
-    // Validate date if partially filled
-    const { year, month, day } = dueDate;
-    if (year || month || day) {
-      if (!year || !month || !day) {
-        setError("Please complete the due date (DD/MM/YYYY)");
-        return false;
-      }
-      const y = parseInt(year);
-      const m = parseInt(month);
-      const d = parseInt(day);
-      if (y < 2024 || y > 2030) {
-        setError("Year must be between 2024 and 2030");
-        return false;
-      }
-      if (m < 1 || m > 12) {
-        setError("Month must be between 1 and 12");
-        return false;
-      }
-      if (d < 1 || d > 31) {
-        setError("Day must be between 1 and 31");
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleCreate = async () => {
-    setError("");
-    if (!validateForm()) return;
-
-    setLoading(true);
-    try {
-      await api.createTask({
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        type,
-        projectId,
-        assignedTo: assignedTo || undefined,
-        deadline: formatDate() || undefined,
-        estimatedHours: estimatedHours ? parseInt(estimatedHours) : undefined,
-      });
-      navigation.goBack();
-    } catch (err) {
-      setError(err.message || "Failed to create task");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const selectedProject = projects.find((p) => p.id === projectId);
-
   return (
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-          <AppText variant="h3" style={styles.headerTitle}>New Task</AppText>
+          <AppText variant="h3" style={styles.headerTitle}>
+            New Task
+          </AppText>
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Title */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Title</AppText>
-            <TextInput
-              style={[styles.input, styles.titleInput]}
-              placeholder="Enter task title..."
-              placeholderTextColor={theme.colors.textMuted}
-              value={title}
-              onChangeText={setTitle}
-              maxLength={100}
-            />
-            <AppText style={styles.charCount}>{title.length}/100</AppText>
-          </View>
+        <Formik
+          initialValues={{
+            title: "",
+            description: "",
+            priority: "medium",
+            type: "task",
+            projectId: route.params?.projectId || "",
+            assignedToUsers: [],
+            assignedToTeams: [],
+            dueDate: { day: "", month: "", year: "" },
+            estimatedHours: "",
+          }}
+          validationSchema={CreateTaskSchema}
+          validateOnChange={false}
+          validateOnBlur={false}
+          onSubmit={async (values, { setSubmitting, setStatus }) => {
+            setStatus("");
+            try {
+              const { year, month, day } = values.dueDate;
+              const formattedDate =
+                year && month && day
+                  ? `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+                  : undefined;
 
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Description</AppText>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Add more details about this task..."
-              placeholderTextColor={theme.colors.textMuted}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Project Selection */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Project</AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-              {projects.map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  style={[styles.projectChip, projectId === p.id && styles.projectChipActive]}
-                  onPress={() => setProjectId(p.id)}
-                >
-                  <Ionicons 
-                    name="folder" 
-                    size={14} 
-                    color={projectId === p.id ? theme.colors.textPrimary : theme.colors.textSecondary} 
-                  />
-                  <AppText
-                    style={[styles.projectChipText, projectId === p.id && styles.projectChipTextActive]}
-                    numberOfLines={1}
-                  >
-                    {p.name}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-              {projects.length === 0 && (
-                <AppText style={styles.noData}>No projects available</AppText>
-              )}
-            </ScrollView>
-          </View>
-
-          {/* Priority */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Priority</AppText>
-            <View style={styles.optionsRow}>
-              {PRIORITIES.map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  style={[
-                    styles.priorityChip,
-                    priority === p.id && { backgroundColor: p.color, borderColor: p.color },
-                  ]}
-                  onPress={() => setPriority(p.id)}
-                >
-                  <View style={[styles.priorityDot, { backgroundColor: p.color }]} />
-                  <AppText
-                    style={[styles.priorityText, priority === p.id && styles.priorityTextActive]}
-                  >
-                    {p.label}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Type */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Type</AppText>
-            <View style={styles.optionsRow}>
-              {TYPES.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[styles.typeChip, type === t.id && styles.typeChipActive]}
-                  onPress={() => setType(t.id)}
-                >
-                  <Ionicons 
-                    name={t.icon} 
-                    size={16} 
-                    color={type === t.id ? theme.colors.textPrimary : theme.colors.textMuted} 
-                  />
-                  <AppText style={[styles.typeText, type === t.id && styles.typeTextActive]}>
-                    {t.label}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Due Date - Improved */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Due Date</AppText>
-            <View style={styles.dateRow}>
-              <View style={styles.dateInput}>
-                <AppText style={styles.dateLabel}>Day</AppText>
+              await api.createTask({
+                title: values.title.trim(),
+                description: values.description.trim(),
+                priority: values.priority,
+                type: values.type,
+                projectId: values.projectId,
+                assignedToUsers: values.assignedToUsers,
+                assignedToTeams: values.assignedToTeams,
+                dueDate: formattedDate,
+                estimatedHours: values.estimatedHours
+                  ? parseInt(values.estimatedHours)
+                  : undefined,
+              });
+              navigation.goBack();
+            } catch (err) {
+              setStatus(err.message || "Failed to create task");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+            status,
+            setFieldValue,
+            setFieldTouched,
+          }) => (
+            <View style={styles.form}>
+              {/* Title */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Title</AppText>
                 <TextInput
-                  style={styles.dateField}
-                  placeholder="DD"
+                  style={[styles.input, styles.titleInput]}
+                  placeholder="Enter task title..."
                   placeholderTextColor={theme.colors.textMuted}
-                  value={dueDate.day}
-                  onChangeText={(text) => setDueDate({ ...dueDate, day: text.replace(/[^0-9]/g, "").slice(0, 2) })}
-                  keyboardType="number-pad"
-                  maxLength={2}
+                  value={values.title}
+                  onChangeText={handleChange("title")}
+                  onBlur={handleBlur("title")}
+                  maxLength={100}
                 />
-              </View>
-              <AppText style={styles.dateSeparator}>/</AppText>
-              <View style={styles.dateInput}>
-                <AppText style={styles.dateLabel}>Month</AppText>
-                <TextInput
-                  style={styles.dateField}
-                  placeholder="MM"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={dueDate.month}
-                  onChangeText={(text) => setDueDate({ ...dueDate, month: text.replace(/[^0-9]/g, "").slice(0, 2) })}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                />
-              </View>
-              <AppText style={styles.dateSeparator}>/</AppText>
-              <View style={[styles.dateInput, { flex: 1.5 }]}>
-                <AppText style={styles.dateLabel}>Year</AppText>
-                <TextInput
-                  style={styles.dateField}
-                  placeholder="YYYY"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={dueDate.year}
-                  onChangeText={(text) => setDueDate({ ...dueDate, year: text.replace(/[^0-9]/g, "").slice(0, 4) })}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                />
-              </View>
-              <TouchableOpacity 
-                style={styles.todayButton}
-                onPress={() => {
-                  const today = new Date();
-                  setDueDate({
-                    day: String(today.getDate()),
-                    month: String(today.getMonth() + 1),
-                    year: String(today.getFullYear()),
-                  });
-                }}
-              >
-                <Ionicons name="today" size={18} color={theme.colors.brandGreen} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.quickDates}>
-              {[
-                { label: "Today", days: 0 },
-                { label: "Tomorrow", days: 1 },
-                { label: "+1 Week", days: 7 },
-                { label: "+2 Weeks", days: 14 },
-              ].map((option) => (
-                <TouchableOpacity
-                  key={option.label}
-                  style={styles.quickDateChip}
-                  onPress={() => {
-                    const date = new Date();
-                    date.setDate(date.getDate() + option.days);
-                    setDueDate({
-                      day: String(date.getDate()),
-                      month: String(date.getMonth() + 1),
-                      year: String(date.getFullYear()),
-                    });
-                  }}
-                >
-                  <AppText style={styles.quickDateText}>{option.label}</AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Estimated Hours - Improved */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Estimated Hours</AppText>
-            <View style={styles.hoursContainer}>
-              {HOURS_OPTIONS.map((hours) => (
-                <TouchableOpacity
-                  key={hours}
-                  style={[
-                    styles.hoursChip,
-                    estimatedHours === String(hours) && styles.hoursChipActive,
-                  ]}
-                  onPress={() => setEstimatedHours(String(hours))}
-                >
-                  <AppText
-                    style={[
-                      styles.hoursText,
-                      estimatedHours === String(hours) && styles.hoursTextActive,
-                    ]}
-                  >
-                    {hours}h
+                <View style={styles.inputFooter}>
+                  <AppText style={styles.charCount}>
+                    {values.title.length}/100
                   </AppText>
-                </TouchableOpacity>
-              ))}
-              <View style={styles.customHoursWrapper}>
-                <TextInput
-                  style={styles.customHoursInput}
-                  placeholder="Other"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={HOURS_OPTIONS.includes(parseInt(estimatedHours)) ? "" : estimatedHours}
-                  onChangeText={(text) => setEstimatedHours(text.replace(/[^0-9]/g, ""))}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                />
-                <AppText style={styles.customHoursLabel}>hrs</AppText>
-              </View>
-            </View>
-          </View>
-
-          {/* Assign To */}
-          <View style={styles.inputGroup}>
-            <AppText style={styles.label}>Assign To</AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-              <TouchableOpacity
-                style={[styles.userChip, !assignedTo && styles.userChipActive]}
-                onPress={() => setAssignedTo("")}
-              >
-                <View style={[styles.userAvatar, !assignedTo && styles.userAvatarActive]}>
-                  <Ionicons name="person-outline" size={16} color={theme.colors.textSecondary} />
+                  {touched.title && errors.title && (
+                    <AppText style={styles.fieldError}>{errors.title}</AppText>
+                  )}
                 </View>
-                <AppText style={[styles.userName, !assignedTo && styles.userNameActive]}>
-                  Unassigned
-                </AppText>
-              </TouchableOpacity>
-              {users.map((u) => (
-                <TouchableOpacity
-                  key={u.id}
-                  style={[styles.userChip, assignedTo === u.id && styles.userChipActive]}
-                  onPress={() => setAssignedTo(u.id)}
-                >
-                  <View style={[styles.userAvatar, assignedTo === u.id && styles.userAvatarActive]}>
-                    <AppText style={styles.userAvatarText}>{u.firstName?.[0]}</AppText>
-                  </View>
-                  <AppText style={[styles.userName, assignedTo === u.id && styles.userNameActive]}>
-                    {u.firstName}
+              </View>
+
+              {/* Description */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Description</AppText>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Add more details about this task..."
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={values.description}
+                  onChangeText={handleChange("description")}
+                  onBlur={handleBlur("description")}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                  maxLength={500}
+                />
+                {touched.description && errors.description && (
+                  <AppText style={styles.fieldError}>
+                    {errors.description}
                   </AppText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+                )}
+              </View>
 
-          {/* Error Message */}
-          {error ? (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={18} color={theme.colors.danger} />
-              <AppText style={styles.errorText}>{error}</AppText>
+              {/* Project Selection */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Project</AppText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.horizontalScroll}
+                >
+                  {projects.map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[
+                        styles.projectChip,
+                        values.projectId === p.id && styles.projectChipActive,
+                      ]}
+                      onPress={() => {
+                        setFieldValue("projectId", p.id);
+                        setFieldTouched("projectId", true);
+                      }}
+                    >
+                      <Ionicons
+                        name="folder"
+                        size={14}
+                        color={
+                          values.projectId === p.id
+                            ? theme.colors.textPrimary
+                            : theme.colors.textSecondary
+                        }
+                      />
+                      <AppText
+                        style={[
+                          styles.projectChipText,
+                          values.projectId === p.id &&
+                            styles.projectChipTextActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {p.name}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                  {projects.length === 0 && (
+                    <AppText style={styles.noData}>
+                      No projects available
+                    </AppText>
+                  )}
+                </ScrollView>
+                {touched.projectId && errors.projectId && (
+                  <AppText style={styles.fieldError}>
+                    {errors.projectId}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Priority */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Priority</AppText>
+                <View style={styles.optionsRow}>
+                  {PRIORITIES.map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[
+                        styles.priorityChip,
+                        values.priority === p.id && {
+                          backgroundColor: p.color,
+                          borderColor: p.color,
+                        },
+                      ]}
+                      onPress={() => {
+                        setFieldValue("priority", p.id);
+                        setFieldTouched("priority", true);
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.priorityDot,
+                          { backgroundColor: p.color },
+                        ]}
+                      />
+                      <AppText
+                        style={[
+                          styles.priorityText,
+                          values.priority === p.id && styles.priorityTextActive,
+                        ]}
+                      >
+                        {p.label}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {touched.priority && errors.priority && (
+                  <AppText style={styles.fieldError}>{errors.priority}</AppText>
+                )}
+              </View>
+
+              {/* Type */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Type</AppText>
+                <View style={styles.optionsRow}>
+                  {TYPES.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[
+                        styles.typeChip,
+                        values.type === t.id && styles.typeChipActive,
+                      ]}
+                      onPress={() => {
+                        setFieldValue("type", t.id);
+                        setFieldTouched("type", true);
+                      }}
+                    >
+                      <Ionicons
+                        name={t.icon}
+                        size={16}
+                        color={
+                          values.type === t.id
+                            ? theme.colors.textPrimary
+                            : theme.colors.textMuted
+                        }
+                      />
+                      <AppText
+                        style={[
+                          styles.typeText,
+                          values.type === t.id && styles.typeTextActive,
+                        ]}
+                      >
+                        {t.label}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {touched.type && errors.type && (
+                  <AppText style={styles.fieldError}>{errors.type}</AppText>
+                )}
+              </View>
+
+              {/* Due Date - Improved */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Due Date</AppText>
+                <View style={styles.dateRow}>
+                  <View style={styles.dateInput}>
+                    <AppText style={styles.dateLabel}>Day</AppText>
+                    <TextInput
+                      style={styles.dateField}
+                      placeholder="DD"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.dueDate.day}
+                      onChangeText={(text) => {
+                        setFieldValue(
+                          "dueDate.day",
+                          text.replace(/[^0-9]/g, "").slice(0, 2),
+                        );
+                        setFieldTouched("dueDate.day", true);
+                      }}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                    />
+                  </View>
+                  <AppText style={styles.dateSeparator}>/</AppText>
+                  <View style={styles.dateInput}>
+                    <AppText style={styles.dateLabel}>Month</AppText>
+                    <TextInput
+                      style={styles.dateField}
+                      placeholder="MM"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.dueDate.month}
+                      onChangeText={(text) => {
+                        setFieldValue(
+                          "dueDate.month",
+                          text.replace(/[^0-9]/g, "").slice(0, 2),
+                        );
+                        setFieldTouched("dueDate.month", true);
+                      }}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                    />
+                  </View>
+                  <AppText style={styles.dateSeparator}>/</AppText>
+                  <View style={[styles.dateInput, { flex: 1.5 }]}>
+                    <AppText style={styles.dateLabel}>Year</AppText>
+                    <TextInput
+                      style={styles.dateField}
+                      placeholder="YYYY"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={values.dueDate.year}
+                      onChangeText={(text) => {
+                        setFieldValue(
+                          "dueDate.year",
+                          text.replace(/[^0-9]/g, "").slice(0, 4),
+                        );
+                        setFieldTouched("dueDate.year", true);
+                      }}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.todayButton}
+                    onPress={() => {
+                      const today = new Date();
+                      setFieldValue("dueDate", {
+                        day: String(today.getDate()),
+                        month: String(today.getMonth() + 1),
+                        year: String(today.getFullYear()),
+                      });
+                      setFieldTouched("dueDate", true);
+                    }}
+                  >
+                    <Ionicons
+                      name="today"
+                      size={18}
+                      color={theme.colors.brandGreen}
+                    />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.quickDates}>
+                  {[
+                    { label: "Today", days: 0 },
+                    { label: "Tomorrow", days: 1 },
+                    { label: "+1 Week", days: 7 },
+                    { label: "+2 Weeks", days: 14 },
+                  ].map((option) => (
+                    <TouchableOpacity
+                      key={option.label}
+                      style={styles.quickDateChip}
+                      onPress={() => {
+                        const date = new Date();
+                        date.setDate(date.getDate() + option.days);
+                        setFieldValue("dueDate", {
+                          day: String(date.getDate()),
+                          month: String(date.getMonth() + 1),
+                          year: String(date.getFullYear()),
+                        });
+                        setFieldTouched("dueDate", true);
+                      }}
+                    >
+                      <AppText style={styles.quickDateText}>
+                        {option.label}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {touched.dueDate &&
+                  (errors.dueDate?.day ||
+                    errors.dueDate?.month ||
+                    errors.dueDate?.year) && (
+                    <AppText style={styles.fieldError}>
+                      {errors.dueDate?.day ||
+                        errors.dueDate?.month ||
+                        errors.dueDate?.year}
+                    </AppText>
+                  )}
+              </View>
+
+              {/* Estimated Hours - Improved */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Estimated Hours</AppText>
+                <View style={styles.hoursContainer}>
+                  {HOURS_OPTIONS.map((hours) => (
+                    <TouchableOpacity
+                      key={hours}
+                      style={[
+                        styles.hoursChip,
+                        values.estimatedHours === String(hours) &&
+                          styles.hoursChipActive,
+                      ]}
+                      onPress={() => {
+                        setFieldValue("estimatedHours", String(hours));
+                        setFieldTouched("estimatedHours", true);
+                      }}
+                    >
+                      <AppText
+                        style={[
+                          styles.hoursText,
+                          values.estimatedHours === String(hours) &&
+                            styles.hoursTextActive,
+                        ]}
+                      >
+                        {hours}h
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                  <View style={styles.customHoursWrapper}>
+                    <TextInput
+                      style={styles.customHoursInput}
+                      placeholder="Other"
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={
+                        HOURS_OPTIONS.includes(parseInt(values.estimatedHours))
+                          ? ""
+                          : values.estimatedHours
+                      }
+                      onChangeText={(text) => {
+                        setFieldValue(
+                          "estimatedHours",
+                          text.replace(/[^0-9]/g, ""),
+                        );
+                        setFieldTouched("estimatedHours", true);
+                      }}
+                      keyboardType="number-pad"
+                      maxLength={3}
+                    />
+                    <AppText style={styles.customHoursLabel}>hrs</AppText>
+                  </View>
+                </View>
+                {touched.estimatedHours && errors.estimatedHours && (
+                  <AppText style={styles.fieldError}>
+                    {errors.estimatedHours}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Assign To */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Assign To</AppText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.horizontalScroll}
+                >
+                  {users.map((u) => {
+                    const isSelected = values.assignedToUsers.includes(u.id);
+                    return (
+                      <TouchableOpacity
+                        key={u.id}
+                        style={[
+                          styles.userChip,
+                          isSelected && styles.userChipActive,
+                        ]}
+                        onPress={() => {
+                          const newUsers = isSelected
+                            ? values.assignedToUsers.filter((id) => id !== u.id)
+                            : [...values.assignedToUsers, u.id];
+                          setFieldValue("assignedToUsers", newUsers);
+                          setFieldTouched("assignedToUsers", true);
+                        }}
+                      >
+                        <View
+                          style={[
+                            styles.userAvatar,
+                            isSelected && styles.userAvatarActive,
+                          ]}
+                        >
+                          <AppText style={styles.userAvatarText}>
+                            {u.firstName?.[0]}
+                          </AppText>
+                        </View>
+                        <AppText
+                          style={[
+                            styles.userName,
+                            isSelected && styles.userNameActive,
+                          ]}
+                        >
+                          {u.firstName}
+                        </AppText>
+                        {isSelected && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color={theme.colors.brandGreen}
+                            style={{ marginLeft: 4 }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
+              {/* OR Divider */}
+              <View style={styles.orDivider}>
+                <View style={styles.orLine} />
+                <AppText style={styles.orText}>OR</AppText>
+                <View style={styles.orLine} />
+              </View>
+
+              {/* Assign to Team */}
+              <View style={styles.inputGroup}>
+                <AppText style={styles.label}>Assign to Team</AppText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.horizontalScroll}
+                >
+                  {teams.map((team) => {
+                    const isSelected = values.assignedToTeams.includes(team.id);
+                    return (
+                      <TouchableOpacity
+                        key={team.id}
+                        style={[
+                          styles.teamChip,
+                          isSelected && styles.userChipActive,
+                        ]}
+                        onPress={() => {
+                          const newTeams = isSelected
+                            ? values.assignedToTeams.filter(
+                                (id) => id !== team.id,
+                              )
+                            : [...values.assignedToTeams, team.id];
+                          setFieldValue("assignedToTeams", newTeams);
+                          setFieldTouched("assignedToTeams", true);
+                        }}
+                      >
+                        <View
+                          style={[
+                            styles.teamAvatar,
+                            isSelected && styles.userAvatarActive,
+                          ]}
+                        >
+                          <Ionicons
+                            name="people"
+                            size={16}
+                            color={
+                              isSelected
+                                ? theme.colors.brandGreen
+                                : theme.colors.textSecondary
+                            }
+                          />
+                        </View>
+                        <AppText
+                          style={[
+                            styles.userName,
+                            isSelected && styles.userNameActive,
+                          ]}
+                        >
+                          {team.name}
+                        </AppText>
+                        {isSelected && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color={theme.colors.brandGreen}
+                            style={{ marginLeft: 4 }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+                {touched.assignedToTeams && errors.assignedToTeams && (
+                  <AppText style={styles.fieldError}>
+                    {errors.assignedToTeams}
+                  </AppText>
+                )}
+              </View>
+
+              {/* Error Message */}
+              {status ? (
+                <View style={styles.errorContainer}>
+                  <Ionicons
+                    name="alert-circle"
+                    size={18}
+                    color={theme.colors.danger}
+                  />
+                  <AppText style={styles.errorText}>{status}</AppText>
+                </View>
+              ) : null}
+
+              {/* Create Button */}
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                <LinearGradient
+                  colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color={theme.colors.textPrimary} />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={22}
+                        color={theme.colors.textPrimary}
+                      />
+                      <AppText style={styles.createButtonText}>
+                        Create Task
+                      </AppText>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
-          ) : null}
-
-          {/* Create Button */}
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={handleCreate}
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradient}
-            >
-              {loading ? (
-                <ActivityIndicator color={theme.colors.textPrimary} />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle" size={22} color={theme.colors.textPrimary} />
-                  <AppText style={styles.createButtonText}>Create Task</AppText>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+          )}
+        </Formik>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -497,6 +820,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "right",
     marginTop: 4,
+  },
+  inputFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  fieldError: {
+    color: theme.colors.danger,
+    fontSize: 12,
+    marginTop: theme.spacing.xs,
   },
   textArea: {
     minHeight: 80,
@@ -734,6 +1068,39 @@ const styles = StyleSheet.create({
   userNameActive: {
     color: theme.colors.brandGreen,
     fontWeight: "500",
+  },
+  orDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: theme.spacing.lg,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.glassDark,
+  },
+  orText: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    marginHorizontal: theme.spacing.md,
+    fontWeight: "500",
+  },
+  teamChip: {
+    alignItems: "center",
+    marginRight: theme.spacing.md,
+    padding: theme.spacing.sm,
+    borderRadius: 12,
+  },
+  teamAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.glassDark,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+    borderWidth: 2,
+    borderColor: "transparent",
   },
   errorContainer: {
     flexDirection: "row",
