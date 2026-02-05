@@ -13,6 +13,15 @@ class UserValidator {
             { field: 'email', required: false, type: 'email' }
         ];
     }
+
+    /**
+     * Rules for updating user role (Admin only)
+     */
+    static get updateRole() {
+        return [
+            { field: 'role', required: true, enum: ['admin', 'project_manager', 'team_member'] }
+        ];
+    }
 }
 
 export default UserValidator;

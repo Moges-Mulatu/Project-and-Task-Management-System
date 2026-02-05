@@ -15,6 +15,9 @@ class AuthService {
                 throw new Error('User already exists');
             }
 
+            // Force role to 'team_member' for public registration (security)
+            userData.role = 'team_member';
+
             // Create new user (password hashing happens in the model)
             const user = await User.create(userData);
 

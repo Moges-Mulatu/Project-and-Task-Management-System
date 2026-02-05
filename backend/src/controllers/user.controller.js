@@ -71,6 +71,31 @@ class UserController {
     }
 
     /**
+     * Update a user's role (Admin only)
+     */
+    static async updateUserRole(req, res) {
+        try {
+            const { role } = req.body;
+            const user = await UserService.updateUserRole(req.params.id, role);
+            return sendSuccess(res, 'User role updated successfully', user);
+        } catch (error) {
+            return sendError(res, error.message, 400);
+        }
+    }
+
+    /**
+     * Reactivate a user (Admin only)
+     */
+    static async reactivateUser(req, res) {
+        try {
+            const user = await UserService.reactivateUser(req.params.id);
+            return sendSuccess(res, 'User reactivated successfully', user);
+        } catch (error) {
+            return sendError(res, error.message, 400);
+        }
+    }
+
+    /**
      * Search for users
      */
     static async search(req, res) {

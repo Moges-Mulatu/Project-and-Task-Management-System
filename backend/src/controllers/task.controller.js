@@ -15,7 +15,7 @@ class TaskController {
                 ...req.body,
                 assignedBy: req.user.id
             };
-            const task = await TaskService.createTask(taskData);
+            const task = await TaskService.createTask(taskData, req.user.id, req.user.role);
             return sendSuccess(res, 'Task created successfully', task, 201);
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -23,7 +23,7 @@ class TaskController {
     }
 
     /**
-     * Get all tasks
+     * Get all tasks with role-based visibility
      */
     static async getAll(req, res) {
         try {
@@ -32,7 +32,9 @@ class TaskController {
                 assignedTo: req.query.assignedTo,
                 status: req.query.status,
                 priority: req.query.priority,
-                type: req.query.type
+                type: req.query.type,
+                userRole: req.user.role,
+                requesterId: req.user.id
             };
             const tasks = await TaskService.getTasks(filters);
             return sendSuccess(res, 'Tasks retrieved successfully', tasks);
@@ -58,7 +60,7 @@ class TaskController {
      */
     static async update(req, res) {
         try {
-            const task = await TaskService.updateTask(req.params.id, req.body);
+            const task = await TaskService.updateTask(req.params.id, req.body, req.user.id, req.user.role);
             return sendSuccess(res, 'Task updated successfully', task);
         } catch (error) {
             return sendError(res, error.message, 400);

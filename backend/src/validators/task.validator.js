@@ -24,7 +24,8 @@ class TaskValidator {
         return [
             { field: 'title', required: false, type: 'string' },
             { field: 'status', required: false, enum: ['todo', 'in_progress', 'review', 'completed'] },
-            { field: 'priority', required: false, enum: ['low', 'medium', 'high'] }
+            { field: 'priority', required: false, enum: ['low', 'medium', 'high'] },
+            { field: 'progress', required: false, type: 'number' }
         ];
     }
 
