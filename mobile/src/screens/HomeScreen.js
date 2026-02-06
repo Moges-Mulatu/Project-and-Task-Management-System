@@ -401,14 +401,15 @@ const HomeScreen = ({ navigation, user }) => {
               onPress={() => navigation.navigate("Users")}
               activeOpacity={0.8}
             >
-              <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.accentPink }]} />
-              <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.accentPink }]} />
-              <View style={styles.actionCardContent}>
+              <View style={[styles.actionGlowLineFull, { backgroundColor: theme.colors.accentPink }]} />
+              <View style={styles.actionCardContentFull}>
                 <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentPink + "30" }]}>
                   <Ionicons name="person-circle" size={20} color={theme.colors.accentPink} />
                 </View>
-                <AppText style={styles.actionCardTitle}>Users</AppText>
-                <AppText style={styles.actionCardSub}>Manage roles</AppText>
+                <View style={styles.actionTextContainer}>
+                  <AppText style={styles.actionCardTitle}>Users</AppText>
+                  <AppText style={styles.actionCardSub}>Manage roles</AppText>
+                </View>
               </View>
             </TouchableOpacity>
           )}
@@ -740,6 +741,25 @@ const styles = StyleSheet.create({
   actionCardContent: {
     padding: theme.spacing.sm,
     paddingLeft: theme.spacing.md,
+  },
+  actionCardContentFull: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+  },
+  actionTextContainer: {
+    marginLeft: theme.spacing.sm,
+  },
+  actionGlowLineFull: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: 3,
+    height: "100%",
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
   },
   actionIconLarge: {
     width: 36,
