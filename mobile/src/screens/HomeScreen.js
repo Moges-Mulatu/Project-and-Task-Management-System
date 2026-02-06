@@ -403,7 +403,7 @@ const HomeScreen = ({ navigation, user }) => {
             >
               <View style={[styles.actionGlowLineFull, { backgroundColor: theme.colors.accentPink }]} />
               <View style={styles.actionCardContentFull}>
-                <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentPink + "30" }]}>
+                <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentPink + "30", marginBottom: 0 }]}>
                   <Ionicons name="person-circle" size={20} color={theme.colors.accentPink} />
                 </View>
                 <View style={styles.actionTextContainer}>
