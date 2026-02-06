@@ -66,10 +66,11 @@ const TaskDetailScreen = ({ route, navigation, user }) => {
   ];
 
   // Check if current user can edit this task
+  // Per spec: PM can manage tasks, Team member can update their assigned tasks
+  // Admin can only view (manages users/roles, not tasks)
   const canEdit = () => {
     if (!user) return false;
-    if (user.role === "admin") return true;
-    if (user.role === "project_manager") return true; // PM can edit tasks in their projects
+    if (user.role === "project_manager") return true;
     if (user.role === "team_member" && task.assignedTo === user.id) return true;
     return false;
   };

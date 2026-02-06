@@ -150,7 +150,7 @@ const ProjectsScreen = ({ navigation, user }) => {
     <ScreenContainer>
       <View style={styles.header}>
         <AppText variant="h2" style={styles.title}>Projects</AppText>
-        {(user?.role === "admin" || user?.role === "project_manager") && (
+        {user?.role === "project_manager" && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate("CreateProject")}

@@ -134,7 +134,7 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
         {/* Tasks Section */}
         <View style={styles.sectionHeader}>
           <AppText variant="h3" style={styles.sectionTitle}>Tasks</AppText>
-          {(user?.role === "admin" || user?.role === "project_manager") && (
+          {user?.role === "project_manager" && (
             <TouchableOpacity
               style={styles.addTaskButton}
               onPress={() => navigation.navigate("CreateTask", { projectId: project.id })}

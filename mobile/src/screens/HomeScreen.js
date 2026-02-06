@@ -304,40 +304,44 @@ const HomeScreen = ({ navigation, user }) => {
         </View>
 
         <View style={styles.quickActionsGrid}>
-          {/* Row 1 */}
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate("CreateTask")}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-            <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
-            <View style={styles.actionCardContent}>
-              <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                <Ionicons name="add-circle" size={20} color={theme.colors.brandGreen} />
-              </View>
-              <AppText style={styles.actionCardTitle}>New Task</AppText>
-              <AppText style={styles.actionCardSub}>Create a task</AppText>
-            </View>
-          </TouchableOpacity>
+          {/* PM Only: Create Task & Project */}
+          {user?.role === "project_manager" && (
+            <>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => navigation.navigate("CreateTask")}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandBlue }]} />
+                <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandBlue }]} />
+                <View style={styles.actionCardContent}>
+                  <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandBlue + "30" }]}>
+                    <Ionicons name="add-circle" size={20} color={theme.colors.brandBlue} />
+                  </View>
+                  <AppText style={styles.actionCardTitle}>New Task</AppText>
+                  <AppText style={styles.actionCardSub}>Create & assign</AppText>
+                </View>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate("CreateProject")}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-            <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
-            <View style={styles.actionCardContent}>
-              <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                <Ionicons name="folder-open" size={20} color={theme.colors.brandGreen} />
-              </View>
-              <AppText style={styles.actionCardTitle}>New Project</AppText>
-              <AppText style={styles.actionCardSub}>Start fresh</AppText>
-            </View>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => navigation.navigate("CreateProject")}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
+                <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
+                <View style={styles.actionCardContent}>
+                  <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
+                    <Ionicons name="folder-open" size={20} color={theme.colors.brandGreen} />
+                  </View>
+                  <AppText style={styles.actionCardTitle}>New Project</AppText>
+                  <AppText style={styles.actionCardSub}>Start fresh</AppText>
+                </View>
+              </TouchableOpacity>
+            </>
+          )}
 
-          {/* Row 2 */}
+          {/* All roles: View Tasks */}
           <TouchableOpacity
             style={styles.actionCard}
             onPress={() => navigation.navigate("Tasks")}
@@ -349,11 +353,12 @@ const HomeScreen = ({ navigation, user }) => {
               <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
                 <Ionicons name="checkbox" size={20} color={theme.colors.brandGreen} />
               </View>
-              <AppText style={styles.actionCardTitle}>My Tasks</AppText>
-              <AppText style={styles.actionCardSub}>View all tasks</AppText>
+              <AppText style={styles.actionCardTitle}>{user?.role === "team_member" ? "My Tasks" : "All Tasks"}</AppText>
+              <AppText style={styles.actionCardSub}>{user?.role === "team_member" ? "Update progress" : "View tasks"}</AppText>
             </View>
           </TouchableOpacity>
 
+          {/* All roles: View Teams */}
           <TouchableOpacity
             style={styles.actionCard}
             onPress={() => navigation.navigate("Teams")}
@@ -366,47 +371,46 @@ const HomeScreen = ({ navigation, user }) => {
                 <Ionicons name="people" size={20} color={theme.colors.brandGreen} />
               </View>
               <AppText style={styles.actionCardTitle}>Teams</AppText>
-              <AppText style={styles.actionCardSub}>Collaborate</AppText>
+              <AppText style={styles.actionCardSub}>{user?.role === "admin" ? "Manage teams" : "View teams"}</AppText>
             </View>
           </TouchableOpacity>
 
-          {/* Row 3 - Conditional */}
-          {(user?.role === "admin" || user?.role === "project_manager") && (
-            <>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => navigation.navigate("Reports")}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-                <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
-                <View style={styles.actionCardContent}>
-<View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                <Ionicons name="analytics" size={20} color={theme.colors.brandGreen} />
-                  </View>
-                  <AppText style={styles.actionCardTitle}>Reports</AppText>
-                  <AppText style={styles.actionCardSub}>View stats</AppText>
+          {/* PM Only: Reports (Monitor Progress) */}
+          {user?.role === "project_manager" && (
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => navigation.navigate("Reports")}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.accentOrange }]} />
+              <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.accentOrange }]} />
+              <View style={styles.actionCardContent}>
+                <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentOrange + "30" }]}>
+                  <Ionicons name="analytics" size={20} color={theme.colors.accentOrange} />
                 </View>
-              </TouchableOpacity>
+                <AppText style={styles.actionCardTitle}>Reports</AppText>
+                <AppText style={styles.actionCardSub}>Monitor progress</AppText>
+              </View>
+            </TouchableOpacity>
+          )}
 
-              {user?.role === "admin" && (
-                <TouchableOpacity
-                  style={styles.actionCard}
-                  onPress={() => navigation.navigate("Users")}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-                  <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
-                  <View style={styles.actionCardContent}>
-<View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                <Ionicons name="person-circle" size={20} color={theme.colors.brandGreen} />
-                    </View>
-                    <AppText style={styles.actionCardTitle}>Users</AppText>
-                    <AppText style={styles.actionCardSub}>Manage team</AppText>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </>
+          {/* Admin Only: Manage Users */}
+          {user?.role === "admin" && (
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => navigation.navigate("Users")}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.accentPink }]} />
+              <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.accentPink }]} />
+              <View style={styles.actionCardContent}>
+                <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentPink + "30" }]}>
+                  <Ionicons name="person-circle" size={20} color={theme.colors.accentPink} />
+                </View>
+                <AppText style={styles.actionCardTitle}>Users</AppText>
+                <AppText style={styles.actionCardSub}>Manage roles</AppText>
+              </View>
+            </TouchableOpacity>
           )}
         </View>
 

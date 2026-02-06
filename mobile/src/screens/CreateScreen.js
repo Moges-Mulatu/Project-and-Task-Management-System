@@ -12,16 +12,11 @@ import AppText from "../components/AppText";
 import theme from "../theme";
 
 const CreateScreen = ({ navigation, user }) => {
+  // Role-based create options per spec:
+  // Admin: Create teams only
+  // PM: Create projects, tasks, reports
+  // Team Member: No create access
   const createOptions = [
-    {
-      id: "task",
-      icon: "checkbox-outline",
-      title: "New Task",
-      subtitle: "Create a task for your project",
-      color: theme.colors.brandBlue,
-      screen: "CreateTask",
-      roles: ["admin", "project_manager"],
-    },
     {
       id: "project",
       icon: "briefcase-outline",
@@ -29,7 +24,16 @@ const CreateScreen = ({ navigation, user }) => {
       subtitle: "Start a new project",
       color: theme.colors.brandGreen,
       screen: "CreateProject",
-      roles: ["admin", "project_manager"],
+      roles: ["project_manager"],
+    },
+    {
+      id: "task",
+      icon: "checkbox-outline",
+      title: "New Task",
+      subtitle: "Create and assign a task",
+      color: theme.colors.brandBlue,
+      screen: "CreateTask",
+      roles: ["project_manager"],
     },
     {
       id: "team",
@@ -43,16 +47,16 @@ const CreateScreen = ({ navigation, user }) => {
     {
       id: "report",
       icon: "analytics-outline",
-      title: "New Report",
-      subtitle: "Generate a project report",
+      title: "View Reports",
+      subtitle: "Monitor project progress",
       color: theme.colors.accentOrange,
       screen: "Reports",
-      roles: ["admin", "project_manager"],
+      roles: ["project_manager"],
     },
   ];
 
   const filteredOptions = createOptions.filter(
-    (opt) => opt.roles.includes(user?.role) || user?.role === "admin"
+    (opt) => opt.roles.includes(user?.role)
   );
 
   return (
@@ -104,7 +108,16 @@ const CreateScreen = ({ navigation, user }) => {
         <View style={styles.limitedAccess}>
           <Ionicons name="information-circle-outline" size={20} color={theme.colors.textMuted} />
           <AppText style={styles.limitedText}>
-            Team members can update task progress from the Tasks screen
+            Team members can view assigned tasks and update progress from the Tasks screen
+          </AppText>
+        </View>
+      )}
+
+      {user?.role === "admin" && (
+        <View style={styles.limitedAccess}>
+          <Ionicons name="information-circle-outline" size={20} color={theme.colors.brandBlue} />
+          <AppText style={styles.limitedText}>
+            Admins manage users, roles, and teams. View all projects from the Projects tab.
           </AppText>
         </View>
       )}
