@@ -1,6 +1,5 @@
 import TaskService from '../services/task.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
-import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Task Controller
@@ -16,7 +15,7 @@ class TaskController {
                 ...req.body,
                 assignedBy: req.user.id
             };
-            const task = await TaskService.createTask(taskData);
+            const task = await TaskService.createTask(taskData, req.user.id, req.user.role);
             return sendSuccess(res, 'Task created successfully', task, 201);
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -24,7 +23,7 @@ class TaskController {
     }
 
     /**
-     * Get all tasks
+     * Get all tasks with role-based visibility
      */
     static async getAll(req, res) {
         try {
@@ -33,14 +32,10 @@ class TaskController {
                 assignedTo: req.query.assignedTo,
                 status: req.query.status,
                 priority: req.query.priority,
-                type: req.query.type
+                type: req.query.type,
+                userRole: req.user.role,
+                requesterId: req.user.id
             };
-
-            // Team Members only see their assigned tasks
-            if (req.user.role === ROLES.TEAM_MEMBER) {
-                filters.assignedTo = req.user.id;
-            }
-
             const tasks = await TaskService.getTasks(filters);
             return sendSuccess(res, 'Tasks retrieved successfully', tasks);
         } catch (error) {
@@ -65,30 +60,8 @@ class TaskController {
      */
     static async update(req, res) {
         try {
-            const task = await TaskService.getTaskById(req.params.id);
-            if (!task) {
-                return sendError(res, 'Task not found', 404);
-            }
-
-            // Role-based Permission Audit
-            if (req.user.role === ROLES.TEAM_MEMBER) {
-                // Team members can only update tasks assigned to them
-                if (task.assignedTo !== req.user.id) {
-                    return sendError(res, 'You can only update tasks assigned to you', 403);
-                }
-
-                // Team members can only update status and progress
-                const allowedFields = ['status', 'progress'];
-                const updateKeys = Object.keys(req.body);
-                const isOnlyAllowedFields = updateKeys.every(key => allowedFields.includes(key));
-
-                if (!isOnlyAllowedFields) {
-                    return sendError(res, 'Team members can only update status and progress', 403);
-                }
-            }
-
-            const updatedTask = await TaskService.updateTask(req.params.id, req.body);
-            return sendSuccess(res, 'Task updated successfully', updatedTask);
+            const task = await TaskService.updateTask(req.params.id, req.body, req.user.id, req.user.role);
+            return sendSuccess(res, 'Task updated successfully', task);
         } catch (error) {
             return sendError(res, error.message, 400);
         }

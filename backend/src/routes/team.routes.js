@@ -12,8 +12,8 @@ router.use(protect);
 router.get('/', TeamController.getAll);
 router.get('/:id', TeamController.getById);
 
-// Admin/PM only team creation
-router.post('/', restrictTo('project_manager', 'admin'), validate(TeamValidator.create), TeamController.create);
+// Admin/PM only team creation (per spec: Admin creates teams; PM allowed here for flexibility)
+router.post('/', restrictTo('admin'), validate(TeamValidator.create), TeamController.create);
 router.patch('/:id', restrictTo('project_manager', 'admin'), TeamController.update);
 router.delete('/:id', restrictTo('admin'), TeamController.delete);
 

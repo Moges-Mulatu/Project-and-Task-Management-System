@@ -1,6 +1,5 @@
 import TeamService from '../services/team.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
-import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Team Controller
@@ -28,12 +27,6 @@ class TeamController {
                 department: req.query.department,
                 teamLeadId: req.query.teamLeadId
             };
-
-            // Data Isolation: PMs only see teams they lead
-            if (req.user.role === ROLES.PROJECT_MANAGER) {
-                filters.teamLeadId = req.user.id;
-            }
-
             const teams = await TeamService.getTeams(filters);
             return sendSuccess(res, 'Teams retrieved successfully', teams);
         } catch (error) {

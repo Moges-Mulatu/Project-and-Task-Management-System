@@ -15,6 +15,9 @@ class AuthService {
                 throw new Error('User already exists');
             }
 
+            // Force role to 'team_member' for public registration (security)
+            userData.role = 'team_member';
+
             // Create new user (password hashing happens in the model)
             const user = await User.create(userData);
 
@@ -40,14 +43,12 @@ class AuthService {
         try {
             // Find user by email
             const user = await User.findByEmail(email);
-            console.log(`Login attempt: ${email}, Found: ${!!user}`);
             if (!user) {
                 throw new Error('Invalid email or password');
             }
 
             // Validate password
             const isPasswordValid = await user.validatePassword(password);
-            console.log(`Password valid: ${isPasswordValid}`);
             if (!isPasswordValid) {
                 throw new Error('Invalid email or password');
             }

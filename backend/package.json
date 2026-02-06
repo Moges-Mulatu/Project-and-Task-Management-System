@@ -5,7 +5,13 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "seed": "node scripts/seed.js",
+    "test": "node scripts/test-api.js",
+    "test:admin": "node scripts/test-admin.js",
+    "test:pm": "node scripts/test-pm.js",
+    "test:member": "node scripts/test-member.js",
+    "test:audit": "node scripts/super-audit.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -17,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "mysql2": "^3.16.2",
+    "node-fetch": "^3.3.2",
     "uuid": "^11.0.5"
   },
   "devDependencies": {

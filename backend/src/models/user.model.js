@@ -18,7 +18,7 @@ class User {
     this.lastName = data.lastName;
     this.email = data.email;
     this.password = data.password;
-    this.role = (data.role || ROLES.TEAM_MEMBER).toLowerCase();
+    this.role = data.role || ROLES.TEAM_MEMBER;
     this.department = data.department || null;
     this.position = data.position || null;
     this.avatar = data.avatar || null;

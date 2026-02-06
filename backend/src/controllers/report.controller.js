@@ -1,6 +1,5 @@
 import ReportService from '../services/report.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
-import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Report Controller
@@ -28,14 +27,7 @@ class ReportController {
      */
     static async getAll(req, res) {
         try {
-            const filters = { ...req.query };
-
-            // Data Isolation: PMs only see reports they generated
-            if (req.user.role === ROLES.PROJECT_MANAGER) {
-                filters.generatedBy = req.user.id;
-            }
-
-            const reports = await ReportService.getReports(filters);
+            const reports = await ReportService.getReports(req.query);
             return sendSuccess(res, 'Reports retrieved successfully', reports);
         } catch (error) {
             return sendError(res, error.message, 500);

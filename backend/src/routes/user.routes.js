@@ -17,10 +17,12 @@ router.patch(
   UserController.updateMyProfile,
 );
 
-// User management 
-router.get("/", restrictTo("admin", "project_manager", "team_member"), UserController.getAllUsers);
+// User management (Admin only)
+router.get("/", restrictTo("admin"), UserController.getAllUsers);
 router.get("/search", UserController.search); // Search is generally available for protected users
 router.get("/:id", restrictTo("admin"), UserController.getUser);
 router.delete("/:id", restrictTo("admin"), UserController.deactivateUser);
+router.patch("/:id/role", restrictTo("admin"), validate(UserValidator.updateRole), UserController.updateUserRole);
+router.patch("/:id/reactivate", restrictTo("admin"), UserController.reactivateUser);
 
 export default router;
