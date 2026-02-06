@@ -8,9 +8,9 @@ export const useAuth = () => {
   }
   
   // Helper to check roles easily
-  const isAdmin = context.user?.role === 'Admin';
-  const isPM = context.user?.role === 'Project Manager';
-  const isMember = context.user?.role === 'Team Member';
+  const isAdmin = context.user?.role === 'admin';
+  const isPM = context.user?.role === 'project_manager';
+  const isMember = context.user?.role === 'team_member';
 
   return { ...context, isAdmin, isPM, isMember };
 };

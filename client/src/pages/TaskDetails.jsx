@@ -78,17 +78,9 @@ const TaskDetails = () => {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-
-    try {
-      const response = await apiService.addComment(id, { content: newComment });
-      if (response.success) {
-        setComments([...comments, response.data]);
-        setNewComment('');
-      }
-    } catch (err) {
-      console.error('Failed to add comment:', err);
-    }
+    // Comment feature not implemented in backend yet
+    alert('Comments feature coming soon!');
+    return;
   };
 
   const handleStatusChange = async (newStatus) => {
@@ -106,17 +98,9 @@ const TaskDetails = () => {
   };
 
   const toggleSubtask = async (subtaskId) => {
-    try {
-      await apiService.toggleSubtask(id, subtaskId);
-      setTask({
-        ...task,
-        Subtasks: task.Subtasks.map(st =>
-          st.id === subtaskId ? { ...st, completed: !st.completed } : st
-        )
-      });
-    } catch (err) {
-      console.error('Failed to toggle subtask:', err);
-    }
+    // Subtasks feature not implemented in backend yet
+    alert('Subtasks feature coming soon!');
+    return;
   };
 
   const handleDeleteTask = async () => {
@@ -260,13 +244,14 @@ const TaskDetails = () => {
                     <textarea
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Share your thoughts or update the team..."
+                      placeholder="Comments feature coming soon..."
                       rows={3}
-                      className="w-full px-4 py-3 bg-card-background border border-card-border rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/50 transition-all duration-200 text-sm"
+                      disabled={true}
+                      className="w-full px-4 py-3 bg-card-background border border-card-border rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/50 transition-all duration-200 text-sm opacity-50 cursor-not-allowed"
                     />
                     <div className="mt-3 flex justify-end">
-                      <Button onClick={handleAddComment} disabled={!newComment.trim()} className="px-6">
-                        Post Comment
+                      <Button onClick={handleAddComment} disabled={true} className="px-6 opacity-50 cursor-not-allowed">
+                        Post Comment (Soon)
                       </Button>
                     </div>
                   </div>

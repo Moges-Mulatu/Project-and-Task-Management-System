@@ -11,11 +11,21 @@ const Reports = () => {
         const fetchReportData = async () => {
             try {
                 setLoading(true);
-                const [statsRes, projectsRes] = await Promise.all([
-                    apiService.getStats(),
-                    apiService.getProjects()
+                const [tasksRes, projectsRes, usersRes] = await Promise.all([
+                    apiService.getAllTasks(),
+                    apiService.getProjects(),
+                    apiService.getUsers()
                 ]);
-                setStats(statsRes.data);
+                
+                // Calculate stats from actual data since /stats endpoint doesn't exist
+                const tasks = tasksRes.data || [];
+                const users = usersRes.data || [];
+                const calculatedStats = {
+                    tasksCount: tasks.length,
+                    usersCount: users.length
+                };
+                
+                setStats(calculatedStats);
                 setProjects(projectsRes.data || []);
             } catch (err) {
                 console.error('Failed to fetch report data:', err);

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
-import { ROLES } from '../../constants/roles';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
@@ -12,8 +11,8 @@ const Register = () => {
         firstName: '',
         lastName: '',
         email: '',
-        password: '',
-        role: ROLES.TEAM_MEMBER
+        password: ''
+        // Role is determined by backend - all new registrations are team_member
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -39,8 +38,8 @@ const Register = () => {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
-                password: formData.password,
-                role: formData.role.toLowerCase() // Backend expects lowercase
+                password: formData.password
+                // No role - backend assigns team_member automatically
             });
 
             if (response.success) {
@@ -120,21 +119,6 @@ const Register = () => {
                             required
                             placeholder="Minimum 6 characters"
                         />
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-semibold text-text-primary mb-2">
-                                Join As
-                            </label>
-                            <select
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 bg-card-background border border-card-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                            >
-                                <option value={ROLES.PROJECT_MANAGER}>Project Manager</option>
-                                <option value={ROLES.TEAM_MEMBER}>Team Member</option>
-                            </select>
-                        </div>
 
                         {error && (
                             <div className="bg-error/10 border border-error/30 text-error px-4 py-3 rounded-lg text-sm text-center">

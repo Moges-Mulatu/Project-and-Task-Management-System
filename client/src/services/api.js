@@ -93,7 +93,7 @@ class ApiService {
   }
 
   async getTasks(projectId) {
-    return this.get(`/projects/${projectId}/tasks`);
+    return this.get(`/tasks?projectId=${projectId}`);
   }
 
   async getTask(id) {
@@ -112,24 +112,8 @@ class ApiService {
     return this.delete(`/tasks/${id}`);
   }
 
-  async getTaskComments(taskId) {
-    return this.get(`/tasks/${taskId}/comments`);
-  }
-
-  async addComment(taskId, commentData) {
-    return this.post(`/tasks/${taskId}/comments`, commentData);
-  }
-
-  async toggleSubtask(taskId, subtaskId) {
-    return this.put(`/tasks/${taskId}/subtasks/${subtaskId}/toggle`);
-  }
-
   async getAllTasks() {
     return this.get('/tasks');
-  }
-
-  async getStats() {
-    return this.get('/stats');
   }
 
   async getUsers() {
