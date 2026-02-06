@@ -250,7 +250,7 @@ const TeamsScreen = ({ navigation, user }) => {
         <AppText variant="h2" style={styles.title}>
           Teams
         </AppText>
-        {(user?.role === "admin" || user?.role === "project_manager") && (
+        {user?.role === "admin" && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate("CreateTeam")}
@@ -286,7 +286,7 @@ const TeamsScreen = ({ navigation, user }) => {
                 color={theme.colors.textMuted}
               />
               <AppText style={styles.emptyText}>No teams yet</AppText>
-              {(user?.role === "admin" || user?.role === "project_manager") && (
+              {user?.role === "admin" && (
                 <TouchableOpacity
                   style={styles.createButton}
                   onPress={() => navigation.navigate("CreateTeam")}
