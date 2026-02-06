@@ -418,7 +418,7 @@ const TasksScreen = ({ navigation, user }) => {
             {sections.length} project{sections.length !== 1 ? "s" : ""}
           </AppText>
         </View>
-        {(user?.role === "admin" || user?.role === "project_manager") && (
+        {user?.role === "project_manager" && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate("CreateTask")}

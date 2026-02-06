@@ -394,10 +394,10 @@ const HomeScreen = ({ navigation, user }) => {
             </TouchableOpacity>
           )}
 
-          {/* Admin Only: Manage Users */}
+          {/* Admin Only: Manage Users - Full width as last item */}
           {user?.role === "admin" && (
             <TouchableOpacity
-              style={styles.actionCard}
+              style={styles.actionCardFull}
               onPress={() => navigation.navigate("Users")}
               activeOpacity={0.8}
             >
@@ -698,6 +698,16 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: "48%",
+    marginBottom: theme.spacing.sm,
+    borderRadius: 14,
+    backgroundColor: theme.colors.glass,
+    borderWidth: 1,
+    borderColor: theme.colors.glassBorder,
+    overflow: "hidden",
+    position: "relative",
+  },
+  actionCardFull: {
+    width: "100%",
     marginBottom: theme.spacing.sm,
     borderRadius: 14,
     backgroundColor: theme.colors.glass,
