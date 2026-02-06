@@ -4,3 +4,4 @@ dist/
 build/
 *.log
 package-lock.json
+run_seed.js

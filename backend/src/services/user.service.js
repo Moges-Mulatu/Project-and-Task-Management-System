@@ -78,21 +78,40 @@ class UserService {
     }
 
     /**
-     * Search for users based on a query string
-     * @param {string} query - Name or email fragment
-     * @returns {Promise<Array>} List of matching users
+     * Update a user's role (Admin only)
+     * @param {string} id - User ID
+     * @param {string} role - New role
+     * @returns {Promise<Object>} Updated user object
      */
-    static async searchUsers(query) {
-        // Implementation for searching users - could be added to Model first
-        // For now, we'll keep it simple
-        const users = await User.findAll();
-        return users
-            .filter(u =>
-                u.firstName.toLowerCase().includes(query.toLowerCase()) ||
-                u.lastName.toLowerCase().includes(query.toLowerCase()) ||
-                u.email.toLowerCase().includes(query.toLowerCase())
-            )
-            .map(u => u.toJSON());
+    static async updateUserRole(id, role) {
+        try {
+            const user = await User.findById(id);
+            if (!user) {
+                throw new Error('User not found');
+            }
+            await user.update({ role });
+            return user.toJSON();
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Reactivate a user (Admin only)
+     * @param {string} id - User ID
+     * @returns {Promise<Object>} Updated user object
+     */
+    static async reactivateUser(id) {
+        try {
+            const user = await User.findById(id);
+            if (!user) {
+                throw new Error('User not found');
+            }
+            await user.update({ isActive: true });
+            return user.toJSON();
+        } catch (error) {
+            throw error;
+        }
     }
 }
 

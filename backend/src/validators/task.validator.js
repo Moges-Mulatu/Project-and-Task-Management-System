@@ -36,6 +36,7 @@ class TaskValidator {
         enum: ["todo", "in_progress", "review", "completed"],
       },
       { field: "priority", required: false, enum: ["low", "medium", "high"] },
+      { field: "progress", required: false, type: "number" },
     ];
   }
 

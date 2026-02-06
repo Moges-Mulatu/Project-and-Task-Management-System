@@ -23,14 +23,17 @@ class ProjectController {
     }
 
     /**
-     * Get all projects
+     * Get all projects with role-based visibility
      */
     static async getAll(req, res) {
         try {
             const filters = {
                 teamId: req.query.teamId,
                 status: req.query.status,
-                priority: req.query.priority
+                priority: req.query.priority,
+                userRole: req.user.role,
+                userTeamIds: req.user.teamIds || [], // You may need to populate this in auth middleware or fetch here
+                projectManagerId: req.user.role === 'project_manager' ? req.user.id : undefined
             };
             const projects = await ProjectService.getProjects(filters);
             return sendSuccess(res, 'Projects retrieved successfully', projects);
@@ -56,7 +59,7 @@ class ProjectController {
      */
     static async update(req, res) {
         try {
-            const project = await ProjectService.updateProject(req.params.id, req.body);
+            const project = await ProjectService.updateProject(req.params.id, req.body, req.user.id, req.user.role);
             return sendSuccess(res, 'Project updated successfully', project);
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -68,7 +71,7 @@ class ProjectController {
      */
     static async delete(req, res) {
         try {
-            await ProjectService.deleteProject(req.params.id);
+            await ProjectService.deleteProject(req.params.id, req.user.id, req.user.role);
             return sendSuccess(res, 'Project deleted successfully');
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -80,7 +83,7 @@ class ProjectController {
      */
     static async refreshProgress(req, res) {
         try {
-            const project = await ProjectService.refreshProgress(req.params.id);
+            const project = await ProjectService.refreshProgress(req.params.id, req.user.id, req.user.role);
             return sendSuccess(res, 'Project progress updated', { progress: project.progress });
         } catch (error) {
             return sendError(res, error.message, 400);

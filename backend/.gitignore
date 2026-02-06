@@ -3,3 +3,28 @@
 
 # Ignore node modules
 node_modules/
+
+# Logs and test results
+*.txt
+*.log
+results/
+*_results.txt
+
+# Temporary scripts and debugging tools
+admin_step1.js
+admin_test_roles.js
+direct_test.js
+test_conn.js
+test_output.txt
+hash.txt
+scripts/check-users.js
+scripts/seed.js
+scripts/test-admin.js
+scripts/test-pm.js
+scripts/test-member.js
+scripts/test-api.js
+super_audit.js
+test_db.js
+TEST_CASES.md
+scripts/super-audit.js
+audit_summary.txt
