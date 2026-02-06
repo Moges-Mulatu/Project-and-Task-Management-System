@@ -21,76 +21,20 @@ const ProjectsScreen = ({ navigation, user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const getMemberTeamIds = useCallback(async (teamsList) => {
-    if (!user?.id) return [];
-    const membershipChecks = await Promise.all(
-      teamsList.map(async (team) => {
-        try {
-          const membersRes = await api.getTeamMembers(team.id);
-          const members = membersRes.data || [];
-          const isMember = members.some(
-            (m) => m.userId === user.id || m.id === user.id
-          );
-          return isMember ? team.id : null;
-        } catch (err) {
-          return null;
-        }
-      })
-    );
-    return membershipChecks.filter(Boolean);
-  }, [user]);
-
   const loadProjects = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
+      // Backend now handles role-based filtering
       const response = await api.getProjects();
-      let projectsList = response.data || [];
-
-      if (user?.role === "team_member") {
-        const [tasksRes, teamsRes] = await Promise.all([
-          api.getTasks(),
-          api.getTeams(),
-        ]);
-
-        const tasks = tasksRes.data || [];
-        const teamsList = teamsRes.data || [];
-        const memberTeamIds = await getMemberTeamIds(teamsList);
-
-        const assignedTasks = tasks.filter((task) => {
-          const isDirectAssignment = task.assignedTo === user.id;
-          const isUserAssignment = Array.isArray(task.assignedToUsers) && task.assignedToUsers.includes(user.id);
-          const isTeamAssignment = Array.isArray(task.assignedToTeams) && task.assignedToTeams.some((teamId) => memberTeamIds.includes(teamId));
-          return isDirectAssignment || isUserAssignment || isTeamAssignment;
-        });
-
-        const assignedProjectIds = new Set(
-          assignedTasks.map((task) => task.projectId).filter(Boolean)
-        );
-
-        const teamProjectIds = new Set(
-          projectsList
-            .filter((project) => memberTeamIds.includes(project.teamId))
-            .map((project) => project.id)
-        );
-
-        const allowedProjectIds = new Set([
-          ...assignedProjectIds,
-          ...teamProjectIds,
-        ]);
-
-        projectsList = projectsList.filter((project) =>
-          allowedProjectIds.has(project.id)
-        );
-      }
-
+      const projectsList = response.data || [];
       setProjects(projectsList);
     } catch (err) {
       setError(err.message || "Failed to load projects");
     } finally {
       setLoading(false);
     }
-  }, [getMemberTeamIds, user]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {

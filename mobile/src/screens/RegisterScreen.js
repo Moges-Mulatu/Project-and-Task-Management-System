@@ -7,17 +7,15 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import AppText from "../components/AppText";
 import theme from "../theme";
 
-const ROLES = [
-  { id: "admin", label: "Admin" },
-  { id: "project_manager", label: "Project Manager" },
-  { id: "team_member", label: "Team Member" },
-];
+// Note: Role selection removed - backend enforces team_member for public registration
+// Only admins can later promote users to project_manager or admin roles
 
 const RegisterSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -41,9 +39,6 @@ const RegisterSchema = Yup.object().shape({
     .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
     .matches(/[0-9]/, "Password must contain at least one number")
     .required("Password is required"),
-  role: Yup.string()
-    .oneOf(["admin", "project_manager", "team_member"], "Invalid role")
-    .required("Role is required"),
 });
 
 const RegisterScreen = ({ onRegister, navigation }) => {
@@ -77,7 +72,6 @@ const RegisterScreen = ({ onRegister, navigation }) => {
             lastName: "",
             email: "",
             password: "",
-            role: "team_member",
           }}
           validationSchema={RegisterSchema}
           validateOnChange={false}
@@ -102,8 +96,6 @@ const RegisterScreen = ({ onRegister, navigation }) => {
             touched,
             isSubmitting,
             status,
-            setFieldValue,
-            setFieldTouched,
           }) => (
             <View style={styles.form}>
               <View style={styles.row}>
@@ -179,35 +171,12 @@ const RegisterScreen = ({ onRegister, navigation }) => {
                 )}
               </View>
 
-              <View style={styles.inputContainer}>
-                <AppText style={styles.label}>Role</AppText>
-                <View style={styles.roleContainer}>
-                  {ROLES.map((r) => (
-                    <TouchableOpacity
-                      key={r.id}
-                      style={[
-                        styles.roleButton,
-                        values.role === r.id && styles.roleButtonActive,
-                      ]}
-                      onPress={() => {
-                        setFieldValue("role", r.id);
-                        setFieldTouched("role", true);
-                      }}
-                    >
-                      <AppText
-                        style={[
-                          styles.roleText,
-                          values.role === r.id && styles.roleTextActive,
-                        ]}
-                      >
-                        {r.label}
-                      </AppText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                {touched.role && errors.role && (
-                  <AppText style={styles.fieldError}>{errors.role}</AppText>
-                )}
+              {/* Info about role assignment */}
+              <View style={styles.infoBox}>
+                <Ionicons name="information-circle-outline" size={18} color={theme.colors.brandBlue} />
+                <AppText style={styles.infoText}>
+                  New accounts start as Team Members. Admins can promote users to other roles.
+                </AppText>
               </View>
 
               {status ? <AppText style={styles.error}>{status}</AppText> : null}
@@ -312,37 +281,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  roleContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  roleButton: {
-    backgroundColor: theme.colors.glassDark,
-    borderRadius: 20,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    marginRight: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  roleButtonActive: {
-    backgroundColor: theme.colors.brandBlue,
-    borderColor: theme.colors.brandBlue,
-  },
-  roleText: {
-    color: theme.colors.textSecondary,
-    fontSize: 13,
-  },
-  roleTextActive: {
-    color: theme.colors.textPrimary,
-    fontWeight: "600",
-  },
   fieldError: {
     color: theme.colors.danger,
     fontSize: 12,
     marginTop: theme.spacing.xs,
     marginLeft: theme.spacing.xs,
+  },
+  infoBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.brandBlue + "15",
+    borderRadius: 12,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.brandBlue + "30",
+  },
+  infoText: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    marginLeft: theme.spacing.sm,
+    flex: 1,
   },
   error: {
     color: theme.colors.danger,

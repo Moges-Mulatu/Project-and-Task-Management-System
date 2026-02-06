@@ -59,11 +59,20 @@ const TaskDetailScreen = ({ route, navigation, user }) => {
 
   const progressOptions = [0, 25, 50, 75, 100];
   const statusOptions = [
-    { id: "pending", label: "Pending", icon: "time-outline" },
+    { id: "todo", label: "To Do", icon: "time-outline" },
     { id: "in_progress", label: "In Progress", icon: "play-outline" },
     { id: "review", label: "Review", icon: "eye-outline" },
     { id: "completed", label: "Completed", icon: "checkmark-circle-outline" },
   ];
+
+  // Check if current user can edit this task
+  const canEdit = () => {
+    if (!user) return false;
+    if (user.role === "admin") return true;
+    if (user.role === "project_manager") return true; // PM can edit tasks in their projects
+    if (user.role === "team_member" && task.assignedTo === user.id) return true;
+    return false;
+  };
 
   return (
     <ScreenContainer>
@@ -123,7 +132,7 @@ const TaskDetailScreen = ({ route, navigation, user }) => {
             <ProgressBar value={task.progress || 0} color={theme.colors.brandBlue} />
           </View>
 
-          {(user?.role === "team_member" || user?.role === "admin" || user?.role === "project_manager") && (
+          {canEdit() && (
             <View style={styles.progressButtons}>
               {progressOptions.map((val) => (
                 <TouchableOpacity
@@ -160,8 +169,8 @@ const TaskDetailScreen = ({ route, navigation, user }) => {
                   styles.statusOption,
                   task.status === option.id && styles.statusOptionActive,
                 ]}
-                onPress={() => handleUpdateStatus(option.id)}
-                disabled={loading}
+                onPress={() => canEdit() && handleUpdateStatus(option.id)}
+                disabled={loading || !canEdit()}
               >
                 <Ionicons
                   name={option.icon}
@@ -179,6 +188,11 @@ const TaskDetailScreen = ({ route, navigation, user }) => {
               </TouchableOpacity>
             ))}
           </View>
+          {!canEdit() && (
+            <AppText style={styles.restrictionNote}>
+              Only assigned users or managers can update this task
+            </AppText>
+          )}
         </AppCard>
 
         {loading && (
@@ -329,6 +343,13 @@ const styles = StyleSheet.create({
     left: "50%",
     marginLeft: -15,
     marginTop: -15,
+  },
+  restrictionNote: {
+    color: theme.colors.textMuted,
+    fontSize: 12,
+    fontStyle: "italic",
+    marginTop: theme.spacing.md,
+    textAlign: "center",
   },
 });
 

@@ -23,49 +23,19 @@ const TasksScreen = ({ navigation, user }) => {
   const [collapsedSections, setCollapsedSections] = useState({});
   const [selectedTaskId, setSelectedTaskId] = useState(null);
 
-  const getMemberTeamIds = useCallback(async (teamsList) => {
-    if (!user?.id) return [];
-    const membershipChecks = await Promise.all(
-      teamsList.map(async (team) => {
-        try {
-          const membersRes = await api.getTeamMembers(team.id);
-          const members = membersRes.data || [];
-          const isMember = members.some(
-            (m) => m.userId === user.id || m.id === user.id
-          );
-          return isMember ? team.id : null;
-        } catch (err) {
-          return null;
-        }
-      })
-    );
-    return membershipChecks.filter(Boolean);
-  }, [getMemberTeamIds, user]);
-
   const loadTasks = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       // Load tasks and projects in parallel
-      const [tasksRes, projectsRes, teamsRes] = await Promise.all([
+      // Backend now handles role-based filtering
+      const [tasksRes, projectsRes] = await Promise.all([
         api.getTasks(),
         api.getProjects().catch(() => ({ data: [] })),
-        api.getTeams().catch(() => ({ data: [] })),
       ]);
 
-      let tasks = tasksRes.data || [];
+      const tasks = tasksRes.data || [];
       const projects = projectsRes.data || [];
-      const teamsList = teamsRes.data || [];
-
-      if (user?.role === "team_member") {
-        const memberTeamIds = await getMemberTeamIds(teamsList);
-        tasks = tasks.filter((task) => {
-          const isDirectAssignment = task.assignedTo === user.id;
-          const isUserAssignment = Array.isArray(task.assignedToUsers) && task.assignedToUsers.includes(user.id);
-          const isTeamAssignment = Array.isArray(task.assignedToTeams) && task.assignedToTeams.some((teamId) => memberTeamIds.includes(teamId));
-          return isDirectAssignment || isUserAssignment || isTeamAssignment;
-        });
-      }
 
       // Create a map of projects by ID
       const projectMap = {};

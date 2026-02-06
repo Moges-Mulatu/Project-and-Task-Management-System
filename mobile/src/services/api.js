@@ -148,6 +148,17 @@ const api = {
     request(`/users/${id}`, {
       method: "DELETE",
     }),
+  // Admin-only: Update user role
+  updateUserRole: (id, role) =>
+    request(`/users/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  // Admin-only: Reactivate user
+  reactivateUser: (id) =>
+    request(`/users/${id}/reactivate`, {
+      method: "PATCH",
+    }),
 };
 
 export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth };

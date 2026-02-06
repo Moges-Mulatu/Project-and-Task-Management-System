@@ -23,7 +23,6 @@ const PRIORITIES = [
   { id: "low", label: "Low", color: theme.colors.textMuted },
   { id: "medium", label: "Medium", color: theme.colors.warning },
   { id: "high", label: "High", color: theme.colors.accentOrange },
-  { id: "critical", label: "Critical", color: theme.colors.danger },
 ];
 
 const TYPES = [
@@ -34,101 +33,95 @@ const TYPES = [
 
 const HOURS_OPTIONS = [1, 2, 4, 8, 16, 24, 40];
 
-const CreateTaskSchema = Yup.object()
-  .shape({
-    title: Yup.string()
-      .trim()
-      .min(3, "Title must be at least 3 characters")
-      .max(100, "Title cannot exceed 100 characters")
-      .required("Task title is required"),
-    description: Yup.string()
-      .trim()
-      .max(500, "Description cannot exceed 500 characters"),
-    projectId: Yup.string().required("Please select a project"),
-    priority: Yup.string()
-      .oneOf(["low", "medium", "high", "critical"], "Invalid priority")
-      .required("Priority is required"),
-    type: Yup.string()
-      .oneOf(["feature", "bug", "task"], "Invalid task type")
-      .required("Task type is required"),
-    assignedToUsers: Yup.array().of(Yup.string()),
-    assignedToTeams: Yup.array().of(Yup.string()),
-    dueDate: Yup.object().shape({
-      day: Yup.string().test(
-        "valid-day",
-        "Day must be between 1 and 31",
-        function (value) {
-          if (!value) return true; // Optional field
-          const { month, year } = this.parent;
-          // If any date field is filled, all must be filled
-          if (value || month || year) {
-            if (!value || !month || !year) {
-              return this.createError({
-                message: "Complete the date (DD/MM/YYYY)",
-              });
-            }
-            const d = parseInt(value);
-            return d >= 1 && d <= 31;
-          }
-          return true;
-        },
-      ),
-      month: Yup.string().test(
-        "valid-month",
-        "Month must be between 1 and 12",
-        function (value) {
-          if (!value) return true;
-          const { day, year } = this.parent;
-          if (value || day || year) {
-            if (!value || !day || !year) {
-              return this.createError({
-                message: "Complete the date (DD/MM/YYYY)",
-              });
-            }
-            const m = parseInt(value);
-            return m >= 1 && m <= 12;
-          }
-          return true;
-        },
-      ),
-      year: Yup.string().test(
-        "valid-year",
-        "Year must be between 2024 and 2030",
-        function (value) {
-          if (!value) return true;
-          const { day, month } = this.parent;
-          if (value || day || month) {
-            if (!value || !day || !month) {
-              return this.createError({
-                message: "Complete the date (DD/MM/YYYY)",
-              });
-            }
-            const y = parseInt(value);
-            return y >= 2024 && y <= 2030;
-          }
-          return true;
-        },
-      ),
-    }),
-    estimatedHours: Yup.string().test(
-      "valid-hours",
-      "Hours must be between 1 and 999",
+const CreateTaskSchema = Yup.object().shape({
+  title: Yup.string()
+    .trim()
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title cannot exceed 100 characters")
+    .required("Task title is required"),
+  description: Yup.string()
+    .trim()
+    .max(500, "Description cannot exceed 500 characters"),
+  projectId: Yup.string().required("Please select a project"),
+  priority: Yup.string()
+    .oneOf(["low", "medium", "high"], "Invalid priority")
+    .required("Priority is required"),
+  type: Yup.string()
+    .oneOf(["feature", "bug", "task"], "Invalid task type")
+    .required("Task type is required"),
+  assignedTo: Yup.string().required("Please assign to a user"),
+  deadline: Yup.object().shape({
+    day: Yup.string().test(
+      "valid-day",
+      "Day must be between 1 and 31",
       function (value) {
-        if (!value) return true; // Optional
-        const hours = parseInt(value);
-        return hours >= 1 && hours <= 999;
+        if (!value) return true;
+        const { month, year } = this.parent;
+        if (value || month || year) {
+          if (!value || !month || !year) {
+            return this.createError({
+              message: "Complete the date (DD/MM/YYYY)",
+            });
+          }
+          const d = parseInt(value);
+          return d >= 1 && d <= 31;
+        }
+        return true;
       },
     ),
-  })
-  .test(
-    "assignee-required",
-    "Please assign to at least one individual or team",
-    function (values) {
-      return !!(
-        values.assignedToUsers?.length > 0 || values.assignedToTeams?.length > 0
-      );
+    month: Yup.string().test(
+      "valid-month",
+      "Month must be between 1 and 12",
+      function (value) {
+        if (!value) return true;
+        const { day, year } = this.parent;
+        if (value || day || year) {
+          if (!value || !day || !year) {
+            return this.createError({
+              message: "Complete the date (DD/MM/YYYY)",
+            });
+          }
+          const m = parseInt(value);
+          return m >= 1 && m <= 12;
+        }
+        return true;
+      },
+    ),
+    year: Yup.string().test(
+      "valid-year",
+      "Year must be between 2024 and 2030",
+      function (value) {
+        if (!value) return true;
+        const { day, month } = this.parent;
+        if (value || day || month) {
+          if (!value || !day || !month) {
+            return this.createError({
+              message: "Complete the date (DD/MM/YYYY)",
+            });
+          }
+          const y = parseInt(value);
+          return y >= 2024 && y <= 2030;
+        }
+        return true;
+      },
+    ),
+  }).test(
+    "deadline-required",
+    "Deadline is required",
+    function (value) {
+      return !!(value?.day && value?.month && value?.year);
+    }
+  ),
+  estimatedHours: Yup.string().test(
+    "valid-hours",
+    "Hours must be between 1 and 999",
+    function (value) {
+      if (!value) return true;
+      const hours = parseInt(value);
+      return hours >= 1 && hours <= 999;
     },
-  );
+  ),
+});
 
 const CreateTaskScreen = ({ navigation, route, user }) => {
   const [projects, setProjects] = useState([]);
@@ -177,9 +170,8 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
             priority: "medium",
             type: "task",
             projectId: route.params?.projectId || "",
-            assignedToUsers: [],
-            assignedToTeams: [],
-            dueDate: { day: "", month: "", year: "" },
+            assignedTo: "",
+            deadline: { day: "", month: "", year: "" },
             estimatedHours: "",
           }}
           validationSchema={CreateTaskSchema}
@@ -188,8 +180,8 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {
-              const { year, month, day } = values.dueDate;
-              const formattedDate =
+              const { year, month, day } = values.deadline;
+              const formattedDeadline =
                 year && month && day
                   ? `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
                   : undefined;
@@ -200,9 +192,8 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                 priority: values.priority,
                 type: values.type,
                 projectId: values.projectId,
-                assignedToUsers: values.assignedToUsers,
-                assignedToTeams: values.assignedToTeams,
-                dueDate: formattedDate,
+                assignedTo: values.assignedTo,
+                deadline: formattedDeadline,
                 estimatedHours: values.estimatedHours
                   ? parseInt(values.estimatedHours)
                   : undefined,
@@ -408,9 +399,9 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                 )}
               </View>
 
-              {/* Due Date - Improved */}
+              {/* Deadline - Required */}
               <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Due Date</AppText>
+                <AppText style={styles.label}>Deadline *</AppText>
                 <View style={styles.dateRow}>
                   <View style={styles.dateInput}>
                     <AppText style={styles.dateLabel}>Day</AppText>
@@ -418,13 +409,13 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                       style={styles.dateField}
                       placeholder="DD"
                       placeholderTextColor={theme.colors.textMuted}
-                      value={values.dueDate.day}
+                      value={values.deadline.day}
                       onChangeText={(text) => {
                         setFieldValue(
-                          "dueDate.day",
+                          "deadline.day",
                           text.replace(/[^0-9]/g, "").slice(0, 2),
                         );
-                        setFieldTouched("dueDate.day", true);
+                        setFieldTouched("deadline.day", true);
                       }}
                       keyboardType="number-pad"
                       maxLength={2}
@@ -437,13 +428,13 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                       style={styles.dateField}
                       placeholder="MM"
                       placeholderTextColor={theme.colors.textMuted}
-                      value={values.dueDate.month}
+                      value={values.deadline.month}
                       onChangeText={(text) => {
                         setFieldValue(
-                          "dueDate.month",
+                          "deadline.month",
                           text.replace(/[^0-9]/g, "").slice(0, 2),
                         );
-                        setFieldTouched("dueDate.month", true);
+                        setFieldTouched("deadline.month", true);
                       }}
                       keyboardType="number-pad"
                       maxLength={2}
@@ -456,13 +447,13 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                       style={styles.dateField}
                       placeholder="YYYY"
                       placeholderTextColor={theme.colors.textMuted}
-                      value={values.dueDate.year}
+                      value={values.deadline.year}
                       onChangeText={(text) => {
                         setFieldValue(
-                          "dueDate.year",
+                          "deadline.year",
                           text.replace(/[^0-9]/g, "").slice(0, 4),
                         );
-                        setFieldTouched("dueDate.year", true);
+                        setFieldTouched("deadline.year", true);
                       }}
                       keyboardType="number-pad"
                       maxLength={4}
@@ -472,12 +463,12 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                     style={styles.todayButton}
                     onPress={() => {
                       const today = new Date();
-                      setFieldValue("dueDate", {
+                      setFieldValue("deadline", {
                         day: String(today.getDate()),
                         month: String(today.getMonth() + 1),
                         year: String(today.getFullYear()),
                       });
-                      setFieldTouched("dueDate", true);
+                      setFieldTouched("deadline", true);
                     }}
                   >
                     <Ionicons
@@ -500,12 +491,12 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                       onPress={() => {
                         const date = new Date();
                         date.setDate(date.getDate() + option.days);
-                        setFieldValue("dueDate", {
+                        setFieldValue("deadline", {
                           day: String(date.getDate()),
                           month: String(date.getMonth() + 1),
                           year: String(date.getFullYear()),
                         });
-                        setFieldTouched("dueDate", true);
+                        setFieldTouched("deadline", true);
                       }}
                     >
                       <AppText style={styles.quickDateText}>
@@ -514,14 +505,16 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                     </TouchableOpacity>
                   ))}
                 </View>
-                {touched.dueDate &&
-                  (errors.dueDate?.day ||
-                    errors.dueDate?.month ||
-                    errors.dueDate?.year) && (
+                {touched.deadline &&
+                  (errors.deadline?.day ||
+                    errors.deadline?.month ||
+                    errors.deadline?.year ||
+                    errors.deadline) && (
                     <AppText style={styles.fieldError}>
-                      {errors.dueDate?.day ||
-                        errors.dueDate?.month ||
-                        errors.dueDate?.year}
+                      {errors.deadline?.day ||
+                        errors.deadline?.month ||
+                        errors.deadline?.year ||
+                        (typeof errors.deadline === 'string' ? errors.deadline : '')}
                     </AppText>
                   )}
               </View>
@@ -584,16 +577,16 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                 )}
               </View>
 
-              {/* Assign To */}
+              {/* Assign To (Single User) */}
               <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Assign To</AppText>
+                <AppText style={styles.label}>Assign To *</AppText>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   style={styles.horizontalScroll}
                 >
                   {users.map((u) => {
-                    const isSelected = values.assignedToUsers.includes(u.id);
+                    const isSelected = values.assignedTo === u.id;
                     return (
                       <TouchableOpacity
                         key={u.id}
@@ -602,11 +595,8 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           isSelected && styles.userChipActive,
                         ]}
                         onPress={() => {
-                          const newUsers = isSelected
-                            ? values.assignedToUsers.filter((id) => id !== u.id)
-                            : [...values.assignedToUsers, u.id];
-                          setFieldValue("assignedToUsers", newUsers);
-                          setFieldTouched("assignedToUsers", true);
+                          setFieldValue("assignedTo", u.id);
+                          setFieldTouched("assignedTo", true);
                         }}
                       >
                         <View
@@ -639,81 +629,9 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                     );
                   })}
                 </ScrollView>
-              </View>
-
-              {/* OR Divider */}
-              <View style={styles.orDivider}>
-                <View style={styles.orLine} />
-                <AppText style={styles.orText}>OR</AppText>
-                <View style={styles.orLine} />
-              </View>
-
-              {/* Assign to Team */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Assign to Team</AppText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.horizontalScroll}
-                >
-                  {teams.map((team) => {
-                    const isSelected = values.assignedToTeams.includes(team.id);
-                    return (
-                      <TouchableOpacity
-                        key={team.id}
-                        style={[
-                          styles.teamChip,
-                          isSelected && styles.userChipActive,
-                        ]}
-                        onPress={() => {
-                          const newTeams = isSelected
-                            ? values.assignedToTeams.filter(
-                                (id) => id !== team.id,
-                              )
-                            : [...values.assignedToTeams, team.id];
-                          setFieldValue("assignedToTeams", newTeams);
-                          setFieldTouched("assignedToTeams", true);
-                        }}
-                      >
-                        <View
-                          style={[
-                            styles.teamAvatar,
-                            isSelected && styles.userAvatarActive,
-                          ]}
-                        >
-                          <Ionicons
-                            name="people"
-                            size={16}
-                            color={
-                              isSelected
-                                ? theme.colors.brandGreen
-                                : theme.colors.textSecondary
-                            }
-                          />
-                        </View>
-                        <AppText
-                          style={[
-                            styles.userName,
-                            isSelected && styles.userNameActive,
-                          ]}
-                        >
-                          {team.name}
-                        </AppText>
-                        {isSelected && (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={16}
-                            color={theme.colors.brandGreen}
-                            style={{ marginLeft: 4 }}
-                          />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-                {touched.assignedToTeams && errors.assignedToTeams && (
+                {touched.assignedTo && errors.assignedTo && (
                   <AppText style={styles.fieldError}>
-                    {errors.assignedToTeams}
+                    {errors.assignedTo}
                   </AppText>
                 )}
               </View>

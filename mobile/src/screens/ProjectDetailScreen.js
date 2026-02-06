@@ -21,53 +21,19 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const getMemberTeamIds = useCallback(async (teamsList) => {
-    if (!user?.id) return [];
-    const membershipChecks = await Promise.all(
-      teamsList.map(async (team) => {
-        try {
-          const membersRes = await api.getTeamMembers(team.id);
-          const members = membersRes.data || [];
-          const isMember = members.some(
-            (m) => m.userId === user.id || m.id === user.id
-          );
-          return isMember ? team.id : null;
-        } catch (err) {
-          return null;
-        }
-      })
-    );
-    return membershipChecks.filter(Boolean);
-  }, [user]);
-
   const loadProjectTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const [tasksRes, teamsRes] = await Promise.all([
-        api.getTasks({ projectId: project.id }),
-        api.getTeams().catch(() => ({ data: [] })),
-      ]);
-
-      let taskList = tasksRes.data || [];
-
-      if (user?.role === "team_member") {
-        const teamsList = teamsRes.data || [];
-        const memberTeamIds = await getMemberTeamIds(teamsList);
-        taskList = taskList.filter((task) => {
-          const isDirectAssignment = task.assignedTo === user.id;
-          const isUserAssignment = Array.isArray(task.assignedToUsers) && task.assignedToUsers.includes(user.id);
-          const isTeamAssignment = Array.isArray(task.assignedToTeams) && task.assignedToTeams.some((teamId) => memberTeamIds.includes(teamId));
-          return isDirectAssignment || isUserAssignment || isTeamAssignment;
-        });
-      }
-
+      // Backend now handles role-based filtering
+      const tasksRes = await api.getTasks({ projectId: project.id });
+      const taskList = tasksRes.data || [];
       setTasks(taskList);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [getMemberTeamIds, project.id, user]);
+  }, [project.id]);
 
   useFocusEffect(
     useCallback(() => {

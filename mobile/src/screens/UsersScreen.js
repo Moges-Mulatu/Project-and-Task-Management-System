@@ -26,6 +26,12 @@ const ROLE_FILTERS = [
   { key: "team_member", label: "Member", color: theme.colors.brandGreen },
 ];
 
+const ROLE_OPTIONS = [
+  { id: "admin", label: "Admin", color: theme.colors.accentPink },
+  { id: "project_manager", label: "Project Manager", color: theme.colors.brandBlue },
+  { id: "team_member", label: "Team Member", color: theme.colors.brandGreen },
+];
+
 const UsersScreen = ({ navigation, user: currentUser }) => {
   const [users, setUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -36,6 +42,8 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -161,6 +169,46 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
         },
       ]
     );
+  };
+
+  const handleReactivateUser = async (userId, userName) => {
+    Alert.alert(
+      "Reactivate User",
+      `Are you sure you want to reactivate ${userName}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reactivate",
+          onPress: async () => {
+            try {
+              await api.reactivateUser(userId);
+              setShowUserModal(false);
+              setSelectedUser(null);
+              loadData();
+              Alert.alert("Success", `${userName} has been reactivated.`);
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to reactivate user");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUpdateRole = async (newRole) => {
+    if (!selectedUser) return;
+    setUpdatingRole(true);
+    try {
+      await api.updateUserRole(selectedUser.id, newRole);
+      setShowRoleModal(false);
+      setSelectedUser({ ...selectedUser, role: newRole });
+      loadData();
+      Alert.alert("Success", `Role updated to ${getRoleLabel(newRole)}.`);
+    } catch (err) {
+      Alert.alert("Error", err.message || "Failed to update role");
+    } finally {
+      setUpdatingRole(false);
+    }
   };
 
   const openUserDetail = (userItem) => {
@@ -357,6 +405,15 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
               {/* Actions */}
               {currentUser?.role === "admin" && selectedUser.id !== currentUser?.id && (
                 <View style={styles.actionsSection}>
+                  {/* Role Change Button */}
+                  <TouchableOpacity
+                    style={styles.roleChangeButton}
+                    onPress={() => setShowRoleModal(true)}
+                  >
+                    <Ionicons name="shield-checkmark" size={20} color={theme.colors.brandBlue} />
+                    <AppText style={styles.roleChangeButtonText}>Change Role</AppText>
+                  </TouchableOpacity>
+
                   {selectedUser.isActive !== false ? (
                     <TouchableOpacity
                       style={styles.deactivateButton}
@@ -366,16 +423,73 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                       <AppText style={styles.deactivateButtonText}>Deactivate User</AppText>
                     </TouchableOpacity>
                   ) : (
-                    <View style={styles.deactivatedBadge}>
-                      <Ionicons name="information-circle" size={20} color={theme.colors.warning} />
-                      <AppText style={styles.deactivatedText}>This user has been deactivated</AppText>
-                    </View>
+                    <TouchableOpacity
+                      style={styles.reactivateButton}
+                      onPress={() => handleReactivateUser(selectedUser.id, `${selectedUser.firstName} ${selectedUser.lastName}`)}
+                    >
+                      <Ionicons name="person-add" size={20} color={theme.colors.brandGreen} />
+                      <AppText style={styles.reactivateButtonText}>Reactivate User</AppText>
+                    </TouchableOpacity>
                   )}
                 </View>
               )}
 
               <View style={{ height: 40 }} />
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  // Role Selection Modal
+  const renderRoleModal = () => {
+    if (!selectedUser) return null;
+
+    return (
+      <Modal
+        visible={showRoleModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowRoleModal(false)}
+      >
+        <View style={styles.roleModalOverlay}>
+          <View style={styles.roleModalContent}>
+            <AppText variant="h3" style={styles.roleModalTitle}>Change Role</AppText>
+            <AppText style={styles.roleModalSubtitle}>
+              Select a new role for {selectedUser.firstName}
+            </AppText>
+
+            {ROLE_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.roleOption,
+                  selectedUser.role === option.id && styles.roleOptionCurrent,
+                ]}
+                onPress={() => handleUpdateRole(option.id)}
+                disabled={updatingRole || selectedUser.role === option.id}
+              >
+                <View style={[styles.roleOptionDot, { backgroundColor: option.color }]} />
+                <AppText style={[
+                  styles.roleOptionText,
+                  selectedUser.role === option.id && styles.roleOptionTextCurrent,
+                ]}>
+                  {option.label}
+                  {selectedUser.role === option.id && " (Current)"}
+                </AppText>
+                {updatingRole && selectedUser.role !== option.id && (
+                  <ActivityIndicator size="small" color={theme.colors.brandBlue} />
+                )}
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity
+              style={styles.roleModalCancel}
+              onPress={() => setShowRoleModal(false)}
+            >
+              <AppText style={styles.roleModalCancelText}>Cancel</AppText>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -480,6 +594,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       )}
 
       {renderUserModal()}
+      {renderRoleModal()}
     </ScreenContainer>
   );
 };
@@ -764,6 +879,22 @@ const styles = StyleSheet.create({
   actionsSection: {
     marginTop: theme.spacing.sm,
   },
+  roleChangeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.brandBlue + "15",
+    borderWidth: 1,
+    borderColor: theme.colors.brandBlue,
+    borderRadius: 14,
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  roleChangeButtonText: {
+    color: theme.colors.brandBlue,
+    fontWeight: "600",
+    marginLeft: theme.spacing.sm,
+  },
   deactivateButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -776,6 +907,21 @@ const styles = StyleSheet.create({
   },
   deactivateButtonText: {
     color: theme.colors.danger,
+    fontWeight: "600",
+    marginLeft: theme.spacing.sm,
+  },
+  reactivateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.brandGreen + "15",
+    borderWidth: 1,
+    borderColor: theme.colors.brandGreen,
+    borderRadius: 14,
+    paddingVertical: theme.spacing.md,
+  },
+  reactivateButtonText: {
+    color: theme.colors.brandGreen,
     fontWeight: "600",
     marginLeft: theme.spacing.sm,
   },
@@ -792,6 +938,73 @@ const styles = StyleSheet.create({
     color: theme.colors.warning,
     marginLeft: theme.spacing.sm,
     fontSize: 13,
+  },
+  // Role Modal Styles
+  roleModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.xl,
+  },
+  roleModalContent: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+    padding: theme.spacing.xl,
+    width: "100%",
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: theme.colors.glassBorder,
+  },
+  roleModalTitle: {
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: theme.spacing.xs,
+  },
+  roleModalSubtitle: {
+    color: theme.colors.textMuted,
+    textAlign: "center",
+    marginBottom: theme.spacing.lg,
+    fontSize: 13,
+  },
+  roleOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: 12,
+    backgroundColor: theme.colors.glass,
+    marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  roleOptionCurrent: {
+    backgroundColor: theme.colors.brandBlue + "15",
+    borderColor: theme.colors.brandBlue,
+  },
+  roleOptionDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: theme.spacing.sm,
+  },
+  roleOptionText: {
+    flex: 1,
+    color: theme.colors.textSecondary,
+    fontWeight: "500",
+  },
+  roleOptionTextCurrent: {
+    color: theme.colors.textPrimary,
+    fontWeight: "600",
+  },
+  roleModalCancel: {
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: "center",
+  },
+  roleModalCancelText: {
+    color: theme.colors.textMuted,
+    fontWeight: "500",
   },
 });
 

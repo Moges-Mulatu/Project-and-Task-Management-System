@@ -58,6 +58,41 @@ const CreateTeamScreen = ({ navigation, user }) => {
     loadUsers();
   }, []);
 
+  // Check admin permission
+  if (user?.role !== "admin") {
+    return (
+      <ScreenContainer>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+          </TouchableOpacity>
+          <AppText variant="h3" style={styles.headerTitle}>
+            New Team
+          </AppText>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.permissionDenied}>
+          <Ionicons name="lock-closed" size={64} color={theme.colors.danger} />
+          <AppText variant="h3" style={styles.permissionTitle}>
+            Admin Access Required
+          </AppText>
+          <AppText style={styles.permissionText}>
+            Only administrators can create new teams. Contact your admin if you need a team created.
+          </AppText>
+          <TouchableOpacity
+            style={styles.goBackButton}
+            onPress={() => navigation.goBack()}
+          >
+            <AppText style={styles.goBackButtonText}>Go Back</AppText>
+          </TouchableOpacity>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
   // Filter users who can be team leads (admins and PMs)
   const potentialLeads = users.filter(
     (u) => u.role === "admin" || u.role === "project_manager",
@@ -605,6 +640,36 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
     marginLeft: theme.spacing.sm,
+  },
+  permissionDenied: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.xl,
+  },
+  permissionTitle: {
+    fontWeight: "700",
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
+    textAlign: "center",
+  },
+  permissionText: {
+    color: theme.colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: theme.spacing.xl,
+  },
+  goBackButton: {
+    backgroundColor: theme.colors.glass,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 14,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  goBackButtonText: {
+    color: theme.colors.textPrimary,
+    fontWeight: "600",
   },
 });
 
