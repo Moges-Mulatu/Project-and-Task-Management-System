@@ -1,5 +1,6 @@
 import ProjectService from '../services/project.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
+import { getDBConnection } from '../config/db.config.js';
 
 /**
  * Project Controller
@@ -27,12 +28,24 @@ class ProjectController {
      */
     static async getAll(req, res) {
         try {
+            let userTeamIds = [];
+            
+            // For team_members, fetch their team memberships from database
+            if (req.user.role === 'team_member') {
+                const connection = getDBConnection();
+                const [rows] = await connection.execute(
+                    'SELECT teamId FROM team_members WHERE userId = ? AND isActive = 1',
+                    [req.user.id]
+                );
+                userTeamIds = rows.map(row => row.teamId);
+            }
+
             const filters = {
                 teamId: req.query.teamId,
                 status: req.query.status,
                 priority: req.query.priority,
                 userRole: req.user.role,
-                userTeamIds: req.user.teamIds || [], // You may need to populate this in auth middleware or fetch here
+                userTeamIds: userTeamIds,
                 projectManagerId: req.user.role === 'project_manager' ? req.user.id : undefined
             };
             const projects = await ProjectService.getProjects(filters);
