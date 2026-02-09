@@ -29,6 +29,7 @@ class TaskController {
         try {
             const filters = {
                 projectId: req.query.projectId,
+                projectManagerId: req.query.projectManagerId,
                 assignedTo: req.query.assignedTo,
                 status: req.query.status,
                 priority: req.query.priority,
@@ -48,7 +49,7 @@ class TaskController {
      */
     static async getById(req, res) {
         try {
-            const task = await TaskService.getTaskById(req.params.id);
+            const task = await TaskService.getTaskById(req.params.id, req.user.id, req.user.role);
             return sendSuccess(res, 'Task retrieved successfully', task);
         } catch (error) {
             return sendError(res, error.message, 404);
@@ -72,7 +73,7 @@ class TaskController {
      */
     static async delete(req, res) {
         try {
-            await TaskService.deleteTask(req.params.id);
+            await TaskService.deleteTask(req.params.id, req.user.id, req.user.role);
             return sendSuccess(res, 'Task deleted successfully');
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -88,7 +89,7 @@ class TaskController {
                 text: req.body.text,
                 userId: req.user.id
             };
-            const task = await TaskService.addComment(req.params.id, comment);
+            const task = await TaskService.addComment(req.params.id, comment, req.user.id, req.user.role);
             return sendSuccess(res, 'Comment added successfully', task);
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -104,7 +105,7 @@ class TaskController {
                 ...req.body,
                 uploadedBy: req.user.id
             };
-            const task = await TaskService.addAttachment(req.params.id, attachment);
+            const task = await TaskService.addAttachment(req.params.id, attachment, req.user.id, req.user.role);
             return sendSuccess(res, 'Attachment added successfully', task);
         } catch (error) {
             return sendError(res, error.message, 400);

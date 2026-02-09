@@ -7,6 +7,18 @@ import { sendSuccess, sendError } from '../utils/response.util.js';
  */
 class UserController {
     /**
+     * Create a new user (Admin only)
+     */
+    static async create(req, res) {
+        try {
+            const user = await UserService.createUser(req.body);
+            return sendSuccess(res, 'User created successfully', user, 201);
+        } catch (error) {
+            return sendError(res, error.message, 400);
+        }
+    }
+
+    /**
      * Get the profile of the currently logged-in user
      */
     static async getMyProfile(req, res) {
@@ -23,7 +35,7 @@ class UserController {
      */
     static async updateMyProfile(req, res) {
         try {
-            const user = await UserService.updateProfile(req.user.id, req.body);
+            const user = await UserService.updateProfile(req.user.id, req.body, req.user.role);
             return sendSuccess(res, 'Profile updated successfully', user);
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -63,7 +75,7 @@ class UserController {
      */
     static async deactivateUser(req, res) {
         try {
-            await UserService.deactivateUser(req.params.id);
+            await UserService.deactivateUser(req.params.id, req.user.id);
             return sendSuccess(res, 'User deactivated successfully');
         } catch (error) {
             return sendError(res, error.message, 400);

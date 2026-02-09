@@ -100,35 +100,46 @@ class Report {
    */
   static async findAll(options = {}) {
     const connection = getDBConnection();
-    let query = 'SELECT * FROM reports';
+    let query = 'SELECT r.* FROM reports r';
     const values = [];
 
+    if (options.projectManagerId) {
+      query += ' JOIN projects p ON r.projectId = p.id';
+    }
+
+    query += ' WHERE 1=1';
+
+    if (options.projectManagerId) {
+      query += ' AND p.projectManagerId = ?';
+      values.push(options.projectManagerId);
+    }
+
     if (options.generatedBy) {
-      query += ' WHERE generatedBy = ?';
+      query += ' AND r.generatedBy = ?';
       values.push(options.generatedBy);
     }
 
     if (options.projectId) {
-      query += values.length > 0 ? ' AND projectId = ?' : ' WHERE projectId = ?';
+      query += ' AND r.projectId = ?';
       values.push(options.projectId);
     }
 
     if (options.teamId) {
-      query += values.length > 0 ? ' AND teamId = ?' : ' WHERE teamId = ?';
+      query += ' AND r.teamId = ?';
       values.push(options.teamId);
     }
 
     if (options.type) {
-      query += values.length > 0 ? ' AND type = ?' : ' WHERE type = ?';
+      query += ' AND r.type = ?';
       values.push(options.type);
     }
 
     if (options.status) {
-      query += values.length > 0 ? ' AND status = ?' : ' WHERE status = ?';
+      query += ' AND r.status = ?';
       values.push(options.status);
     }
 
-    query += ' ORDER BY createdAt DESC';
+    query += ' ORDER BY r.createdAt DESC';
 
     if (options.limit) {
       query += ' LIMIT ?';

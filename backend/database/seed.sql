@@ -16,15 +16,15 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- =========================================
 INSERT INTO users (id, firstName, lastName, email, password, role, department, position, isActive)
 VALUES
-('u1-admin-001', 'System', 'Admin', 'admin@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'admin', 'Management', 'System Administrator', 1),
-('u2-pm-001', 'Alex', 'Projector', 'pm@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'project_manager', 'Engineering', 'Project Lead', 1),
-('u3-member-001', 'John', 'Coder', 'member@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Software Engineer', 1),
-('u4-backend-001', 'Maria', 'Backend', 'backend@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Backend Developer', 1),
-('u5-frontend-001', 'Lisa', 'Frontend', 'frontend@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Frontend Developer', 1),
-('u6-mobile-001', 'Tom', 'Mobile', 'mobile@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Mobile Developer', 1),
-('u7-ux-001', 'Sara', 'UX', 'ux@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Design', 'UI/UX Designer', 1),
-('u8-pm-002', 'James', 'Manager', 'pm2@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'project_manager', 'Engineering', 'Project Lead', 1),
-('u9-member-002', 'Ben', 'Tester', 'member2@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'QA Engineer', 1);
+('u1-admin-001', 'System', 'Admin', 'admin@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'admin', 'Management', 'System Administrator', 1),
+('u2-pm-001', 'Alex', 'Projector', 'pm@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'project_manager', 'Engineering', 'Project Lead', 1),
+('u3-member-001', 'John', 'Coder', 'member@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'team_member', 'Engineering', 'Software Engineer', 1),
+('u4-backend-001', 'Maria', 'Backend', 'backend@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'team_member', 'Engineering', 'Backend Developer', 1),
+('u5-frontend-001', 'Lisa', 'Frontend', 'frontend@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'team_member', 'Engineering', 'Frontend Developer', 1),
+('u6-mobile-001', 'Tom', 'Mobile', 'mobile@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'team_member', 'Engineering', 'Mobile Developer', 1),
+('u7-ux-001', 'Sara', 'UX', 'ux@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'team_member', 'Design', 'UI/UX Designer', 1),
+('u8-pm-002', 'James', 'Manager', 'pm2@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'project_manager', 'Engineering', 'Project Lead', 1),
+('u9-member-002', 'Ben', 'Tester', 'member2@debo.com', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgOzt0bBduu', 'team_member', 'Engineering', 'QA Engineer', 1);
 
 -- =========================================
 -- TEAMS (as per spec: Team Structure)

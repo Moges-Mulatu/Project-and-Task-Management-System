@@ -1,5 +1,6 @@
 import Team from '../models/team.model.js';
 import TeamMember from '../models/teamMember.model.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Team Service
@@ -13,6 +14,15 @@ class TeamService {
      */
     static async createTeam(teamData) {
         try {
+            // Validate teamLeadId exists if provided
+            if (teamData.teamLeadId) {
+                const User = (await import('../models/user.model.js')).default;
+                const lead = await User.findById(teamData.teamLeadId);
+                if (!lead) {
+                    throw new Error('Team lead not found');
+                }
+            }
+
             return await Team.create(teamData);
         } catch (error) {
             throw new Error(`Error creating team: ${error.message}`);
@@ -50,25 +60,57 @@ class TeamService {
     }
 
     /**
-     * Update team details
+     * Get allowed update fields for teams
+     * @returns {Array} List of allowed field names
+     */
+    static getAllowedUpdateFields() {
+        return ['name', 'description', 'department', 'teamLeadId', 'maxMembers'];
+    }
+
+    /**
+     * Update team details with ownership check
      * @param {string} id - Team ID
      * @param {Object} updateData - Data to update
+     * @param {string} requesterId - ID of the user making the request
+     * @param {string} requesterRole - Role of the user making the request
      * @returns {Promise<Team>} Updated team instance
      */
-    static async updateTeam(id, updateData) {
+    static async updateTeam(id, updateData, requesterId, requesterRole) {
         try {
             const team = await Team.findById(id);
             if (!team) {
                 throw new Error('Team not found');
             }
-            return await team.update(updateData);
+
+            // Ownership check for PMs - can only update teams they lead
+            if (requesterRole === ROLES.PROJECT_MANAGER && team.teamLeadId !== requesterId) {
+                throw new Error('You can only update teams you lead');
+            }
+            // Admin can update any team
+
+            // Whitelist allowed fields
+            const allowedFields = this.getAllowedUpdateFields();
+            const filteredData = {};
+            for (const field of allowedFields) {
+                if (updateData[field] !== undefined) {
+                    filteredData[field] = updateData[field];
+                }
+            }
+
+            // Prevent changing protected fields
+            delete filteredData.id;
+            delete filteredData.currentMemberCount;
+            delete filteredData.createdAt;
+            delete filteredData.isActive;
+
+            return await team.update(filteredData);
         } catch (error) {
             throw error;
         }
     }
 
     /**
-     * Delete a team (soft delete)
+     * Delete a team (soft delete) with validation
      * @param {string} id - Team ID
      * @returns {Promise<boolean>} Success status
      */
@@ -78,6 +120,16 @@ class TeamService {
             if (!team) {
                 throw new Error('Team not found');
             }
+
+            // Check if team has active members
+            const activeMembers = await TeamMember.findByTeam(id);
+            if (activeMembers && activeMembers.length > 0) {
+                throw new Error('Cannot delete team with active members. Remove all members first.');
+            }
+
+            // Check if team has active projects (optional - can be added if Project model is imported)
+            // For now, we'll allow deletion but this could be enhanced
+
             return await team.delete();
         } catch (error) {
             throw error;
@@ -94,6 +146,27 @@ class TeamService {
      */
     static async addMember(teamId, userId, role = 'member', assignedBy = null) {
         try {
+            // Check if team exists and validate maxMembers
+            const team = await Team.findById(teamId);
+            if (!team) {
+                throw new Error('Team not found');
+            }
+
+            // Validate that the user exists and is active
+            const User = (await import('../models/user.model.js')).default;
+            const user = await User.findById(userId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+            if (!user.isActive) {
+                throw new Error('Cannot add inactive user to team');
+            }
+
+            // Check if team has reached maximum member limit
+            if (team.currentMemberCount >= team.maxMembers) {
+                throw new Error('Team has reached maximum member limit');
+            }
+
             // Check if membership already exists
             const existing = await TeamMember.findMembership(teamId, userId);
             if (existing) {
