@@ -15,7 +15,8 @@ class ProjectController {
         try {
             const projectData = {
                 ...req.body,
-                projectManagerId: req.body.projectManagerId || req.user.id // Use provided PM or default to self
+                // PMs can only create projects for themselves
+                projectManagerId: req.user.id
             };
             const project = await ProjectService.createProject(projectData);
             return sendSuccess(res, 'Project created successfully', project, 201);
