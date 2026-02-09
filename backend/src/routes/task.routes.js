@@ -13,11 +13,11 @@ router.use(protect);
 
 // Basic CRUD
 router.get('/', TaskController.getAll);
-// Task creation - PM only
+router.get('/:id', validateUUID('id'), TaskController.getById);
 router.post('/', restrictTo(ROLES.PROJECT_MANAGER), validate(TaskValidator.create), TaskController.create);
 
 // Task updates - PM and team members can update
-router.patch('/:id', validateUUID('id'), validate(TaskValidator.update), TaskController.update);
+router.patch('/:id', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER, ROLES.TEAM_MEMBER), validate(TaskValidator.update), TaskController.update);
 
 // Task deletion - PM only
 router.delete('/:id', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER), TaskController.delete);

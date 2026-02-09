@@ -13,6 +13,7 @@ import reportRoutes from './routes/report.routes.js';
 import { sendError } from './utils/response.util.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 import { getDBConnection } from './config/db.config.js';
+import { protect } from './middlewares/auth.middleware.js';
 
 const app = express();
 
@@ -86,7 +87,7 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
-app.get('/api/v1/system-stats', async (req, res) => {
+app.get('/api/v1/system-stats', protect, async (req, res) => {
     const connection = getDBConnection();
     const [u] = await connection.execute('SELECT count(*) as count FROM users');
     const [p] = await connection.execute('SELECT count(*) as count FROM projects');
