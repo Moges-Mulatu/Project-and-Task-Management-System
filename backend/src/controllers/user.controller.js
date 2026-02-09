@@ -47,6 +47,18 @@ class UserController {
     }
 
     /**
+     * Create a user (Admin only)
+     */
+    static async createUser(req, res) {
+        try {
+            const user = await UserService.createUser(req.body);
+            return sendSuccess(res, 'User created successfully', user, 201);
+        } catch (error) {
+            return sendError(res, error.message, 400);
+        }
+    }
+
+    /**
      * Get a specific user by ID (Admin only)
      */
     static async getUser(req, res) {

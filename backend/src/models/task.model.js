@@ -163,40 +163,84 @@ class Task {
    */
   static async findAll(options = {}) {
     const connection = getDBConnection();
-    let query = "SELECT * FROM tasks WHERE isActive = 1";
+    let query = "SELECT DISTINCT t.* FROM tasks t";
+    const joins = [];
+    const where = ["t.isActive = 1"];
     const values = [];
 
     if (options.projectId) {
-      query += " AND projectId = ?";
+      where.push("t.projectId = ?");
       values.push(options.projectId);
     }
 
     if (options.assignedTo) {
-      query += " AND assignedTo = ?";
+      where.push("t.assignedTo = ?");
       values.push(options.assignedTo);
     }
 
+    if (options.projectManagerId) {
+      joins.push("JOIN projects p ON p.id = t.projectId");
+      where.push("p.projectManagerId = ?");
+      values.push(options.projectManagerId);
+    }
+
+    if (
+      options.assignedToUserId ||
+      (options.assignedToTeamIds && options.assignedToTeamIds.length > 0)
+    ) {
+      joins.push("LEFT JOIN task_assignments ta ON ta.taskId = t.id");
+
+      const assignmentConditions = [];
+
+      if (options.assignedToUserId) {
+        assignmentConditions.push("t.assignedTo = ?");
+        assignmentConditions.push(
+          "(ta.assigneeType = 'user' AND ta.assigneeId = ?)",
+        );
+        values.push(options.assignedToUserId, options.assignedToUserId);
+      }
+
+      if (options.assignedToTeamIds && options.assignedToTeamIds.length > 0) {
+        const placeholders = options.assignedToTeamIds
+          .map(() => "?")
+          .join(", ");
+        assignmentConditions.push(
+          `(ta.assigneeType = 'team' AND ta.assigneeId IN (${placeholders}))`,
+        );
+        values.push(...options.assignedToTeamIds);
+      }
+
+      if (assignmentConditions.length > 0) {
+        where.push(`(${assignmentConditions.join(" OR ")})`);
+      }
+    }
+
     if (options.status) {
-      query += " AND status = ?";
+      where.push("t.status = ?");
       values.push(options.status);
     }
 
     if (options.priority) {
-      query += " AND priority = ?";
+      where.push("t.priority = ?");
       values.push(options.priority);
     }
 
     if (options.type) {
-      query += " AND type = ?";
+      where.push("t.type = ?");
       values.push(options.type);
     }
 
     if (options.parentTaskId) {
-      query += " AND parentTaskId = ?";
+      where.push("t.parentTaskId = ?");
       values.push(options.parentTaskId);
     }
 
-    query += " ORDER BY createdAt DESC";
+    if (joins.length > 0) {
+      query += ` ${joins.join(" ")}`;
+    }
+
+    query += ` WHERE ${where.join(" AND ")}`;
+    query += " ORDER BY t.createdAt DESC";
 
     if (options.limit) {
       query += " LIMIT ?";

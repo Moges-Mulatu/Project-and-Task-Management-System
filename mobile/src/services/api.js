@@ -89,10 +89,12 @@ const api = {
     request("/projects", {
       method: "POST",
       body: JSON.stringify(payload),
-    }),  deleteProject: (id) =>
+    }),
+  deleteProject: (id) =>
     request(`/projects/${id}`, {
       method: "DELETE",
-    }),  getTasks: (params) => request(`/tasks${buildQuery(params)}`),
+    }),
+  getTasks: (params) => request(`/tasks${buildQuery(params)}`),
   createTask: (payload) =>
     request("/tasks", {
       method: "POST",
@@ -142,6 +144,11 @@ const api = {
 
   // Users
   getUsers: (params) => request(`/users${buildQuery(params)}`),
+  createUser: (payload) =>
+    request("/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   getUser: (id) => request(`/users/${id}`),
   searchUsers: (query) => request(`/users/search${buildQuery({ q: query })}`),
   deactivateUser: (id) =>

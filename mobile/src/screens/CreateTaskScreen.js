@@ -50,68 +50,66 @@ const CreateTaskSchema = Yup.object().shape({
     .oneOf(["feature", "bug", "task"], "Invalid task type")
     .required("Task type is required"),
   assignedTo: Yup.string().required("Please assign to a user"),
-  deadline: Yup.object().shape({
-    day: Yup.string().test(
-      "valid-day",
-      "Day must be between 1 and 31",
-      function (value) {
-        if (!value) return true;
-        const { month, year } = this.parent;
-        if (value || month || year) {
-          if (!value || !month || !year) {
-            return this.createError({
-              message: "Complete the date (DD/MM/YYYY)",
-            });
+  deadline: Yup.object()
+    .shape({
+      day: Yup.string().test(
+        "valid-day",
+        "Day must be between 1 and 31",
+        function (value) {
+          if (!value) return true;
+          const { month, year } = this.parent;
+          if (value || month || year) {
+            if (!value || !month || !year) {
+              return this.createError({
+                message: "Complete the date (DD/MM/YYYY)",
+              });
+            }
+            const d = parseInt(value);
+            return d >= 1 && d <= 31;
           }
-          const d = parseInt(value);
-          return d >= 1 && d <= 31;
-        }
-        return true;
-      },
-    ),
-    month: Yup.string().test(
-      "valid-month",
-      "Month must be between 1 and 12",
-      function (value) {
-        if (!value) return true;
-        const { day, year } = this.parent;
-        if (value || day || year) {
-          if (!value || !day || !year) {
-            return this.createError({
-              message: "Complete the date (DD/MM/YYYY)",
-            });
+          return true;
+        },
+      ),
+      month: Yup.string().test(
+        "valid-month",
+        "Month must be between 1 and 12",
+        function (value) {
+          if (!value) return true;
+          const { day, year } = this.parent;
+          if (value || day || year) {
+            if (!value || !day || !year) {
+              return this.createError({
+                message: "Complete the date (DD/MM/YYYY)",
+              });
+            }
+            const m = parseInt(value);
+            return m >= 1 && m <= 12;
           }
-          const m = parseInt(value);
-          return m >= 1 && m <= 12;
-        }
-        return true;
-      },
-    ),
-    year: Yup.string().test(
-      "valid-year",
-      "Year must be between 2024 and 2030",
-      function (value) {
-        if (!value) return true;
-        const { day, month } = this.parent;
-        if (value || day || month) {
-          if (!value || !day || !month) {
-            return this.createError({
-              message: "Complete the date (DD/MM/YYYY)",
-            });
+          return true;
+        },
+      ),
+      year: Yup.string().test(
+        "valid-year",
+        "Year must be between 2024 and 2030",
+        function (value) {
+          if (!value) return true;
+          const { day, month } = this.parent;
+          if (value || day || month) {
+            if (!value || !day || !month) {
+              return this.createError({
+                message: "Complete the date (DD/MM/YYYY)",
+              });
+            }
+            const y = parseInt(value);
+            return y >= 2024 && y <= 2030;
           }
-          const y = parseInt(value);
-          return y >= 2024 && y <= 2030;
-        }
-        return true;
-      },
-    ),
-  }).test(
-    "deadline-required",
-    "Deadline is required",
-    function (value) {
+          return true;
+        },
+      ),
+    })
+    .test("deadline-required", "Deadline is required", function (value) {
       return !!(value?.day && value?.month && value?.year);
-    }
-  ),
+    }),
   estimatedHours: Yup.string().test(
     "valid-hours",
     "Hours must be between 1 and 999",
@@ -514,7 +512,9 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                       {errors.deadline?.day ||
                         errors.deadline?.month ||
                         errors.deadline?.year ||
-                        (typeof errors.deadline === 'string' ? errors.deadline : '')}
+                        (typeof errors.deadline === "string"
+                          ? errors.deadline
+                          : "")}
                     </AppText>
                   )}
               </View>

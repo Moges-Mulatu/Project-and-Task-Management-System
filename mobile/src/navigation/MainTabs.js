@@ -15,7 +15,7 @@ const Tab = createBottomTabNavigator();
 
 const CurvedTabBar = ({ state, descriptors, navigation }) => {
   const tabWidth = 70;
-  const tabBarWidth = tabWidth * 5;
+  const tabBarWidth = tabWidth * state.routes.length;
   const curveHeight = 30;
   const fabSize = 56;
 
@@ -47,7 +47,7 @@ const CurvedTabBar = ({ state, descriptors, navigation }) => {
       <View style={styles.tabBar}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
-          const isCenter = index === 2;
+          const isCenter = route.name === "Create";
 
           const iconMap = {
             Home: "home",
@@ -116,9 +116,11 @@ const MainTabs = ({ user, onLogout }) => {
       <Tab.Screen name="Projects">
         {(props) => <ProjectsScreen {...props} user={user} />}
       </Tab.Screen>
-      <Tab.Screen name="Create">
-        {(props) => <CreateScreen {...props} user={user} />}
-      </Tab.Screen>
+      {user?.role !== "team_member" && (
+        <Tab.Screen name="Create">
+          {(props) => <CreateScreen {...props} user={user} />}
+        </Tab.Screen>
+      )}
       <Tab.Screen name="Tasks">
         {(props) => <TasksScreen {...props} user={user} />}
       </Tab.Screen>

@@ -51,7 +51,7 @@ const HomeScreen = ({ navigation, user }) => {
       if (user) {
         loadHome();
       }
-    }, [loadHome, user])
+    }, [loadHome, user]),
   );
 
   // Generate week days starting from today
@@ -59,7 +59,7 @@ const HomeScreen = ({ navigation, user }) => {
     const days = [];
     const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const today = new Date();
-    
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -98,7 +98,10 @@ const HomeScreen = ({ navigation, user }) => {
 
   return (
     <ScreenContainer>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -121,22 +124,30 @@ const HomeScreen = ({ navigation, user }) => {
             style={styles.settingsButton}
             onPress={() => navigation.navigate("Profile")}
           >
-            <Ionicons name="settings-outline" size={22} color={theme.colors.textPrimary} />
+            <Ionicons
+              name="settings-outline"
+              size={22}
+              color={theme.colors.textPrimary}
+            />
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.searchBar}
           onPress={() => navigation.navigate("Search")}
         >
           <Ionicons name="search" size={18} color={theme.colors.textMuted} />
-          <AppText style={styles.searchText}>Search tasks and projects...</AppText>
+          <AppText style={styles.searchText}>
+            Search tasks and projects...
+          </AppText>
         </TouchableOpacity>
 
         {/* Projects Section */}
         <View style={styles.sectionHeader}>
-          <AppText variant="h3" style={styles.sectionTitle}>Project</AppText>
+          <AppText variant="h3" style={styles.sectionTitle}>
+            Project
+          </AppText>
           <TouchableOpacity onPress={() => navigation.navigate("Projects")}>
             <AppText style={styles.seeAll}>See All</AppText>
           </TouchableOpacity>
@@ -145,38 +156,71 @@ const HomeScreen = ({ navigation, user }) => {
         {loading ? (
           <ActivityIndicator color={theme.colors.accentBlue} />
         ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.projectsScroll}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.projectsScroll}
+          >
             {projects.slice(0, 3).map((project, index) => (
               <TouchableOpacity
                 key={project.id}
-                onPress={() => navigation.navigate("ProjectDetail", { project })}
+                onPress={() =>
+                  navigation.navigate("ProjectDetail", { project })
+                }
               >
                 <AppCard
-                  accentColor={index % 2 === 0 ? theme.colors.brandBlue : theme.colors.brandGreen}
+                  accentColor={
+                    index % 2 === 0
+                      ? theme.colors.brandBlue
+                      : theme.colors.brandGreen
+                  }
                   style={styles.projectCard}
                   glowIntensity="high"
                 >
-                  <AppText variant="h3" style={styles.projectTitle} numberOfLines={2}>
+                  <AppText
+                    variant="h3"
+                    style={styles.projectTitle}
+                    numberOfLines={2}
+                  >
                     {project.name}
                   </AppText>
                   <View style={styles.projectMeta}>
                     <View style={styles.avatarStack}>
                       {[0, 1, 2].map((i) => (
-                        <View key={i} style={[styles.miniAvatar, { marginLeft: i > 0 ? -8 : 0 }]}>
-                          <AppText style={styles.miniAvatarText}>{String.fromCharCode(65 + i)}</AppText>
+                        <View
+                          key={i}
+                          style={[
+                            styles.miniAvatar,
+                            { marginLeft: i > 0 ? -8 : 0 },
+                          ]}
+                        >
+                          <AppText style={styles.miniAvatarText}>
+                            {String.fromCharCode(65 + i)}
+                          </AppText>
                         </View>
                       ))}
                     </View>
                     <View style={styles.projectStats}>
-                      <Ionicons name="time-outline" size={12} color={theme.colors.textMuted} />
+                      <Ionicons
+                        name="time-outline"
+                        size={12}
+                        color={theme.colors.textMuted}
+                      />
                       <AppText style={styles.statText}>
                         {project.progress || 0}%
                       </AppText>
                     </View>
                   </View>
                   <View style={styles.taskCount}>
-                    <Ionicons name="checkbox-outline" size={12} color={theme.colors.textMuted} />
-                    <AppText style={styles.taskCountText}>{tasks.filter(t => t.projectId === project.id).length} Tasks</AppText>
+                    <Ionicons
+                      name="checkbox-outline"
+                      size={12}
+                      color={theme.colors.textMuted}
+                    />
+                    <AppText style={styles.taskCountText}>
+                      {tasks.filter((t) => t.projectId === project.id).length}{" "}
+                      Tasks
+                    </AppText>
                   </View>
                 </AppCard>
               </TouchableOpacity>
@@ -189,7 +233,9 @@ const HomeScreen = ({ navigation, user }) => {
 
         {/* Progress Section - Functional Calendar */}
         <View style={styles.sectionHeader}>
-          <AppText variant="h3" style={styles.sectionTitle}>Progress</AppText>
+          <AppText variant="h3" style={styles.sectionTitle}>
+            Progress
+          </AppText>
           <TouchableOpacity onPress={() => navigation.navigate("Tasks")}>
             <AppText style={styles.seeAll}>All Stats</AppText>
           </TouchableOpacity>
@@ -240,13 +286,19 @@ const HomeScreen = ({ navigation, user }) => {
           {/* Tasks for Selected Day */}
           <View style={styles.dayTasksContainer}>
             <AppText style={styles.dayTasksTitle}>
-              {weekDays[selectedDay]?.isToday ? "Today's Tasks" : `Tasks for ${weekDays[selectedDay]?.dayName}`}
-              {" "}({tasksForSelectedDay.length})
+              {weekDays[selectedDay]?.isToday
+                ? "Today's Tasks"
+                : `Tasks for ${weekDays[selectedDay]?.dayName}`}{" "}
+              ({tasksForSelectedDay.length})
             </AppText>
-            
+
             {tasksForSelectedDay.length === 0 ? (
               <View style={styles.noTasks}>
-                <Ionicons name="calendar-outline" size={24} color={theme.colors.textMuted} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={24}
+                  color={theme.colors.textMuted}
+                />
                 <AppText style={styles.noTasksText}>No tasks scheduled</AppText>
               </View>
             ) : (
@@ -256,7 +308,12 @@ const HomeScreen = ({ navigation, user }) => {
                   style={styles.dayTaskItem}
                   onPress={() => navigation.navigate("TaskDetail", { task })}
                 >
-                  <View style={[styles.taskIndicator, { backgroundColor: getStatusColor(task.status) }]} />
+                  <View
+                    style={[
+                      styles.taskIndicator,
+                      { backgroundColor: getStatusColor(task.status) },
+                    ]}
+                  />
                   <View style={styles.taskInfo}>
                     <AppText style={styles.taskItemTitle} numberOfLines={1}>
                       {task.title}
@@ -265,13 +322,17 @@ const HomeScreen = ({ navigation, user }) => {
                       {task.progress || 0}% • {task.status?.replace("_", " ")}
                     </AppText>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={16}
+                    color={theme.colors.textMuted}
+                  />
                 </TouchableOpacity>
               ))
             )}
-            
+
             {tasksForSelectedDay.length > 3 && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.viewMoreButton}
                 onPress={() => navigation.navigate("Tasks")}
               >
@@ -289,10 +350,18 @@ const HomeScreen = ({ navigation, user }) => {
                 key={i}
                 style={[
                   styles.teamAvatar,
-                  { marginLeft: i > 0 ? -10 : 0, backgroundColor: i % 2 === 0 ? theme.colors.brandBlue : theme.colors.brandGreen },
+                  {
+                    marginLeft: i > 0 ? -10 : 0,
+                    backgroundColor:
+                      i % 2 === 0
+                        ? theme.colors.brandBlue
+                        : theme.colors.brandGreen,
+                  },
                 ]}
               >
-                <AppText style={styles.teamAvatarText}>{String.fromCharCode(65 + i)}</AppText>
+                <AppText style={styles.teamAvatarText}>
+                  {String.fromCharCode(65 + i)}
+                </AppText>
               </View>
             ))}
           </View>
@@ -300,7 +369,9 @@ const HomeScreen = ({ navigation, user }) => {
 
         {/* Quick Actions */}
         <View style={styles.sectionHeader}>
-          <AppText variant="h3" style={styles.sectionTitle}>Quick Actions</AppText>
+          <AppText variant="h3" style={styles.sectionTitle}>
+            Quick Actions
+          </AppText>
         </View>
 
         <View style={styles.quickActionsGrid}>
@@ -312,14 +383,35 @@ const HomeScreen = ({ navigation, user }) => {
                 onPress={() => navigation.navigate("CreateTask")}
                 activeOpacity={0.8}
               >
-                <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandBlue }]} />
-                <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandBlue }]} />
+                <View
+                  style={[
+                    styles.actionGlowLine,
+                    { backgroundColor: theme.colors.brandBlue },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.actionGlowEffect,
+                    { shadowColor: theme.colors.brandBlue },
+                  ]}
+                />
                 <View style={styles.actionCardContent}>
-                  <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandBlue + "30" }]}>
-                    <Ionicons name="add-circle" size={20} color={theme.colors.brandBlue} />
+                  <View
+                    style={[
+                      styles.actionIconLarge,
+                      { backgroundColor: theme.colors.brandBlue + "30" },
+                    ]}
+                  >
+                    <Ionicons
+                      name="add-circle"
+                      size={20}
+                      color={theme.colors.brandBlue}
+                    />
                   </View>
                   <AppText style={styles.actionCardTitle}>New Task</AppText>
-                  <AppText style={styles.actionCardSub}>Create & assign</AppText>
+                  <AppText style={styles.actionCardSub}>
+                    Create & assign
+                  </AppText>
                 </View>
               </TouchableOpacity>
 
@@ -328,11 +420,30 @@ const HomeScreen = ({ navigation, user }) => {
                 onPress={() => navigation.navigate("CreateProject")}
                 activeOpacity={0.8}
               >
-                <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-                <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
+                <View
+                  style={[
+                    styles.actionGlowLine,
+                    { backgroundColor: theme.colors.brandGreen },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.actionGlowEffect,
+                    { shadowColor: theme.colors.brandGreen },
+                  ]}
+                />
                 <View style={styles.actionCardContent}>
-                  <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                    <Ionicons name="folder-open" size={20} color={theme.colors.brandGreen} />
+                  <View
+                    style={[
+                      styles.actionIconLarge,
+                      { backgroundColor: theme.colors.brandGreen + "30" },
+                    ]}
+                  >
+                    <Ionicons
+                      name="folder-open"
+                      size={20}
+                      color={theme.colors.brandGreen}
+                    />
                   </View>
                   <AppText style={styles.actionCardTitle}>New Project</AppText>
                   <AppText style={styles.actionCardSub}>Start fresh</AppText>
@@ -347,14 +458,39 @@ const HomeScreen = ({ navigation, user }) => {
             onPress={() => navigation.navigate("Tasks")}
             activeOpacity={0.8}
           >
-            <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-            <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
+            <View
+              style={[
+                styles.actionGlowLine,
+                { backgroundColor: theme.colors.brandGreen },
+              ]}
+            />
+            <View
+              style={[
+                styles.actionGlowEffect,
+                { shadowColor: theme.colors.brandGreen },
+              ]}
+            />
             <View style={styles.actionCardContent}>
-              <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                <Ionicons name="checkbox" size={20} color={theme.colors.brandGreen} />
+              <View
+                style={[
+                  styles.actionIconLarge,
+                  { backgroundColor: theme.colors.brandGreen + "30" },
+                ]}
+              >
+                <Ionicons
+                  name="checkbox"
+                  size={20}
+                  color={theme.colors.brandGreen}
+                />
               </View>
-              <AppText style={styles.actionCardTitle}>{user?.role === "team_member" ? "My Tasks" : "All Tasks"}</AppText>
-              <AppText style={styles.actionCardSub}>{user?.role === "team_member" ? "Update progress" : "View tasks"}</AppText>
+              <AppText style={styles.actionCardTitle}>
+                {user?.role === "team_member" ? "My Tasks" : "All Tasks"}
+              </AppText>
+              <AppText style={styles.actionCardSub}>
+                {user?.role === "team_member"
+                  ? "Update progress"
+                  : "View tasks"}
+              </AppText>
             </View>
           </TouchableOpacity>
 
@@ -364,14 +500,35 @@ const HomeScreen = ({ navigation, user }) => {
             onPress={() => navigation.navigate("Teams")}
             activeOpacity={0.8}
           >
-            <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.brandGreen }]} />
-            <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.brandGreen }]} />
+            <View
+              style={[
+                styles.actionGlowLine,
+                { backgroundColor: theme.colors.brandGreen },
+              ]}
+            />
+            <View
+              style={[
+                styles.actionGlowEffect,
+                { shadowColor: theme.colors.brandGreen },
+              ]}
+            />
             <View style={styles.actionCardContent}>
-              <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-                <Ionicons name="people" size={20} color={theme.colors.brandGreen} />
+              <View
+                style={[
+                  styles.actionIconLarge,
+                  { backgroundColor: theme.colors.brandGreen + "30" },
+                ]}
+              >
+                <Ionicons
+                  name="people"
+                  size={20}
+                  color={theme.colors.brandGreen}
+                />
               </View>
               <AppText style={styles.actionCardTitle}>Teams</AppText>
-              <AppText style={styles.actionCardSub}>{user?.role === "admin" ? "Manage teams" : "View teams"}</AppText>
+              <AppText style={styles.actionCardSub}>
+                {user?.role === "admin" ? "Manage teams" : "View teams"}
+              </AppText>
             </View>
           </TouchableOpacity>
 
@@ -382,11 +539,30 @@ const HomeScreen = ({ navigation, user }) => {
               onPress={() => navigation.navigate("Reports")}
               activeOpacity={0.8}
             >
-              <View style={[styles.actionGlowLine, { backgroundColor: theme.colors.accentOrange }]} />
-              <View style={[styles.actionGlowEffect, { shadowColor: theme.colors.accentOrange }]} />
+              <View
+                style={[
+                  styles.actionGlowLine,
+                  { backgroundColor: theme.colors.accentOrange },
+                ]}
+              />
+              <View
+                style={[
+                  styles.actionGlowEffect,
+                  { shadowColor: theme.colors.accentOrange },
+                ]}
+              />
               <View style={styles.actionCardContent}>
-                <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentOrange + "30" }]}>
-                  <Ionicons name="analytics" size={20} color={theme.colors.accentOrange} />
+                <View
+                  style={[
+                    styles.actionIconLarge,
+                    { backgroundColor: theme.colors.accentOrange + "30" },
+                  ]}
+                >
+                  <Ionicons
+                    name="analytics"
+                    size={20}
+                    color={theme.colors.accentOrange}
+                  />
                 </View>
                 <AppText style={styles.actionCardTitle}>Reports</AppText>
                 <AppText style={styles.actionCardSub}>Monitor progress</AppText>
@@ -401,10 +577,27 @@ const HomeScreen = ({ navigation, user }) => {
               onPress={() => navigation.navigate("Users")}
               activeOpacity={0.8}
             >
-              <View style={[styles.actionGlowLineFull, { backgroundColor: theme.colors.accentPink }]} />
+              <View
+                style={[
+                  styles.actionGlowLineFull,
+                  { backgroundColor: theme.colors.accentPink },
+                ]}
+              />
               <View style={styles.actionCardContentFull}>
-                <View style={[styles.actionIconLarge, { backgroundColor: theme.colors.accentPink + "30", marginBottom: 0 }]}>
-                  <Ionicons name="person-circle" size={20} color={theme.colors.accentPink} />
+                <View
+                  style={[
+                    styles.actionIconLarge,
+                    {
+                      backgroundColor: theme.colors.accentPink + "30",
+                      marginBottom: 0,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="person-circle"
+                    size={20}
+                    color={theme.colors.accentPink}
+                  />
                 </View>
                 <View style={styles.actionTextContainer}>
                   <AppText style={styles.actionCardTitle}>Users</AppText>

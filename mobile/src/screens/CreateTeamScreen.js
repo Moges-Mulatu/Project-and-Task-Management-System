@@ -80,7 +80,8 @@ const CreateTeamScreen = ({ navigation, user }) => {
             Admin Access Required
           </AppText>
           <AppText style={styles.permissionText}>
-            Only administrators can create new teams. Contact your admin if you need a team created.
+            Only administrators can create new teams. Contact your admin if you
+            need a team created.
           </AppText>
           <TouchableOpacity
             style={styles.goBackButton}

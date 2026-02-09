@@ -32,7 +32,7 @@ const ReportsScreen = ({ navigation, user }) => {
       Alert.alert(
         "Access Denied",
         "Only project managers can access reports to monitor progress.",
-        [{ text: "OK", onPress: () => navigation.goBack() }]
+        [{ text: "OK", onPress: () => navigation.goBack() }],
       );
     }
   }, [user, navigation]);
@@ -49,7 +49,8 @@ const ReportsScreen = ({ navigation, user }) => {
   const [showReportDetail, setShowReportDetail] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const [reportTypeToGenerate, setReportTypeToGenerate] = useState("project_summary");
+  const [reportTypeToGenerate, setReportTypeToGenerate] =
+    useState("project_summary");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -75,7 +76,7 @@ const ReportsScreen = ({ navigation, user }) => {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const handleGenerateReport = async () => {
@@ -83,26 +84,39 @@ const ReportsScreen = ({ navigation, user }) => {
     try {
       if (reportTypeToGenerate === "project_summary") {
         if (!selectedProject) {
-          Alert.alert("Select Project", "Please select a project to generate a summary report.");
+          Alert.alert(
+            "Select Project",
+            "Please select a project to generate a summary report.",
+          );
           setGenerating(false);
           return;
         }
         await api.generateProjectSummary(selectedProject.id);
-        Alert.alert("Success", "Project summary report generated successfully!");
+        Alert.alert(
+          "Success",
+          "Project summary report generated successfully!",
+        );
       } else if (reportTypeToGenerate === "team_performance") {
         if (!selectedTeam) {
-          Alert.alert("Select Team", "Please select a team to generate a performance report.");
+          Alert.alert(
+            "Select Team",
+            "Please select a team to generate a performance report.",
+          );
           setGenerating(false);
           return;
         }
         // Calculate team stats
-        const teamTasks = tasks.filter(t => {
-          const project = projects.find(p => p.id === t.projectId);
+        const teamTasks = tasks.filter((t) => {
+          const project = projects.find((p) => p.id === t.projectId);
           return project?.teamId === selectedTeam.id;
         });
-        const completedTasks = teamTasks.filter(t => t.status === "completed").length;
-        const inProgressTasks = teamTasks.filter(t => t.status === "in_progress").length;
-        
+        const completedTasks = teamTasks.filter(
+          (t) => t.status === "completed",
+        ).length;
+        const inProgressTasks = teamTasks.filter(
+          (t) => t.status === "in_progress",
+        ).length;
+
         await api.createReport({
           title: `Team Performance: ${selectedTeam.name}`,
           type: "team_performance",
@@ -115,25 +129,31 @@ const ReportsScreen = ({ navigation, user }) => {
             completedTasks,
             inProgressTasks,
             pendingTasks: teamTasks.length - completedTasks - inProgressTasks,
-            completionRate: teamTasks.length > 0 
-              ? Math.round((completedTasks / teamTasks.length) * 100) 
-              : 0,
+            completionRate:
+              teamTasks.length > 0
+                ? Math.round((completedTasks / teamTasks.length) * 100)
+                : 0,
           },
           status: "completed",
         });
-        Alert.alert("Success", "Team performance report generated successfully!");
+        Alert.alert(
+          "Success",
+          "Team performance report generated successfully!",
+        );
       } else if (reportTypeToGenerate === "task_bottlenecks") {
         // Analyze task bottlenecks
-        const overdueTasks = tasks.filter(t => {
+        const overdueTasks = tasks.filter((t) => {
           if (!t.dueDate || t.status === "completed") return false;
           return new Date(t.dueDate) < new Date();
         });
-        const blockedTasks = tasks.filter(t => t.status === "blocked");
-        const highPriorityPending = tasks.filter(t => 
-          (t.priority === "high" || t.priority === "critical") && t.status !== "completed"
+        const blockedTasks = tasks.filter((t) => t.status === "blocked");
+        const highPriorityPending = tasks.filter(
+          (t) =>
+            (t.priority === "high" || t.priority === "critical") &&
+            t.status !== "completed",
         );
-        const longRunningTasks = tasks.filter(t => 
-          t.status === "in_progress" && t.progress < 50
+        const longRunningTasks = tasks.filter(
+          (t) => t.status === "in_progress" && t.progress < 50,
         );
 
         await api.createReport({
@@ -142,19 +162,33 @@ const ReportsScreen = ({ navigation, user }) => {
           reportData: {
             totalTasks: tasks.length,
             overdueTasks: overdueTasks.length,
-            overdueTasksList: overdueTasks.slice(0, 5).map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate })),
+            overdueTasksList: overdueTasks
+              .slice(0, 5)
+              .map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate })),
             blockedTasks: blockedTasks.length,
-            blockedTasksList: blockedTasks.slice(0, 5).map(t => ({ id: t.id, title: t.title })),
+            blockedTasksList: blockedTasks
+              .slice(0, 5)
+              .map((t) => ({ id: t.id, title: t.title })),
             highPriorityPending: highPriorityPending.length,
-            highPriorityList: highPriorityPending.slice(0, 5).map(t => ({ id: t.id, title: t.title, priority: t.priority })),
+            highPriorityList: highPriorityPending
+              .slice(0, 5)
+              .map((t) => ({ id: t.id, title: t.title, priority: t.priority })),
             slowProgressTasks: longRunningTasks.length,
-            riskScore: Math.min(100, (overdueTasks.length * 10) + (blockedTasks.length * 15) + (highPriorityPending.length * 5)),
+            riskScore: Math.min(
+              100,
+              overdueTasks.length * 10 +
+                blockedTasks.length * 15 +
+                highPriorityPending.length * 5,
+            ),
           },
           status: "completed",
         });
-        Alert.alert("Success", "Task bottlenecks report generated successfully!");
+        Alert.alert(
+          "Success",
+          "Task bottlenecks report generated successfully!",
+        );
       }
-      
+
       setShowGenerateModal(false);
       setSelectedProject(null);
       setSelectedTeam(null);
@@ -186,7 +220,7 @@ const ReportsScreen = ({ navigation, user }) => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -242,32 +276,56 @@ const ReportsScreen = ({ navigation, user }) => {
     }
   };
 
-  const filteredReports = activeFilter === "all"
-    ? reports
-    : reports.filter((r) => r.type === activeFilter);
+  const filteredReports =
+    activeFilter === "all"
+      ? reports
+      : reports.filter((r) => r.type === activeFilter);
 
   const renderReport = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => setShowReportDetail(item)}
     >
-      <AppCard
-        accentColor={getTypeColor(item.type)}
-        glowIntensity="medium"
-      >
+      <AppCard accentColor={getTypeColor(item.type)} glowIntensity="medium">
         <View style={styles.cardHeader}>
-          <View style={[styles.typeIcon, { backgroundColor: getTypeColor(item.type) + "25" }]}>
-            <Ionicons name={getTypeIcon(item.type)} size={22} color={getTypeColor(item.type)} />
+          <View
+            style={[
+              styles.typeIcon,
+              { backgroundColor: getTypeColor(item.type) + "25" },
+            ]}
+          >
+            <Ionicons
+              name={getTypeIcon(item.type)}
+              size={22}
+              color={getTypeColor(item.type)}
+            />
           </View>
           <View style={styles.reportInfo}>
             <AppText variant="h3" style={styles.reportTitle} numberOfLines={1}>
               {item.title}
             </AppText>
-            <AppText style={styles.reportType}>{getTypeLabel(item.type)}</AppText>
+            <AppText style={styles.reportType}>
+              {getTypeLabel(item.type)}
+            </AppText>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + "25" }]}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-            <AppText style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(item.status) + "25" },
+            ]}
+          >
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: getStatusColor(item.status) },
+              ]}
+            />
+            <AppText
+              style={[
+                styles.statusText,
+                { color: getStatusColor(item.status) },
+              ]}
+            >
               {item.status}
             </AppText>
           </View>
@@ -277,23 +335,31 @@ const ReportsScreen = ({ navigation, user }) => {
         {item.reportData && item.type === "project_summary" && (
           <View style={styles.dataPreview}>
             <View style={styles.dataItem}>
-              <AppText style={styles.dataValue}>{item.reportData.totalTasks || 0}</AppText>
+              <AppText style={styles.dataValue}>
+                {item.reportData.totalTasks || 0}
+              </AppText>
               <AppText style={styles.dataLabel}>Total Tasks</AppText>
             </View>
             <View style={styles.dataItem}>
-              <AppText style={[styles.dataValue, { color: theme.colors.brandGreen }]}>
+              <AppText
+                style={[styles.dataValue, { color: theme.colors.brandGreen }]}
+              >
                 {item.reportData.completedTasks || 0}
               </AppText>
               <AppText style={styles.dataLabel}>Completed</AppText>
             </View>
             <View style={styles.dataItem}>
-              <AppText style={[styles.dataValue, { color: theme.colors.warning }]}>
+              <AppText
+                style={[styles.dataValue, { color: theme.colors.warning }]}
+              >
                 {item.reportData.pendingTasks || 0}
               </AppText>
               <AppText style={styles.dataLabel}>Pending</AppText>
             </View>
             <View style={styles.dataItem}>
-              <AppText style={[styles.dataValue, { color: theme.colors.brandBlue }]}>
+              <AppText
+                style={[styles.dataValue, { color: theme.colors.brandBlue }]}
+              >
                 {item.reportData.projectProgress || 0}%
               </AppText>
               <AppText style={styles.dataLabel}>Progress</AppText>
@@ -303,12 +369,22 @@ const ReportsScreen = ({ navigation, user }) => {
 
         <View style={styles.cardFooter}>
           <View style={styles.metaItem}>
-            <Ionicons name="calendar-outline" size={14} color={theme.colors.textMuted} />
+            <Ionicons
+              name="calendar-outline"
+              size={14}
+              color={theme.colors.textMuted}
+            />
             <AppText style={styles.metaText}>
-              {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A"}
+              {item.createdAt
+                ? new Date(item.createdAt).toLocaleDateString()
+                : "N/A"}
             </AppText>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={theme.colors.textMuted}
+          />
         </View>
       </AppCard>
     </TouchableOpacity>
@@ -331,14 +407,24 @@ const ReportsScreen = ({ navigation, user }) => {
                 onPress={() => setShowReportDetail(null)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.textPrimary}
+                />
               </TouchableOpacity>
-              <AppText variant="h3" style={styles.modalTitle}>Report Details</AppText>
+              <AppText variant="h3" style={styles.modalTitle}>
+                Report Details
+              </AppText>
               <TouchableOpacity
                 onPress={() => handleDeleteReport(showReportDetail?.id)}
                 style={styles.modalDeleteBtn}
               >
-                <Ionicons name="trash-outline" size={20} color={theme.colors.danger} />
+                <Ionicons
+                  name="trash-outline"
+                  size={20}
+                  color={theme.colors.danger}
+                />
               </TouchableOpacity>
             </View>
 
@@ -346,7 +432,15 @@ const ReportsScreen = ({ navigation, user }) => {
               <>
                 {/* Title & Type */}
                 <View style={styles.detailSection}>
-                  <View style={[styles.detailIcon, { backgroundColor: getTypeColor(showReportDetail.type) + "25" }]}>
+                  <View
+                    style={[
+                      styles.detailIcon,
+                      {
+                        backgroundColor:
+                          getTypeColor(showReportDetail.type) + "25",
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name={getTypeIcon(showReportDetail.type)}
                       size={32}
@@ -356,8 +450,21 @@ const ReportsScreen = ({ navigation, user }) => {
                   <AppText variant="h2" style={styles.detailTitle}>
                     {showReportDetail.title}
                   </AppText>
-                  <View style={[styles.detailTypeBadge, { backgroundColor: getTypeColor(showReportDetail.type) + "25" }]}>
-                    <AppText style={[styles.detailTypeText, { color: getTypeColor(showReportDetail.type) }]}>
+                  <View
+                    style={[
+                      styles.detailTypeBadge,
+                      {
+                        backgroundColor:
+                          getTypeColor(showReportDetail.type) + "25",
+                      },
+                    ]}
+                  >
+                    <AppText
+                      style={[
+                        styles.detailTypeText,
+                        { color: getTypeColor(showReportDetail.type) },
+                      ]}
+                    >
                       {getTypeLabel(showReportDetail.type)}
                     </AppText>
                   </View>
@@ -366,9 +473,31 @@ const ReportsScreen = ({ navigation, user }) => {
                 {/* Status */}
                 <View style={styles.detailRow}>
                   <AppText style={styles.detailLabel}>Status</AppText>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(showReportDetail.status) + "25" }]}>
-                    <View style={[styles.statusDot, { backgroundColor: getStatusColor(showReportDetail.status) }]} />
-                    <AppText style={[styles.statusText, { color: getStatusColor(showReportDetail.status) }]}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor:
+                          getStatusColor(showReportDetail.status) + "25",
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor: getStatusColor(
+                            showReportDetail.status,
+                          ),
+                        },
+                      ]}
+                    />
+                    <AppText
+                      style={[
+                        styles.statusText,
+                        { color: getStatusColor(showReportDetail.status) },
+                      ]}
+                    >
                       {showReportDetail.status}
                     </AppText>
                   </View>
@@ -388,69 +517,195 @@ const ReportsScreen = ({ navigation, user }) => {
                 {showReportDetail.reportData && (
                   <View style={styles.reportDataSection}>
                     <AppText style={styles.sectionTitle}>Report Data</AppText>
-                    
+
                     {showReportDetail.type === "project_summary" && (
                       <View style={styles.statsGrid}>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.brandBlue + "20" }]}>
-                          <Ionicons name="list" size={24} color={theme.colors.brandBlue} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.brandBlue }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.brandBlue + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="list"
+                            size={24}
+                            color={theme.colors.brandBlue}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.brandBlue },
+                            ]}
+                          >
                             {showReportDetail.reportData.totalTasks || 0}
                           </AppText>
-                          <AppText style={styles.statBoxLabel}>Total Tasks</AppText>
+                          <AppText style={styles.statBoxLabel}>
+                            Total Tasks
+                          </AppText>
                         </View>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.brandGreen + "20" }]}>
-                          <Ionicons name="checkmark-circle" size={24} color={theme.colors.brandGreen} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.brandGreen }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.brandGreen + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color={theme.colors.brandGreen}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.brandGreen },
+                            ]}
+                          >
                             {showReportDetail.reportData.completedTasks || 0}
                           </AppText>
-                          <AppText style={styles.statBoxLabel}>Completed</AppText>
+                          <AppText style={styles.statBoxLabel}>
+                            Completed
+                          </AppText>
                         </View>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.warning + "20" }]}>
-                          <Ionicons name="time" size={24} color={theme.colors.warning} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.warning }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.warning + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="time"
+                            size={24}
+                            color={theme.colors.warning}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.warning },
+                            ]}
+                          >
                             {showReportDetail.reportData.pendingTasks || 0}
                           </AppText>
                           <AppText style={styles.statBoxLabel}>Pending</AppText>
                         </View>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.accentPink + "20" }]}>
-                          <Ionicons name="trending-up" size={24} color={theme.colors.accentPink} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.accentPink }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.accentPink + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="trending-up"
+                            size={24}
+                            color={theme.colors.accentPink}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.accentPink },
+                            ]}
+                          >
                             {showReportDetail.reportData.projectProgress || 0}%
                           </AppText>
-                          <AppText style={styles.statBoxLabel}>Progress</AppText>
+                          <AppText style={styles.statBoxLabel}>
+                            Progress
+                          </AppText>
                         </View>
                       </View>
                     )}
 
                     {showReportDetail.type === "team_performance" && (
                       <View style={styles.statsGrid}>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.accentOrange + "20" }]}>
-                          <Ionicons name="people" size={24} color={theme.colors.accentOrange} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.accentOrange }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            {
+                              backgroundColor: theme.colors.accentOrange + "20",
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name="people"
+                            size={24}
+                            color={theme.colors.accentOrange}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.accentOrange },
+                            ]}
+                          >
                             {showReportDetail.reportData.totalMembers || 0}
                           </AppText>
                           <AppText style={styles.statBoxLabel}>Members</AppText>
                         </View>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.brandBlue + "20" }]}>
-                          <Ionicons name="list" size={24} color={theme.colors.brandBlue} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.brandBlue }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.brandBlue + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="list"
+                            size={24}
+                            color={theme.colors.brandBlue}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.brandBlue },
+                            ]}
+                          >
                             {showReportDetail.reportData.totalTasks || 0}
                           </AppText>
-                          <AppText style={styles.statBoxLabel}>Total Tasks</AppText>
+                          <AppText style={styles.statBoxLabel}>
+                            Total Tasks
+                          </AppText>
                         </View>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.brandGreen + "20" }]}>
-                          <Ionicons name="checkmark-circle" size={24} color={theme.colors.brandGreen} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.brandGreen }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.brandGreen + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color={theme.colors.brandGreen}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.brandGreen },
+                            ]}
+                          >
                             {showReportDetail.reportData.completedTasks || 0}
                           </AppText>
-                          <AppText style={styles.statBoxLabel}>Completed</AppText>
+                          <AppText style={styles.statBoxLabel}>
+                            Completed
+                          </AppText>
                         </View>
-                        <View style={[styles.statBox, { backgroundColor: theme.colors.accentPink + "20" }]}>
-                          <Ionicons name="trophy" size={24} color={theme.colors.accentPink} />
-                          <AppText style={[styles.statBoxValue, { color: theme.colors.accentPink }]}>
+                        <View
+                          style={[
+                            styles.statBox,
+                            { backgroundColor: theme.colors.accentPink + "20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="trophy"
+                            size={24}
+                            color={theme.colors.accentPink}
+                          />
+                          <AppText
+                            style={[
+                              styles.statBoxValue,
+                              { color: theme.colors.accentPink },
+                            ]}
+                          >
                             {showReportDetail.reportData.completionRate || 0}%
                           </AppText>
-                          <AppText style={styles.statBoxLabel}>Completion</AppText>
+                          <AppText style={styles.statBoxLabel}>
+                            Completion
+                          </AppText>
                         </View>
                       </View>
                     )}
@@ -458,33 +713,103 @@ const ReportsScreen = ({ navigation, user }) => {
                     {showReportDetail.type === "task_bottlenecks" && (
                       <>
                         <View style={styles.statsGrid}>
-                          <View style={[styles.statBox, { backgroundColor: theme.colors.warning + "20" }]}>
-                            <Ionicons name="time" size={24} color={theme.colors.warning} />
-                            <AppText style={[styles.statBoxValue, { color: theme.colors.warning }]}>
+                          <View
+                            style={[
+                              styles.statBox,
+                              { backgroundColor: theme.colors.warning + "20" },
+                            ]}
+                          >
+                            <Ionicons
+                              name="time"
+                              size={24}
+                              color={theme.colors.warning}
+                            />
+                            <AppText
+                              style={[
+                                styles.statBoxValue,
+                                { color: theme.colors.warning },
+                              ]}
+                            >
                               {showReportDetail.reportData.overdueTasks || 0}
                             </AppText>
-                            <AppText style={styles.statBoxLabel}>Overdue</AppText>
+                            <AppText style={styles.statBoxLabel}>
+                              Overdue
+                            </AppText>
                           </View>
-                          <View style={[styles.statBox, { backgroundColor: theme.colors.danger + "20" }]}>
-                            <Ionicons name="ban" size={24} color={theme.colors.danger} />
-                            <AppText style={[styles.statBoxValue, { color: theme.colors.danger }]}>
+                          <View
+                            style={[
+                              styles.statBox,
+                              { backgroundColor: theme.colors.danger + "20" },
+                            ]}
+                          >
+                            <Ionicons
+                              name="ban"
+                              size={24}
+                              color={theme.colors.danger}
+                            />
+                            <AppText
+                              style={[
+                                styles.statBoxValue,
+                                { color: theme.colors.danger },
+                              ]}
+                            >
                               {showReportDetail.reportData.blockedTasks || 0}
                             </AppText>
-                            <AppText style={styles.statBoxLabel}>Blocked</AppText>
-                          </View>
-                          <View style={[styles.statBox, { backgroundColor: theme.colors.accentOrange + "20" }]}>
-                            <Ionicons name="alert-circle" size={24} color={theme.colors.accentOrange} />
-                            <AppText style={[styles.statBoxValue, { color: theme.colors.accentOrange }]}>
-                              {showReportDetail.reportData.highPriorityPending || 0}
+                            <AppText style={styles.statBoxLabel}>
+                              Blocked
                             </AppText>
-                            <AppText style={styles.statBoxLabel}>High Priority</AppText>
                           </View>
-                          <View style={[styles.statBox, { backgroundColor: theme.colors.accentPink + "20" }]}>
-                            <Ionicons name="speedometer" size={24} color={theme.colors.accentPink} />
-                            <AppText style={[styles.statBoxValue, { color: theme.colors.accentPink }]}>
+                          <View
+                            style={[
+                              styles.statBox,
+                              {
+                                backgroundColor:
+                                  theme.colors.accentOrange + "20",
+                              },
+                            ]}
+                          >
+                            <Ionicons
+                              name="alert-circle"
+                              size={24}
+                              color={theme.colors.accentOrange}
+                            />
+                            <AppText
+                              style={[
+                                styles.statBoxValue,
+                                { color: theme.colors.accentOrange },
+                              ]}
+                            >
+                              {showReportDetail.reportData
+                                .highPriorityPending || 0}
+                            </AppText>
+                            <AppText style={styles.statBoxLabel}>
+                              High Priority
+                            </AppText>
+                          </View>
+                          <View
+                            style={[
+                              styles.statBox,
+                              {
+                                backgroundColor: theme.colors.accentPink + "20",
+                              },
+                            ]}
+                          >
+                            <Ionicons
+                              name="speedometer"
+                              size={24}
+                              color={theme.colors.accentPink}
+                            />
+                            <AppText
+                              style={[
+                                styles.statBoxValue,
+                                { color: theme.colors.accentPink },
+                              ]}
+                            >
                               {showReportDetail.reportData.riskScore || 0}
                             </AppText>
-                            <AppText style={styles.statBoxLabel}>Risk Score</AppText>
+                            <AppText style={styles.statBoxLabel}>
+                              Risk Score
+                            </AppText>
                           </View>
                         </View>
                       </>
@@ -493,13 +818,18 @@ const ReportsScreen = ({ navigation, user }) => {
                     {/* Priority Distribution */}
                     {showReportDetail.reportData.priorityDistribution && (
                       <View style={styles.prioritySection}>
-                        <AppText style={styles.subSectionTitle}>Priority Distribution</AppText>
+                        <AppText style={styles.subSectionTitle}>
+                          Priority Distribution
+                        </AppText>
                         <View style={styles.priorityBars}>
                           <View style={styles.priorityItem}>
                             <View style={styles.priorityLabelRow}>
-                              <AppText style={styles.priorityLabel}>High</AppText>
+                              <AppText style={styles.priorityLabel}>
+                                High
+                              </AppText>
                               <AppText style={styles.priorityCount}>
-                                {showReportDetail.reportData.priorityDistribution.high || 0}
+                                {showReportDetail.reportData
+                                  .priorityDistribution.high || 0}
                               </AppText>
                             </View>
                             <View style={styles.priorityBarBg}>
@@ -509,10 +839,12 @@ const ReportsScreen = ({ navigation, user }) => {
                                   {
                                     backgroundColor: theme.colors.danger,
                                     width: `${Math.min(
-                                      ((showReportDetail.reportData.priorityDistribution.high || 0) /
-                                        (showReportDetail.reportData.totalTasks || 1)) *
+                                      ((showReportDetail.reportData
+                                        .priorityDistribution.high || 0) /
+                                        (showReportDetail.reportData
+                                          .totalTasks || 1)) *
                                         100,
-                                      100
+                                      100,
                                     )}%`,
                                   },
                                 ]}
@@ -521,9 +853,12 @@ const ReportsScreen = ({ navigation, user }) => {
                           </View>
                           <View style={styles.priorityItem}>
                             <View style={styles.priorityLabelRow}>
-                              <AppText style={styles.priorityLabel}>Medium</AppText>
+                              <AppText style={styles.priorityLabel}>
+                                Medium
+                              </AppText>
                               <AppText style={styles.priorityCount}>
-                                {showReportDetail.reportData.priorityDistribution.medium || 0}
+                                {showReportDetail.reportData
+                                  .priorityDistribution.medium || 0}
                               </AppText>
                             </View>
                             <View style={styles.priorityBarBg}>
@@ -533,10 +868,12 @@ const ReportsScreen = ({ navigation, user }) => {
                                   {
                                     backgroundColor: theme.colors.warning,
                                     width: `${Math.min(
-                                      ((showReportDetail.reportData.priorityDistribution.medium || 0) /
-                                        (showReportDetail.reportData.totalTasks || 1)) *
+                                      ((showReportDetail.reportData
+                                        .priorityDistribution.medium || 0) /
+                                        (showReportDetail.reportData
+                                          .totalTasks || 1)) *
                                         100,
-                                      100
+                                      100,
                                     )}%`,
                                   },
                                 ]}
@@ -545,9 +882,12 @@ const ReportsScreen = ({ navigation, user }) => {
                           </View>
                           <View style={styles.priorityItem}>
                             <View style={styles.priorityLabelRow}>
-                              <AppText style={styles.priorityLabel}>Low</AppText>
+                              <AppText style={styles.priorityLabel}>
+                                Low
+                              </AppText>
                               <AppText style={styles.priorityCount}>
-                                {showReportDetail.reportData.priorityDistribution.low || 0}
+                                {showReportDetail.reportData
+                                  .priorityDistribution.low || 0}
                               </AppText>
                             </View>
                             <View style={styles.priorityBarBg}>
@@ -557,10 +897,12 @@ const ReportsScreen = ({ navigation, user }) => {
                                   {
                                     backgroundColor: theme.colors.brandGreen,
                                     width: `${Math.min(
-                                      ((showReportDetail.reportData.priorityDistribution.low || 0) /
-                                        (showReportDetail.reportData.totalTasks || 1)) *
+                                      ((showReportDetail.reportData
+                                        .priorityDistribution.low || 0) /
+                                        (showReportDetail.reportData
+                                          .totalTasks || 1)) *
                                         100,
-                                      100
+                                      100,
                                     )}%`,
                                   },
                                 ]}
@@ -582,10 +924,10 @@ const ReportsScreen = ({ navigation, user }) => {
 
   // Generate Report Modal
   const renderGenerateModal = () => {
-    const canGenerate = 
+    const canGenerate =
       (reportTypeToGenerate === "project_summary" && selectedProject) ||
       (reportTypeToGenerate === "team_performance" && selectedTeam) ||
-      (reportTypeToGenerate === "task_bottlenecks");
+      reportTypeToGenerate === "task_bottlenecks";
 
     return (
       <Modal
@@ -606,20 +948,29 @@ const ReportsScreen = ({ navigation, user }) => {
                 }}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.textPrimary}
+                />
               </TouchableOpacity>
-              <AppText variant="h3" style={styles.modalTitle}>Generate Report</AppText>
+              <AppText variant="h3" style={styles.modalTitle}>
+                Generate Report
+              </AppText>
               <View style={{ width: 40 }} />
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Report Type Selection */}
-              <AppText style={styles.generateLabel}>Select Report Type:</AppText>
+              <AppText style={styles.generateLabel}>
+                Select Report Type:
+              </AppText>
               <View style={styles.reportTypeSelector}>
                 <TouchableOpacity
                   style={[
                     styles.reportTypeOption,
-                    reportTypeToGenerate === "project_summary" && styles.reportTypeOptionSelected,
+                    reportTypeToGenerate === "project_summary" &&
+                      styles.reportTypeOptionSelected,
                   ]}
                   onPress={() => {
                     setReportTypeToGenerate("project_summary");
@@ -629,19 +980,27 @@ const ReportsScreen = ({ navigation, user }) => {
                   <Ionicons
                     name="folder"
                     size={22}
-                    color={reportTypeToGenerate === "project_summary" ? theme.colors.brandBlue : theme.colors.textMuted}
+                    color={
+                      reportTypeToGenerate === "project_summary"
+                        ? theme.colors.brandBlue
+                        : theme.colors.textMuted
+                    }
                   />
-                  <AppText style={[
-                    styles.reportTypeText,
-                    reportTypeToGenerate === "project_summary" && styles.reportTypeTextSelected
-                  ]}>
+                  <AppText
+                    style={[
+                      styles.reportTypeText,
+                      reportTypeToGenerate === "project_summary" &&
+                        styles.reportTypeTextSelected,
+                    ]}
+                  >
                     Project
                   </AppText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.reportTypeOption,
-                    reportTypeToGenerate === "team_performance" && styles.reportTypeOptionSelected,
+                    reportTypeToGenerate === "team_performance" &&
+                      styles.reportTypeOptionSelected,
                   ]}
                   onPress={() => {
                     setReportTypeToGenerate("team_performance");
@@ -651,19 +1010,28 @@ const ReportsScreen = ({ navigation, user }) => {
                   <Ionicons
                     name="people"
                     size={22}
-                    color={reportTypeToGenerate === "team_performance" ? theme.colors.accentOrange : theme.colors.textMuted}
+                    color={
+                      reportTypeToGenerate === "team_performance"
+                        ? theme.colors.accentOrange
+                        : theme.colors.textMuted
+                    }
                   />
-                  <AppText style={[
-                    styles.reportTypeText,
-                    reportTypeToGenerate === "team_performance" && { color: theme.colors.accentOrange }
-                  ]}>
+                  <AppText
+                    style={[
+                      styles.reportTypeText,
+                      reportTypeToGenerate === "team_performance" && {
+                        color: theme.colors.accentOrange,
+                      },
+                    ]}
+                  >
                     Team
                   </AppText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.reportTypeOption,
-                    reportTypeToGenerate === "task_bottlenecks" && styles.reportTypeOptionSelected,
+                    reportTypeToGenerate === "task_bottlenecks" &&
+                      styles.reportTypeOptionSelected,
                   ]}
                   onPress={() => {
                     setReportTypeToGenerate("task_bottlenecks");
@@ -674,12 +1042,20 @@ const ReportsScreen = ({ navigation, user }) => {
                   <Ionicons
                     name="warning"
                     size={22}
-                    color={reportTypeToGenerate === "task_bottlenecks" ? theme.colors.danger : theme.colors.textMuted}
+                    color={
+                      reportTypeToGenerate === "task_bottlenecks"
+                        ? theme.colors.danger
+                        : theme.colors.textMuted
+                    }
                   />
-                  <AppText style={[
-                    styles.reportTypeText,
-                    reportTypeToGenerate === "task_bottlenecks" && { color: theme.colors.danger }
-                  ]}>
+                  <AppText
+                    style={[
+                      styles.reportTypeText,
+                      reportTypeToGenerate === "task_bottlenecks" && {
+                        color: theme.colors.danger,
+                      },
+                    ]}
+                  >
                     Bottlenecks
                   </AppText>
                 </TouchableOpacity>
@@ -688,11 +1064,19 @@ const ReportsScreen = ({ navigation, user }) => {
               {/* Project Selection (for project_summary) */}
               {reportTypeToGenerate === "project_summary" && (
                 <>
-                  <AppText style={styles.generateSubLabel}>Select a project:</AppText>
+                  <AppText style={styles.generateSubLabel}>
+                    Select a project:
+                  </AppText>
                   {projects.length === 0 ? (
                     <View style={styles.noProjects}>
-                      <Ionicons name="folder-outline" size={40} color={theme.colors.textMuted} />
-                      <AppText style={styles.noProjectsText}>No projects available</AppText>
+                      <Ionicons
+                        name="folder-outline"
+                        size={40}
+                        color={theme.colors.textMuted}
+                      />
+                      <AppText style={styles.noProjectsText}>
+                        No projects available
+                      </AppText>
                     </View>
                   ) : (
                     projects.map((project) => (
@@ -700,7 +1084,8 @@ const ReportsScreen = ({ navigation, user }) => {
                         key={project.id}
                         style={[
                           styles.projectOption,
-                          selectedProject?.id === project.id && styles.projectOptionSelected,
+                          selectedProject?.id === project.id &&
+                            styles.projectOptionSelected,
                         ]}
                         onPress={() => setSelectedProject(project)}
                       >
@@ -719,17 +1104,23 @@ const ReportsScreen = ({ navigation, user }) => {
                           <AppText
                             style={[
                               styles.projectOptionName,
-                              selectedProject?.id === project.id && styles.projectOptionNameSelected,
+                              selectedProject?.id === project.id &&
+                                styles.projectOptionNameSelected,
                             ]}
                           >
                             {project.name}
                           </AppText>
                           <AppText style={styles.projectOptionStatus}>
-                            {project.status || "active"} • {project.progress || 0}% complete
+                            {project.status || "active"} •{" "}
+                            {project.progress || 0}% complete
                           </AppText>
                         </View>
                         {selectedProject?.id === project.id && (
-                          <Ionicons name="checkmark-circle" size={22} color={theme.colors.brandBlue} />
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={22}
+                            color={theme.colors.brandBlue}
+                          />
                         )}
                       </TouchableOpacity>
                     ))
@@ -740,11 +1131,19 @@ const ReportsScreen = ({ navigation, user }) => {
               {/* Team Selection (for team_performance) */}
               {reportTypeToGenerate === "team_performance" && (
                 <>
-                  <AppText style={styles.generateSubLabel}>Select a team:</AppText>
+                  <AppText style={styles.generateSubLabel}>
+                    Select a team:
+                  </AppText>
                   {teams.length === 0 ? (
                     <View style={styles.noProjects}>
-                      <Ionicons name="people-outline" size={40} color={theme.colors.textMuted} />
-                      <AppText style={styles.noProjectsText}>No teams available</AppText>
+                      <Ionicons
+                        name="people-outline"
+                        size={40}
+                        color={theme.colors.textMuted}
+                      />
+                      <AppText style={styles.noProjectsText}>
+                        No teams available
+                      </AppText>
                     </View>
                   ) : (
                     teams.map((team) => (
@@ -752,11 +1151,21 @@ const ReportsScreen = ({ navigation, user }) => {
                         key={team.id}
                         style={[
                           styles.projectOption,
-                          selectedTeam?.id === team.id && { ...styles.projectOptionSelected, borderColor: theme.colors.accentOrange },
+                          selectedTeam?.id === team.id && {
+                            ...styles.projectOptionSelected,
+                            borderColor: theme.colors.accentOrange,
+                          },
                         ]}
                         onPress={() => setSelectedTeam(team)}
                       >
-                        <View style={[styles.projectOptionIcon, { backgroundColor: theme.colors.accentOrange + "20" }]}>
+                        <View
+                          style={[
+                            styles.projectOptionIcon,
+                            {
+                              backgroundColor: theme.colors.accentOrange + "20",
+                            },
+                          ]}
+                        >
                           <Ionicons
                             name="people"
                             size={20}
@@ -771,17 +1180,24 @@ const ReportsScreen = ({ navigation, user }) => {
                           <AppText
                             style={[
                               styles.projectOptionName,
-                              selectedTeam?.id === team.id && { color: theme.colors.accentOrange },
+                              selectedTeam?.id === team.id && {
+                                color: theme.colors.accentOrange,
+                              },
                             ]}
                           >
                             {team.name}
                           </AppText>
                           <AppText style={styles.projectOptionStatus}>
-                            {team.department || "No department"} • {team.currentMemberCount || 0} members
+                            {team.department || "No department"} •{" "}
+                            {team.currentMemberCount || 0} members
                           </AppText>
                         </View>
                         {selectedTeam?.id === team.id && (
-                          <Ionicons name="checkmark-circle" size={22} color={theme.colors.accentOrange} />
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={22}
+                            color={theme.colors.accentOrange}
+                          />
                         )}
                       </TouchableOpacity>
                     ))
@@ -793,35 +1209,68 @@ const ReportsScreen = ({ navigation, user }) => {
               {reportTypeToGenerate === "task_bottlenecks" && (
                 <View style={styles.bottleneckInfo}>
                   <View style={styles.bottleneckInfoIcon}>
-                    <Ionicons name="analytics" size={32} color={theme.colors.danger} />
+                    <Ionicons
+                      name="analytics"
+                      size={32}
+                      color={theme.colors.danger}
+                    />
                   </View>
-                  <AppText style={styles.bottleneckInfoTitle}>Task Bottleneck Analysis</AppText>
+                  <AppText style={styles.bottleneckInfoTitle}>
+                    Task Bottleneck Analysis
+                  </AppText>
                   <AppText style={styles.bottleneckInfoText}>
                     This report will analyze all tasks and identify:
                   </AppText>
                   <View style={styles.bottleneckList}>
                     <View style={styles.bottleneckListItem}>
-                      <Ionicons name="time" size={16} color={theme.colors.warning} />
-                      <AppText style={styles.bottleneckListText}>Overdue tasks</AppText>
+                      <Ionicons
+                        name="time"
+                        size={16}
+                        color={theme.colors.warning}
+                      />
+                      <AppText style={styles.bottleneckListText}>
+                        Overdue tasks
+                      </AppText>
                     </View>
                     <View style={styles.bottleneckListItem}>
-                      <Ionicons name="ban" size={16} color={theme.colors.danger} />
-                      <AppText style={styles.bottleneckListText}>Blocked tasks</AppText>
+                      <Ionicons
+                        name="ban"
+                        size={16}
+                        color={theme.colors.danger}
+                      />
+                      <AppText style={styles.bottleneckListText}>
+                        Blocked tasks
+                      </AppText>
                     </View>
                     <View style={styles.bottleneckListItem}>
-                      <Ionicons name="alert-circle" size={16} color={theme.colors.accentOrange} />
-                      <AppText style={styles.bottleneckListText}>High priority pending items</AppText>
+                      <Ionicons
+                        name="alert-circle"
+                        size={16}
+                        color={theme.colors.accentOrange}
+                      />
+                      <AppText style={styles.bottleneckListText}>
+                        High priority pending items
+                      </AppText>
                     </View>
                     <View style={styles.bottleneckListItem}>
-                      <Ionicons name="trending-down" size={16} color={theme.colors.accentPink} />
-                      <AppText style={styles.bottleneckListText}>Slow progress tasks</AppText>
+                      <Ionicons
+                        name="trending-down"
+                        size={16}
+                        color={theme.colors.accentPink}
+                      />
+                      <AppText style={styles.bottleneckListText}>
+                        Slow progress tasks
+                      </AppText>
                     </View>
                   </View>
                 </View>
               )}
 
               <TouchableOpacity
-                style={[styles.generateButton, !canGenerate && styles.generateButtonDisabled]}
+                style={[
+                  styles.generateButton,
+                  !canGenerate && styles.generateButtonDisabled,
+                ]}
                 onPress={handleGenerateReport}
                 disabled={!canGenerate || generating}
               >
@@ -831,8 +1280,8 @@ const ReportsScreen = ({ navigation, user }) => {
                       ? reportTypeToGenerate === "project_summary"
                         ? [theme.colors.brandGreen, theme.colors.brandBlue]
                         : reportTypeToGenerate === "team_performance"
-                        ? [theme.colors.accentOrange, theme.colors.warning]
-                        : [theme.colors.danger, theme.colors.accentPink]
+                          ? [theme.colors.accentOrange, theme.colors.warning]
+                          : [theme.colors.danger, theme.colors.accentPink]
                       : [theme.colors.glass, theme.colors.glass]
                   }
                   start={{ x: 0, y: 0 }}
@@ -843,10 +1292,19 @@ const ReportsScreen = ({ navigation, user }) => {
                     <ActivityIndicator color={theme.colors.textPrimary} />
                   ) : (
                     <>
-                      <Ionicons name="analytics" size={20} color={theme.colors.textPrimary} />
+                      <Ionicons
+                        name="analytics"
+                        size={20}
+                        color={theme.colors.textPrimary}
+                      />
                       <AppText style={styles.generateButtonText}>
-                        Generate {reportTypeToGenerate === "project_summary" ? "Project" : 
-                                  reportTypeToGenerate === "team_performance" ? "Team" : "Bottleneck"} Report
+                        Generate{" "}
+                        {reportTypeToGenerate === "project_summary"
+                          ? "Project"
+                          : reportTypeToGenerate === "team_performance"
+                            ? "Team"
+                            : "Bottleneck"}{" "}
+                        Report
                       </AppText>
                     </>
                   )}
@@ -862,10 +1320,19 @@ const ReportsScreen = ({ navigation, user }) => {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.colors.textPrimary}
+          />
         </TouchableOpacity>
-        <AppText variant="h2" style={styles.title}>Reports</AppText>
+        <AppText variant="h2" style={styles.title}>
+          Reports
+        </AppText>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowGenerateModal(true)}
@@ -876,30 +1343,60 @@ const ReportsScreen = ({ navigation, user }) => {
 
       {/* Quick Stats */}
       <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: theme.colors.brandBlue + "20" }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.colors.brandBlue + "20" },
+          ]}
+        >
           <Ionicons name="folder" size={20} color={theme.colors.brandBlue} />
-          <AppText style={[styles.statValue, { color: theme.colors.brandBlue }]}>
+          <AppText
+            style={[styles.statValue, { color: theme.colors.brandBlue }]}
+          >
             {reports.filter((r) => r.type === "project_summary").length}
           </AppText>
           <AppText style={styles.statLabel}>Project</AppText>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.colors.accentOrange + "20" }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.colors.accentOrange + "20" },
+          ]}
+        >
           <Ionicons name="people" size={20} color={theme.colors.accentOrange} />
-          <AppText style={[styles.statValue, { color: theme.colors.accentOrange }]}>
+          <AppText
+            style={[styles.statValue, { color: theme.colors.accentOrange }]}
+          >
             {reports.filter((r) => r.type === "team_performance").length}
           </AppText>
           <AppText style={styles.statLabel}>Team</AppText>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.colors.danger + "20" }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.colors.danger + "20" },
+          ]}
+        >
           <Ionicons name="warning" size={20} color={theme.colors.danger} />
           <AppText style={[styles.statValue, { color: theme.colors.danger }]}>
             {reports.filter((r) => r.type === "task_bottlenecks").length}
           </AppText>
           <AppText style={styles.statLabel}>Bottleneck</AppText>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.colors.brandGreen + "20" }]}>
-          <Ionicons name="checkmark-circle" size={20} color={theme.colors.brandGreen} />
-          <AppText style={[styles.statValue, { color: theme.colors.brandGreen }]}>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.colors.brandGreen + "20" },
+          ]}
+        >
+          <Ionicons
+            name="checkmark-circle"
+            size={20}
+            color={theme.colors.brandGreen}
+          />
+          <AppText
+            style={[styles.statValue, { color: theme.colors.brandGreen }]}
+          >
             {reports.filter((r) => r.status === "completed").length}
           </AppText>
           <AppText style={styles.statLabel}>Done</AppText>
@@ -916,16 +1413,26 @@ const ReportsScreen = ({ navigation, user }) => {
         {REPORT_TYPES.map((type) => (
           <TouchableOpacity
             key={type.key}
-            style={[styles.filterTab, activeFilter === type.key && styles.filterTabActive]}
+            style={[
+              styles.filterTab,
+              activeFilter === type.key && styles.filterTabActive,
+            ]}
             onPress={() => setActiveFilter(type.key)}
           >
             <Ionicons
               name={type.icon}
               size={16}
-              color={activeFilter === type.key ? theme.colors.textPrimary : theme.colors.textMuted}
+              color={
+                activeFilter === type.key
+                  ? theme.colors.textPrimary
+                  : theme.colors.textMuted
+              }
             />
             <AppText
-              style={[styles.filterTabText, activeFilter === type.key && styles.filterTabTextActive]}
+              style={[
+                styles.filterTabText,
+                activeFilter === type.key && styles.filterTabTextActive,
+              ]}
             >
               {type.label}
             </AppText>
@@ -951,22 +1458,35 @@ const ReportsScreen = ({ navigation, user }) => {
           renderItem={renderReport}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={filteredReports.length > 0 ? styles.list : styles.emptyList}
+          contentContainerStyle={
+            filteredReports.length > 0 ? styles.list : styles.emptyList
+          }
           ListEmptyComponent={
             <View style={styles.empty}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="analytics-outline" size={48} color={theme.colors.textMuted} />
+                <Ionicons
+                  name="analytics-outline"
+                  size={48}
+                  color={theme.colors.textMuted}
+                />
               </View>
               <AppText style={styles.emptyTitle}>No Reports Yet</AppText>
               <AppText style={styles.emptyText}>
-                Generate your first project summary report{"\n"}to get insights and analytics.
+                Generate your first project summary report{"\n"}to get insights
+                and analytics.
               </AppText>
               <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => setShowGenerateModal(true)}
               >
-                <Ionicons name="add-circle" size={20} color={theme.colors.brandBlue} />
-                <AppText style={styles.emptyButtonText}>Generate Report</AppText>
+                <Ionicons
+                  name="add-circle"
+                  size={20}
+                  color={theme.colors.brandBlue}
+                />
+                <AppText style={styles.emptyButtonText}>
+                  Generate Report
+                </AppText>
               </TouchableOpacity>
             </View>
           }

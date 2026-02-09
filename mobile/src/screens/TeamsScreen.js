@@ -20,24 +20,27 @@ const TeamsScreen = ({ navigation, user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const getMemberTeamIds = useCallback(async (teamsList) => {
-    if (!user?.id) return [];
-    const membershipChecks = await Promise.all(
-      teamsList.map(async (team) => {
-        try {
-          const membersRes = await api.getTeamMembers(team.id);
-          const members = membersRes.data || [];
-          const isMember = members.some(
-            (m) => m.userId === user.id || m.id === user.id
-          );
-          return isMember ? team.id : null;
-        } catch (err) {
-          return null;
-        }
-      })
-    );
-    return membershipChecks.filter(Boolean);
-  }, [user]);
+  const getMemberTeamIds = useCallback(
+    async (teamsList) => {
+      if (!user?.id) return [];
+      const membershipChecks = await Promise.all(
+        teamsList.map(async (team) => {
+          try {
+            const membersRes = await api.getTeamMembers(team.id);
+            const members = membersRes.data || [];
+            const isMember = members.some(
+              (m) => m.userId === user.id || m.id === user.id,
+            );
+            return isMember ? team.id : null;
+          } catch (err) {
+            return null;
+          }
+        }),
+      );
+      return membershipChecks.filter(Boolean);
+    },
+    [user],
+  );
 
   const loadTeams = useCallback(async () => {
     setLoading(true);

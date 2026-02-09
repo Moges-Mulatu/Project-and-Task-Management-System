@@ -173,9 +173,14 @@ const RegisterScreen = ({ onRegister, navigation }) => {
 
               {/* Info about role assignment */}
               <View style={styles.infoBox}>
-                <Ionicons name="information-circle-outline" size={18} color={theme.colors.brandBlue} />
+                <Ionicons
+                  name="information-circle-outline"
+                  size={18}
+                  color={theme.colors.brandBlue}
+                />
                 <AppText style={styles.infoText}>
-                  New accounts start as Team Members. Admins can promote users to other roles.
+                  New accounts start as Team Members. Admins can promote users
+                  to other roles.
                 </AppText>
               </View>
 

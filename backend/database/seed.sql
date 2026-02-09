@@ -2,6 +2,7 @@ USE project_management;
 
 -- Disable checks for clean data population
 SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM task_assignments;
 DELETE FROM team_members;
 DELETE FROM tasks;
 DELETE FROM reports;
@@ -16,15 +17,15 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- =========================================
 INSERT INTO users (id, firstName, lastName, email, password, role, department, position, isActive)
 VALUES
-('u1-admin-001', 'System', 'Admin', 'admin@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'admin', 'Management', 'System Administrator', 1),
-('u2-pm-001', 'Alex', 'Projector', 'pm@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'project_manager', 'Engineering', 'Project Lead', 1),
-('u3-member-001', 'John', 'Coder', 'member@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Software Engineer', 1),
-('u4-backend-001', 'Maria', 'Backend', 'backend@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Backend Developer', 1),
-('u5-frontend-001', 'Lisa', 'Frontend', 'frontend@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Frontend Developer', 1),
-('u6-mobile-001', 'Tom', 'Mobile', 'mobile@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'Mobile Developer', 1),
-('u7-ux-001', 'Sara', 'UX', 'ux@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Design', 'UI/UX Designer', 1),
-('u8-pm-002', 'James', 'Manager', 'pm2@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'project_manager', 'Engineering', 'Project Lead', 1),
-('u9-member-002', 'Ben', 'Tester', 'member2@debo.com', '$2b$10$tPx.U/xWd/B.Mh.iK8L3j.O30qGvOsg5uU6YyO6z.0P1uY.vOks.O', 'team_member', 'Engineering', 'QA Engineer', 1);
+('u1-admin-001', 'System', 'Admin', 'admin@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'admin', 'Management', 'System Administrator', 1),
+('u2-pm-001', 'Alex', 'Projector', 'pm@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'project_manager', 'Engineering', 'Project Lead', 1),
+('u3-member-001', 'John', 'Coder', 'member@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'team_member', 'Engineering', 'Software Engineer', 1),
+('u4-backend-001', 'Maria', 'Backend', 'backend@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'team_member', 'Engineering', 'Backend Developer', 1),
+('u5-frontend-001', 'Lisa', 'Frontend', 'frontend@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'team_member', 'Engineering', 'Frontend Developer', 1),
+('u6-mobile-001', 'Tom', 'Mobile', 'mobile@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'team_member', 'Engineering', 'Mobile Developer', 1),
+('u7-ux-001', 'Sara', 'UX', 'ux@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'team_member', 'Design', 'UI/UX Designer', 1),
+('u8-pm-002', 'James', 'Manager', 'pm2@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'project_manager', 'Engineering', 'Project Lead', 1),
+('u9-member-002', 'Ben', 'Tester', 'member2@debo.com', '$2a$12$uns6AnAuatYEsTKSr5n3U.BO7ep54N9xypmUgEITgTXA2b8XQXe9G', 'team_member', 'Engineering', 'QA Engineer', 1);
 
 -- =========================================
 -- TEAMS (as per spec: Team Structure)
@@ -87,3 +88,30 @@ VALUES
 -- UX project tasks
 ('ts4-research-001', 'User Research', 'Conduct user research for task management workflows.', 'p4-design-system', 'u7-ux-001', 'u2-pm-001', 'todo', 'medium', 'task', 2, 0, '["research", "ux"]', '[]', '[]'),
 ('ts4-mockup-001', 'Create Mockups', 'Design mockups for key screens.', 'p4-design-system', 'u7-ux-001', 'u2-pm-001', 'todo', 'medium', 'feature', 3, 0, '["design", "mockup"]', '[]', '[]');
+
+-- =========================================
+-- TASK_ASSIGNMENTS (multi-user/team assignment)
+-- =========================================
+INSERT INTO task_assignments (id, taskId, assigneeType, assigneeId)
+VALUES
+('ta1-db-001', 'ts1-db-001', 'user', 'u4-backend-001'),
+('ta2-api-001', 'ts1-api-001', 'user', 'u4-backend-001'),
+('ta3-comp-001', 'ts2-comp-001', 'user', 'u5-frontend-001'),
+('ta4-dash-001', 'ts2-dash-001', 'user', 'u5-frontend-001'),
+('ta5-init-001', 'ts3-init-001', 'user', 'u6-mobile-001'),
+('ta6-nav-001', 'ts3-nav-001', 'user', 'u6-mobile-001'),
+('ta7-research-001', 'ts4-research-001', 'user', 'u7-ux-001'),
+('ta8-mockup-001', 'ts4-mockup-001', 'user', 'u7-ux-001'),
+('ta9-backend-team', 'ts1-api-001', 'team', 't1-backend-01'),
+('ta10-frontend-team', 'ts2-dash-001', 'team', 't2-frontend-01'),
+('ta11-mobile-team', 'ts3-nav-001', 'team', 't3-mobile-01'),
+('ta12-ux-team', 'ts4-mockup-001', 'team', 't4-ux-01');
+
+-- =========================================
+-- REPORTS (linked to PM projects)
+-- =========================================
+INSERT INTO reports (id, title, description, type, generatedBy, projectId, teamId, reportData, filters, dateRange, format, status, recipients)
+VALUES
+('rpt1-pm1-proj2', 'Summary Report: Web Dashboard', 'Project summary for Web Dashboard.', 'project_summary', 'u2-pm-001', 'p2-web-ui', 't2-frontend-01', '{"totalTasks":2,"completedTasks":0,"pendingTasks":2,"projectProgress":0}', '{}', '{"startDate":null,"endDate":null}', 'json', 'completed', '[]'),
+('rpt2-pm1-proj3', 'Summary Report: Mobile Task App', 'Project summary for Mobile Task App.', 'project_summary', 'u2-pm-001', 'p3-mobile-app', 't3-mobile-01', '{"totalTasks":2,"completedTasks":0,"pendingTasks":2,"projectProgress":0}', '{}', '{"startDate":null,"endDate":null}', 'json', 'completed', '[]'),
+('rpt3-pm2-proj1', 'Summary Report: Project Management System', 'PM2 summary for backend project.', 'project_summary', 'u8-pm-002', 'p1-mgmt-sys', 't1-backend-01', '{"totalTasks":2,"completedTasks":1,"pendingTasks":1,"projectProgress":25}', '{}', '{"startDate":null,"endDate":null}', 'json', 'completed', '[]');

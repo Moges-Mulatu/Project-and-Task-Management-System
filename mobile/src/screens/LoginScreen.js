@@ -26,7 +26,7 @@ const LoginSchema = Yup.object().shape({
 
 const LoginScreen = ({ onLogin, navigation }) => {
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={0}
@@ -42,123 +42,125 @@ const LoginScreen = ({ onLogin, navigation }) => {
       <View style={styles.glowTop} />
       <View style={styles.glowBottom} />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logoGlow} />
-          <View style={styles.logo}>
-            <AppText style={styles.logoText}>D</AppText>
-          </View>
-        </View>
-
-        <AppText variant="h1" style={styles.title}>
-          Welcome Back
-        </AppText>
-        <AppText style={styles.subtitle}>Sign in to Debo Engineering</AppText>
-
-        <Formik
-          initialValues={{ email: "", password: "" }}
-          validationSchema={LoginSchema}
-          validateOnChange={false}
-          validateOnBlur={false}
-          onSubmit={async (
-            values,
-            { setSubmitting, setStatus, setFieldError },
-          ) => {
-            setStatus("");
-            try {
-              await onLogin(values);
-            } catch (err) {
-              setStatus(err.message || "Login failed. Check credentials.");
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-        >
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-            isSubmitting,
-            status,
-          }) => (
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <AppText style={styles.label}>Email</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={values.email}
-                  onChangeText={handleChange("email")}
-                  onBlur={handleBlur("email")}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-                {touched.email && errors.email && (
-                  <AppText style={styles.error}>{errors.email}</AppText>
-                )}
-              </View>
-
-              <View style={styles.inputContainer}>
-                <AppText style={styles.label}>Password</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={values.password}
-                  onChangeText={handleChange("password")}
-                  onBlur={handleBlur("password")}
-                  secureTextEntry
-                />
-                {touched.password && errors.password && (
-                  <AppText style={styles.error}>{errors.password}</AppText>
-                )}
-              </View>
-
-              {status ? <AppText style={styles.error}>{status}</AppText> : null}
-
-              <TouchableOpacity
-                style={styles.loginButton}
-                onPress={handleSubmit}
-                disabled={isSubmitting}
-              >
-                <LinearGradient
-                  colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator color={theme.colors.textPrimary} />
-                  ) : (
-                    <AppText style={styles.loginButtonText}>Sign In</AppText>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.registerLink}
-                onPress={() => navigation.navigate("Register")}
-              >
-                <AppText style={styles.registerText}>
-                  Don't have an account?{" "}
-                  <AppText style={styles.registerHighlight}>
-                    Create Account
-                  </AppText>
-                </AppText>
-              </TouchableOpacity>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoGlow} />
+            <View style={styles.logo}>
+              <AppText style={styles.logoText}>D</AppText>
             </View>
-          )}
-        </Formik>
-      </View>
+          </View>
+
+          <AppText variant="h1" style={styles.title}>
+            Welcome Back
+          </AppText>
+          <AppText style={styles.subtitle}>Sign in to Debo Engineering</AppText>
+
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={LoginSchema}
+            validateOnChange={false}
+            validateOnBlur={false}
+            onSubmit={async (
+              values,
+              { setSubmitting, setStatus, setFieldError },
+            ) => {
+              setStatus("");
+              try {
+                await onLogin(values);
+              } catch (err) {
+                setStatus(err.message || "Login failed. Check credentials.");
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              isSubmitting,
+              status,
+            }) => (
+              <View style={styles.form}>
+                <View style={styles.inputContainer}>
+                  <AppText style={styles.label}>Email</AppText>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your email"
+                    placeholderTextColor={theme.colors.textMuted}
+                    value={values.email}
+                    onChangeText={handleChange("email")}
+                    onBlur={handleBlur("email")}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                  {touched.email && errors.email && (
+                    <AppText style={styles.error}>{errors.email}</AppText>
+                  )}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <AppText style={styles.label}>Password</AppText>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor={theme.colors.textMuted}
+                    value={values.password}
+                    onChangeText={handleChange("password")}
+                    onBlur={handleBlur("password")}
+                    secureTextEntry
+                  />
+                  {touched.password && errors.password && (
+                    <AppText style={styles.error}>{errors.password}</AppText>
+                  )}
+                </View>
+
+                {status ? (
+                  <AppText style={styles.error}>{status}</AppText>
+                ) : null}
+
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  <LinearGradient
+                    colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color={theme.colors.textPrimary} />
+                    ) : (
+                      <AppText style={styles.loginButtonText}>Sign In</AppText>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.registerLink}
+                  onPress={() => navigation.navigate("Register")}
+                >
+                  <AppText style={styles.registerText}>
+                    Don't have an account?{" "}
+                    <AppText style={styles.registerHighlight}>
+                      Create Account
+                    </AppText>
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Formik>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

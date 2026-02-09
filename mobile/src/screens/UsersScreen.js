@@ -32,6 +32,26 @@ const ROLE_OPTIONS = [
   { id: "team_member", label: "Team Member", color: theme.colors.brandGreen },
 ];
 
+const DEPARTMENT_OPTIONS = [
+  "Engineering",
+  "Design",
+  "Product",
+  "QA",
+  "Management",
+  "Operations",
+];
+
+const POSITION_OPTIONS = [
+  "Project Lead",
+  "Software Engineer",
+  "Backend Developer",
+  "Frontend Developer",
+  "Mobile Developer",
+  "UI/UX Designer",
+  "QA Engineer",
+  "Product Manager",
+];
+
 const UsersScreen = ({ navigation, user: currentUser }) => {
   const [users, setUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -44,6 +64,17 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    role: "team_member",
+    department: "",
+    position: "",
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -208,6 +239,46 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       Alert.alert("Error", err.message || "Failed to update role");
     } finally {
       setUpdatingRole(false);
+    }
+  };
+
+  const resetNewUser = () => {
+    setNewUser({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      role: "team_member",
+      department: "",
+      position: "",
+    });
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.password) {
+      Alert.alert("Missing Fields", "Please fill all required fields.");
+      return;
+    }
+
+    setCreatingUser(true);
+    try {
+      await api.createUser({
+        firstName: newUser.firstName.trim(),
+        lastName: newUser.lastName.trim(),
+        email: newUser.email.trim().toLowerCase(),
+        password: newUser.password,
+        role: newUser.role,
+        department: newUser.department.trim() || undefined,
+        position: newUser.position.trim() || undefined,
+      });
+      setShowCreateModal(false);
+      resetNewUser();
+      loadData();
+      Alert.alert("Success", "User created successfully.");
+    } catch (err) {
+      Alert.alert("Error", err.message || "Failed to create user");
+    } finally {
+      setCreatingUser(false);
     }
   };
 
@@ -496,6 +567,150 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
     );
   };
 
+  const renderCreateModal = () => {
+    if (!showCreateModal) return null;
+
+    return (
+      <Modal
+        visible={showCreateModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCreateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity
+                  onPress={() => setShowCreateModal(false)}
+                  style={styles.modalCloseBtn}
+                >
+                  <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                </TouchableOpacity>
+                <AppText variant="h3" style={styles.modalTitle}>Create User</AppText>
+                <View style={{ width: 40 }} />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>First Name</AppText>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="First name"
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={newUser.firstName}
+                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, firstName: text }))}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>Last Name</AppText>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Last name"
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={newUser.lastName}
+                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, lastName: text }))}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>Email</AppText>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Email address"
+                  placeholderTextColor={theme.colors.textMuted}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  value={newUser.email}
+                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, email: text }))}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>Password</AppText>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Temporary password"
+                  placeholderTextColor={theme.colors.textMuted}
+                  secureTextEntry
+                  value={newUser.password}
+                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, password: text }))}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>Role</AppText>
+                <View style={styles.rolePickerRow}>
+                  {ROLE_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={[
+                        styles.roleChip,
+                        newUser.role === option.id && styles.roleChipActive,
+                      ]}
+                      onPress={() => setNewUser((prev) => ({ ...prev, role: option.id }))}
+                    >
+                      <View style={[styles.roleChipDot, { backgroundColor: option.color }]} />
+                      <AppText style={styles.roleChipText}>{option.label}</AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>Department</AppText>
+                <View style={styles.choiceRow}>
+                  {DEPARTMENT_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={[
+                        styles.choiceChip,
+                        newUser.department === option && styles.choiceChipActive,
+                      ]}
+                      onPress={() => setNewUser((prev) => ({ ...prev, department: option }))}
+                    >
+                      <AppText style={styles.choiceChipText}>{option}</AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.formLabel}>Position</AppText>
+                <View style={styles.choiceRow}>
+                  {POSITION_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={[
+                        styles.choiceChip,
+                        newUser.position === option && styles.choiceChipActive,
+                      ]}
+                      onPress={() => setNewUser((prev) => ({ ...prev, position: option }))}
+                    >
+                      <AppText style={styles.choiceChipText}>{option}</AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.createUserButton}
+                onPress={handleCreateUser}
+                disabled={creatingUser}
+              >
+                {creatingUser ? (
+                  <ActivityIndicator color={theme.colors.textPrimary} />
+                ) : (
+                  <AppText style={styles.createUserButtonText}>Create User</AppText>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
     <ScreenContainer>
       <View style={styles.header}>
@@ -504,7 +719,15 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
         </TouchableOpacity>
         <AppText variant="h2" style={styles.title}>Users</AppText>
         <View style={styles.headerRight}>
-          <AppText style={styles.userCount}>{users.length} total</AppText>
+            <AppText style={styles.userCount}>{users.length} total</AppText>
+            {currentUser?.role === "admin" && (
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowCreateModal(true)}
+              >
+                <Ionicons name="add" size={18} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            )}
         </View>
       </View>
 
@@ -595,6 +818,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
       {renderUserModal()}
       {renderRoleModal()}
+      {renderCreateModal()}
     </ScreenContainer>
   );
 };
@@ -621,6 +845,15 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 70,
     alignItems: "flex-end",
+    gap: theme.spacing.xs,
+  },
+  addButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.brandBlue,
+    alignItems: "center",
+    justifyContent: "center",
   },
   userCount: {
     color: theme.colors.textMuted,
@@ -792,6 +1025,83 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modalTitle: {
+    fontWeight: "600",
+  },
+  formGroup: {
+    marginBottom: theme.spacing.lg,
+  },
+  formLabel: {
+    color: theme.colors.textMuted,
+    marginBottom: theme.spacing.xs,
+    fontSize: 12,
+  },
+  formInput: {
+    backgroundColor: theme.colors.glass,
+    borderRadius: 12,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    color: theme.colors.textPrimary,
+    borderWidth: 1,
+    borderColor: theme.colors.glassBorder,
+  },
+  rolePickerRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm,
+  },
+  roleChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    backgroundColor: theme.colors.glass,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.glassBorder,
+  },
+  roleChipActive: {
+    borderColor: theme.colors.brandBlue,
+  },
+  roleChipDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  roleChipText: {
+    color: theme.colors.textPrimary,
+    fontSize: 12,
+  },
+  choiceRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm,
+  },
+  choiceChip: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    backgroundColor: theme.colors.glass,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.glassBorder,
+  },
+  choiceChipActive: {
+    borderColor: theme.colors.brandBlue,
+    backgroundColor: theme.colors.brandBlue + "20",
+  },
+  choiceChipText: {
+    color: theme.colors.textPrimary,
+    fontSize: 12,
+  },
+  createUserButton: {
+    backgroundColor: theme.colors.brandBlue,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: theme.spacing.sm,
+  },
+  createUserButtonText: {
+    color: theme.colors.textPrimary,
     fontWeight: "600",
   },
   profileSection: {

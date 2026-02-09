@@ -39,7 +39,7 @@ const ProjectsScreen = ({ navigation, user }) => {
   useFocusEffect(
     useCallback(() => {
       loadProjects();
-    }, [loadProjects])
+    }, [loadProjects]),
   );
 
   const handleDeleteProject = useCallback(async (project) => {
@@ -58,7 +58,7 @@ const ProjectsScreen = ({ navigation, user }) => {
             try {
               await api.deleteProject(project.id);
               setProjects((prevProjects) =>
-                prevProjects.filter((p) => p.id !== project.id)
+                prevProjects.filter((p) => p.id !== project.id),
               );
               Alert.alert("Success", "Project deleted successfully");
             } catch (err) {
@@ -66,7 +66,7 @@ const ProjectsScreen = ({ navigation, user }) => {
             }
           },
         },
-      ]
+      ],
     );
   }, []);
 
@@ -76,7 +76,9 @@ const ProjectsScreen = ({ navigation, user }) => {
       activeOpacity={0.8}
     >
       <AppCard
-        accentColor={index % 2 === 0 ? theme.colors.brandBlue : theme.colors.brandGreen}
+        accentColor={
+          index % 2 === 0 ? theme.colors.brandBlue : theme.colors.brandGreen
+        }
         glowIntensity={item.priority === "high" ? "high" : "medium"}
       >
         <View style={styles.cardHeader}>
@@ -84,7 +86,12 @@ const ProjectsScreen = ({ navigation, user }) => {
             {item.name}
           </AppText>
           <View style={styles.headerRight}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(item.status) },
+              ]}
+            >
               <AppText style={styles.statusText}>{item.status}</AppText>
             </View>
             {user?.role === "admin" && (
@@ -110,22 +117,38 @@ const ProjectsScreen = ({ navigation, user }) => {
         <View style={styles.progressSection}>
           <View style={styles.progressHeader}>
             <AppText style={styles.progressLabel}>Progress</AppText>
-            <AppText style={styles.progressValue}>{item.progress || 0}%</AppText>
+            <AppText style={styles.progressValue}>
+              {item.progress || 0}%
+            </AppText>
           </View>
           <ProgressBar
             value={item.progress || 0}
-            color={index % 2 === 0 ? theme.colors.brandBlue : theme.colors.brandGreen}
+            color={
+              index % 2 === 0 ? theme.colors.brandBlue : theme.colors.brandGreen
+            }
           />
         </View>
         <View style={styles.cardFooter}>
           <View style={styles.metaItem}>
-            <Ionicons name="flag-outline" size={14} color={theme.colors.textMuted} />
-            <AppText style={styles.metaText}>{item.priority || "medium"}</AppText>
+            <Ionicons
+              name="flag-outline"
+              size={14}
+              color={theme.colors.textMuted}
+            />
+            <AppText style={styles.metaText}>
+              {item.priority || "medium"}
+            </AppText>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="calendar-outline" size={14} color={theme.colors.textMuted} />
+            <Ionicons
+              name="calendar-outline"
+              size={14}
+              color={theme.colors.textMuted}
+            />
             <AppText style={styles.metaText}>
-              {item.endDate ? new Date(item.endDate).toLocaleDateString() : "No deadline"}
+              {item.endDate
+                ? new Date(item.endDate).toLocaleDateString()
+                : "No deadline"}
             </AppText>
           </View>
         </View>
@@ -149,7 +172,9 @@ const ProjectsScreen = ({ navigation, user }) => {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <AppText variant="h2" style={styles.title}>Projects</AppText>
+        <AppText variant="h2" style={styles.title}>
+          Projects
+        </AppText>
         {user?.role === "project_manager" && (
           <TouchableOpacity
             style={styles.addButton}
@@ -180,7 +205,11 @@ const ProjectsScreen = ({ navigation, user }) => {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="folder-open-outline" size={48} color={theme.colors.textMuted} />
+              <Ionicons
+                name="folder-open-outline"
+                size={48}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.emptyText}>No projects yet</AppText>
             </View>
           }

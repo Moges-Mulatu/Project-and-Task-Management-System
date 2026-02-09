@@ -40,7 +40,7 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
       if (project.id) {
         loadProjectTasks();
       }
-    }, [loadProjectTasks, project.id])
+    }, [loadProjectTasks, project.id]),
   );
 
   const getStatusColor = (status) => {
@@ -57,17 +57,27 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
   };
 
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
-  const progressPercent = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+  const progressPercent =
+    tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   return (
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={theme.colors.textPrimary}
+            />
           </TouchableOpacity>
-          <AppText variant="h3" style={styles.headerTitle}>Project</AppText>
+          <AppText variant="h3" style={styles.headerTitle}>
+            Project
+          </AppText>
           <View style={{ width: 40 }} />
         </View>
 
@@ -75,9 +85,18 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
         <AppCard accentColor={theme.colors.brandBlue} glowIntensity="high">
           <View style={styles.projectHeader}>
             <View style={styles.projectIcon}>
-              <Ionicons name="briefcase" size={28} color={theme.colors.textPrimary} />
+              <Ionicons
+                name="briefcase"
+                size={28}
+                color={theme.colors.textPrimary}
+              />
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(project.status) }]}>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(project.status) },
+              ]}
+            >
               <AppText style={styles.statusText}>{project.status}</AppText>
             </View>
           </View>
@@ -94,20 +113,37 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
               <AppText style={styles.progressLabel}>Overall Progress</AppText>
               <AppText style={styles.progressValue}>{progressPercent}%</AppText>
             </View>
-            <ProgressBar value={progressPercent} color={theme.colors.brandBlue} />
+            <ProgressBar
+              value={progressPercent}
+              color={theme.colors.brandBlue}
+            />
           </View>
 
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={16} color={theme.colors.textMuted} />
+              <Ionicons
+                name="calendar-outline"
+                size={16}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.metaText}>
-                Start: {project.startDate ? new Date(project.startDate).toLocaleDateString() : "Not set"}
+                Start:{" "}
+                {project.startDate
+                  ? new Date(project.startDate).toLocaleDateString()
+                  : "Not set"}
               </AppText>
             </View>
             <View style={styles.metaItem}>
-              <Ionicons name="flag-outline" size={16} color={theme.colors.textMuted} />
+              <Ionicons
+                name="flag-outline"
+                size={16}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.metaText}>
-                End: {project.endDate ? new Date(project.endDate).toLocaleDateString() : "Not set"}
+                End:{" "}
+                {project.endDate
+                  ? new Date(project.endDate).toLocaleDateString()
+                  : "Not set"}
               </AppText>
             </View>
           </View>
@@ -120,11 +156,17 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
             <AppText style={styles.statLabel}>Total Tasks</AppText>
           </View>
           <View style={styles.statCard}>
-            <AppText style={[styles.statValue, { color: theme.colors.brandGreen }]}>{completedTasks}</AppText>
+            <AppText
+              style={[styles.statValue, { color: theme.colors.brandGreen }]}
+            >
+              {completedTasks}
+            </AppText>
             <AppText style={styles.statLabel}>Completed</AppText>
           </View>
           <View style={styles.statCard}>
-            <AppText style={[styles.statValue, { color: theme.colors.brandBlue }]}>
+            <AppText
+              style={[styles.statValue, { color: theme.colors.brandBlue }]}
+            >
               {tasks.filter((t) => t.status === "in_progress").length}
             </AppText>
             <AppText style={styles.statLabel}>In Progress</AppText>
@@ -133,11 +175,15 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
 
         {/* Tasks Section */}
         <View style={styles.sectionHeader}>
-          <AppText variant="h3" style={styles.sectionTitle}>Tasks</AppText>
+          <AppText variant="h3" style={styles.sectionTitle}>
+            Tasks
+          </AppText>
           {user?.role === "project_manager" && (
             <TouchableOpacity
               style={styles.addTaskButton}
-              onPress={() => navigation.navigate("CreateTask", { projectId: project.id })}
+              onPress={() =>
+                navigation.navigate("CreateTask", { projectId: project.id })
+              }
             >
               <Ionicons name="add" size={20} color={theme.colors.brandBlue} />
               <AppText style={styles.addTaskText}>Add Task</AppText>
@@ -146,10 +192,17 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
         </View>
 
         {loading ? (
-          <ActivityIndicator color={theme.colors.brandBlue} style={{ marginTop: 20 }} />
+          <ActivityIndicator
+            color={theme.colors.brandBlue}
+            style={{ marginTop: 20 }}
+          />
         ) : tasks.length === 0 ? (
           <View style={styles.emptyTasks}>
-            <Ionicons name="checkbox-outline" size={40} color={theme.colors.textMuted} />
+            <Ionicons
+              name="checkbox-outline"
+              size={40}
+              color={theme.colors.textMuted}
+            />
             <AppText style={styles.emptyText}>No tasks yet</AppText>
           </View>
         ) : (
@@ -164,7 +217,12 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
                 style={styles.taskCard}
               >
                 <View style={styles.taskRow}>
-                  <View style={[styles.taskStatus, { backgroundColor: getStatusColor(task.status) }]} />
+                  <View
+                    style={[
+                      styles.taskStatus,
+                      { backgroundColor: getStatusColor(task.status) },
+                    ]}
+                  />
                   <View style={styles.taskInfo}>
                     <AppText style={styles.taskTitle} numberOfLines={1}>
                       {task.title}
@@ -175,7 +233,11 @@ const ProjectDetailScreen = ({ route, navigation, user }) => {
                       </AppText>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.textMuted}
+                  />
                 </View>
               </AppCard>
             </TouchableOpacity>

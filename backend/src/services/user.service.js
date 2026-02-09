@@ -6,6 +6,24 @@ import User from '../models/user.model.js';
  */
 class UserService {
     /**
+     * Create a new user (Admin only)
+     * @param {Object} userData - New user data
+     * @returns {Promise<Object>} Created user object
+     */
+    static async createUser(userData) {
+        try {
+            const existingUser = await User.findByEmail(userData.email);
+            if (existingUser) {
+                throw new Error('User already exists');
+            }
+
+            const user = await User.create(userData);
+            return user.toJSON();
+        } catch (error) {
+            throw error;
+        }
+    }
+    /**
      * Get all active users in the system with optional filtering
      * @param {Object} filters - Filter options (role, department)
      * @returns {Promise<Array>} List of user objects
