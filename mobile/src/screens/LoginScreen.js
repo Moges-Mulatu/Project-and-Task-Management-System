@@ -145,18 +145,6 @@ const LoginScreen = ({ onLogin, navigation }) => {
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.registerLink}
-                  onPress={() => navigation.navigate("Register")}
-                >
-                  <AppText style={styles.registerText}>
-                    Don't have an account?{" "}
-                    <AppText style={styles.registerHighlight}>
-                      Create Account
-                    </AppText>
-                  </AppText>
-                </TouchableOpacity>
               </View>
             )}
           </Formik>
@@ -285,17 +273,6 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontWeight: "600",
     fontSize: 16,
-  },
-  registerLink: {
-    marginTop: theme.spacing.xl,
-    alignItems: "center",
-  },
-  registerText: {
-    color: theme.colors.textSecondary,
-  },
-  registerHighlight: {
-    color: theme.colors.accentBlue,
-    fontWeight: "600",
   },
 });
 

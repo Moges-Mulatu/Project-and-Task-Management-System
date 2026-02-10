@@ -13,6 +13,7 @@ class AuthValidator {
             { field: 'email', required: true, type: 'email' },
             { field: 'password', required: true, minLength: 6 }
             // Role is NOT allowed in public registration; will be forced to 'team_member'
+            ,{ field: 'role', required: false, enum: ['admin', 'project_manager', 'team_member'] }
         ];
     }
 

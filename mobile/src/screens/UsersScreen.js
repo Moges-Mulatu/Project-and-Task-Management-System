@@ -28,7 +28,11 @@ const ROLE_FILTERS = [
 
 const ROLE_OPTIONS = [
   { id: "admin", label: "Admin", color: theme.colors.accentPink },
-  { id: "project_manager", label: "Project Manager", color: theme.colors.brandBlue },
+  {
+    id: "project_manager",
+    label: "Project Manager",
+    color: theme.colors.brandBlue,
+  },
   { id: "team_member", label: "Team Member", color: theme.colors.brandGreen },
 ];
 
@@ -98,24 +102,29 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   // Get user stats
   const getUserStats = (userId) => {
     const userTasks = tasks.filter((t) => t.assignedTo === userId);
-    const completedTasks = userTasks.filter((t) => t.status === "completed").length;
-    
+    const completedTasks = userTasks.filter(
+      (t) => t.status === "completed",
+    ).length;
+
     // Count projects where user has tasks
-    const projectIds = [...new Set(userTasks.map((t) => t.projectId).filter(Boolean))];
-    
+    const projectIds = [
+      ...new Set(userTasks.map((t) => t.projectId).filter(Boolean)),
+    ];
+
     return {
       taskCount: userTasks.length,
       completedTasks,
       projectCount: projectIds.length,
-      completionRate: userTasks.length > 0 
-        ? Math.round((completedTasks / userTasks.length) * 100) 
-        : 0,
+      completionRate:
+        userTasks.length > 0
+          ? Math.round((completedTasks / userTasks.length) * 100)
+          : 0,
     };
   };
 
@@ -135,7 +144,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
         (u) =>
           u.firstName?.toLowerCase().includes(searchLower) ||
           u.lastName?.toLowerCase().includes(searchLower) ||
-          u.email?.toLowerCase().includes(searchLower)
+          u.email?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -174,7 +183,10 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
   const handleDeactivateUser = (userId, userName) => {
     if (userId === currentUser?.id) {
-      Alert.alert("Cannot Deactivate", "You cannot deactivate your own account.");
+      Alert.alert(
+        "Cannot Deactivate",
+        "You cannot deactivate your own account.",
+      );
       return;
     }
 
@@ -198,7 +210,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -222,7 +234,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -255,7 +267,12 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.password) {
+    if (
+      !newUser.firstName ||
+      !newUser.lastName ||
+      !newUser.email ||
+      !newUser.password
+    ) {
       Alert.alert("Missing Fields", "Please fill all required fields.");
       return;
     }
@@ -289,20 +306,21 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
   const renderUser = ({ item }) => {
     const stats = getUserStats(item.id);
-    
+
     return (
-      <TouchableOpacity activeOpacity={0.8} onPress={() => openUserDetail(item)}>
-        <AppCard
-          accentColor={getRoleBadgeColor(item.role)}
-          glowIntensity="low"
-        >
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => openUserDetail(item)}
+      >
+        <AppCard accentColor={getRoleBadgeColor(item.role)} glowIntensity="low">
           <View style={styles.userRow}>
             <LinearGradient
               colors={[getRoleBadgeColor(item.role), theme.colors.brandBlue]}
               style={styles.avatar}
             >
               <AppText style={styles.avatarText}>
-                {item.firstName?.[0] || "U"}{item.lastName?.[0] || ""}
+                {item.firstName?.[0] || "U"}
+                {item.lastName?.[0] || ""}
               </AppText>
             </LinearGradient>
 
@@ -313,8 +331,18 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
               <AppText style={styles.userEmail}>{item.email}</AppText>
             </View>
 
-            <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(item.role) + "25" }]}>
-              <AppText style={[styles.roleText, { color: getRoleBadgeColor(item.role) }]}>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: getRoleBadgeColor(item.role) + "25" },
+              ]}
+            >
+              <AppText
+                style={[
+                  styles.roleText,
+                  { color: getRoleBadgeColor(item.role) },
+                ]}
+              >
                 {getRoleLabel(item.role)}
               </AppText>
             </View>
@@ -322,23 +350,46 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
           <View style={styles.userMeta}>
             <View style={styles.metaItem}>
-              <Ionicons name="briefcase-outline" size={14} color={theme.colors.textMuted} />
-              <AppText style={styles.metaText}>{stats.projectCount} Projects</AppText>
+              <Ionicons
+                name="briefcase-outline"
+                size={14}
+                color={theme.colors.textMuted}
+              />
+              <AppText style={styles.metaText}>
+                {stats.projectCount} Projects
+              </AppText>
             </View>
             <View style={styles.metaItem}>
-              <Ionicons name="checkbox-outline" size={14} color={theme.colors.textMuted} />
+              <Ionicons
+                name="checkbox-outline"
+                size={14}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.metaText}>{stats.taskCount} Tasks</AppText>
             </View>
             <View style={styles.metaItem}>
-              <Ionicons 
-                name={item.isActive !== false ? "checkmark-circle" : "close-circle"} 
-                size={14} 
-                color={item.isActive !== false ? theme.colors.brandGreen : theme.colors.danger} 
+              <Ionicons
+                name={
+                  item.isActive !== false ? "checkmark-circle" : "close-circle"
+                }
+                size={14}
+                color={
+                  item.isActive !== false
+                    ? theme.colors.brandGreen
+                    : theme.colors.danger
+                }
               />
-              <AppText style={[
-                styles.metaText, 
-                { color: item.isActive !== false ? theme.colors.brandGreen : theme.colors.danger }
-              ]}>
+              <AppText
+                style={[
+                  styles.metaText,
+                  {
+                    color:
+                      item.isActive !== false
+                        ? theme.colors.brandGreen
+                        : theme.colors.danger,
+                  },
+                ]}
+              >
                 {item.isActive !== false ? "Active" : "Inactive"}
               </AppText>
             </View>
@@ -369,28 +420,53 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                   onPress={() => setShowUserModal(false)}
                   style={styles.modalCloseBtn}
                 >
-                  <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                  <Ionicons
+                    name="close"
+                    size={24}
+                    color={theme.colors.textPrimary}
+                  />
                 </TouchableOpacity>
-                <AppText variant="h3" style={styles.modalTitle}>User Details</AppText>
+                <AppText variant="h3" style={styles.modalTitle}>
+                  User Details
+                </AppText>
                 <View style={{ width: 40 }} />
               </View>
 
               {/* User Profile */}
               <View style={styles.profileSection}>
                 <LinearGradient
-                  colors={[getRoleBadgeColor(selectedUser.role), theme.colors.brandBlue]}
+                  colors={[
+                    getRoleBadgeColor(selectedUser.role),
+                    theme.colors.brandBlue,
+                  ]}
                   style={styles.profileAvatar}
                 >
                   <AppText style={styles.profileAvatarText}>
-                    {selectedUser.firstName?.[0] || "U"}{selectedUser.lastName?.[0] || ""}
+                    {selectedUser.firstName?.[0] || "U"}
+                    {selectedUser.lastName?.[0] || ""}
                   </AppText>
                 </LinearGradient>
                 <AppText variant="h2" style={styles.profileName}>
                   {selectedUser.firstName} {selectedUser.lastName}
                 </AppText>
-                <AppText style={styles.profileEmail}>{selectedUser.email}</AppText>
-                <View style={[styles.profileRoleBadge, { backgroundColor: getRoleBadgeColor(selectedUser.role) + "25" }]}>
-                  <AppText style={[styles.profileRoleText, { color: getRoleBadgeColor(selectedUser.role) }]}>
+                <AppText style={styles.profileEmail}>
+                  {selectedUser.email}
+                </AppText>
+                <View
+                  style={[
+                    styles.profileRoleBadge,
+                    {
+                      backgroundColor:
+                        getRoleBadgeColor(selectedUser.role) + "25",
+                    },
+                  ]}
+                >
+                  <AppText
+                    style={[
+                      styles.profileRoleText,
+                      { color: getRoleBadgeColor(selectedUser.role) },
+                    ]}
+                  >
                     {getRoleLabel(selectedUser.role)}
                   </AppText>
                 </View>
@@ -398,30 +474,86 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
               {/* Stats */}
               <View style={styles.statsGrid}>
-                <View style={[styles.statBox, { backgroundColor: theme.colors.brandBlue + "20" }]}>
-                  <Ionicons name="briefcase" size={24} color={theme.colors.brandBlue} />
-                  <AppText style={[styles.statBoxValue, { color: theme.colors.brandBlue }]}>
+                <View
+                  style={[
+                    styles.statBox,
+                    { backgroundColor: theme.colors.brandBlue + "20" },
+                  ]}
+                >
+                  <Ionicons
+                    name="briefcase"
+                    size={24}
+                    color={theme.colors.brandBlue}
+                  />
+                  <AppText
+                    style={[
+                      styles.statBoxValue,
+                      { color: theme.colors.brandBlue },
+                    ]}
+                  >
                     {stats.projectCount}
                   </AppText>
                   <AppText style={styles.statBoxLabel}>Projects</AppText>
                 </View>
-                <View style={[styles.statBox, { backgroundColor: theme.colors.brandGreen + "20" }]}>
-                  <Ionicons name="checkbox" size={24} color={theme.colors.brandGreen} />
-                  <AppText style={[styles.statBoxValue, { color: theme.colors.brandGreen }]}>
+                <View
+                  style={[
+                    styles.statBox,
+                    { backgroundColor: theme.colors.brandGreen + "20" },
+                  ]}
+                >
+                  <Ionicons
+                    name="checkbox"
+                    size={24}
+                    color={theme.colors.brandGreen}
+                  />
+                  <AppText
+                    style={[
+                      styles.statBoxValue,
+                      { color: theme.colors.brandGreen },
+                    ]}
+                  >
                     {stats.taskCount}
                   </AppText>
                   <AppText style={styles.statBoxLabel}>Tasks</AppText>
                 </View>
-                <View style={[styles.statBox, { backgroundColor: theme.colors.accentOrange + "20" }]}>
-                  <Ionicons name="checkmark-done" size={24} color={theme.colors.accentOrange} />
-                  <AppText style={[styles.statBoxValue, { color: theme.colors.accentOrange }]}>
+                <View
+                  style={[
+                    styles.statBox,
+                    { backgroundColor: theme.colors.accentOrange + "20" },
+                  ]}
+                >
+                  <Ionicons
+                    name="checkmark-done"
+                    size={24}
+                    color={theme.colors.accentOrange}
+                  />
+                  <AppText
+                    style={[
+                      styles.statBoxValue,
+                      { color: theme.colors.accentOrange },
+                    ]}
+                  >
                     {stats.completedTasks}
                   </AppText>
                   <AppText style={styles.statBoxLabel}>Completed</AppText>
                 </View>
-                <View style={[styles.statBox, { backgroundColor: theme.colors.accentPink + "20" }]}>
-                  <Ionicons name="trophy" size={24} color={theme.colors.accentPink} />
-                  <AppText style={[styles.statBoxValue, { color: theme.colors.accentPink }]}>
+                <View
+                  style={[
+                    styles.statBox,
+                    { backgroundColor: theme.colors.accentPink + "20" },
+                  ]}
+                >
+                  <Ionicons
+                    name="trophy"
+                    size={24}
+                    color={theme.colors.accentPink}
+                  />
+                  <AppText
+                    style={[
+                      styles.statBoxValue,
+                      { color: theme.colors.accentPink },
+                    ]}
+                  >
                     {stats.completionRate}%
                   </AppText>
                   <AppText style={styles.statBoxLabel}>Rate</AppText>
@@ -431,38 +563,69 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
               {/* Info Rows */}
               <View style={styles.infoSection}>
                 <View style={styles.infoRow}>
-                  <Ionicons name="mail-outline" size={20} color={theme.colors.textMuted} />
+                  <Ionicons
+                    name="mail-outline"
+                    size={20}
+                    color={theme.colors.textMuted}
+                  />
                   <View style={styles.infoContent}>
                     <AppText style={styles.infoLabel}>Email</AppText>
-                    <AppText style={styles.infoValue}>{selectedUser.email}</AppText>
+                    <AppText style={styles.infoValue}>
+                      {selectedUser.email}
+                    </AppText>
                   </View>
                 </View>
                 <View style={styles.infoRow}>
-                  <Ionicons name="shield-outline" size={20} color={theme.colors.textMuted} />
+                  <Ionicons
+                    name="shield-outline"
+                    size={20}
+                    color={theme.colors.textMuted}
+                  />
                   <View style={styles.infoContent}>
                     <AppText style={styles.infoLabel}>Role</AppText>
-                    <AppText style={styles.infoValue}>{getRoleLabel(selectedUser.role)}</AppText>
+                    <AppText style={styles.infoValue}>
+                      {getRoleLabel(selectedUser.role)}
+                    </AppText>
                   </View>
                 </View>
                 <View style={styles.infoRow}>
-                  <Ionicons 
-                    name={selectedUser.isActive !== false ? "checkmark-circle-outline" : "close-circle-outline"} 
-                    size={20} 
-                    color={selectedUser.isActive !== false ? theme.colors.brandGreen : theme.colors.danger} 
+                  <Ionicons
+                    name={
+                      selectedUser.isActive !== false
+                        ? "checkmark-circle-outline"
+                        : "close-circle-outline"
+                    }
+                    size={20}
+                    color={
+                      selectedUser.isActive !== false
+                        ? theme.colors.brandGreen
+                        : theme.colors.danger
+                    }
                   />
                   <View style={styles.infoContent}>
                     <AppText style={styles.infoLabel}>Status</AppText>
-                    <AppText style={[
-                      styles.infoValue, 
-                      { color: selectedUser.isActive !== false ? theme.colors.brandGreen : theme.colors.danger }
-                    ]}>
+                    <AppText
+                      style={[
+                        styles.infoValue,
+                        {
+                          color:
+                            selectedUser.isActive !== false
+                              ? theme.colors.brandGreen
+                              : theme.colors.danger,
+                        },
+                      ]}
+                    >
                       {selectedUser.isActive !== false ? "Active" : "Inactive"}
                     </AppText>
                   </View>
                 </View>
                 {selectedUser.createdAt && (
                   <View style={styles.infoRow}>
-                    <Ionicons name="calendar-outline" size={20} color={theme.colors.textMuted} />
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color={theme.colors.textMuted}
+                    />
                     <View style={styles.infoContent}>
                       <AppText style={styles.infoLabel}>Joined</AppText>
                       <AppText style={styles.infoValue}>
@@ -474,36 +637,65 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
               </View>
 
               {/* Actions */}
-              {currentUser?.role === "admin" && selectedUser.id !== currentUser?.id && (
-                <View style={styles.actionsSection}>
-                  {/* Role Change Button */}
-                  <TouchableOpacity
-                    style={styles.roleChangeButton}
-                    onPress={() => setShowRoleModal(true)}
-                  >
-                    <Ionicons name="shield-checkmark" size={20} color={theme.colors.brandBlue} />
-                    <AppText style={styles.roleChangeButtonText}>Change Role</AppText>
-                  </TouchableOpacity>
+              {currentUser?.role === "admin" &&
+                selectedUser.id !== currentUser?.id && (
+                  <View style={styles.actionsSection}>
+                    {/* Role Change Button */}
+                    <TouchableOpacity
+                      style={styles.roleChangeButton}
+                      onPress={() => setShowRoleModal(true)}
+                    >
+                      <Ionicons
+                        name="shield-checkmark"
+                        size={20}
+                        color={theme.colors.brandBlue}
+                      />
+                      <AppText style={styles.roleChangeButtonText}>
+                        Change Role
+                      </AppText>
+                    </TouchableOpacity>
 
-                  {selectedUser.isActive !== false ? (
-                    <TouchableOpacity
-                      style={styles.deactivateButton}
-                      onPress={() => handleDeactivateUser(selectedUser.id, `${selectedUser.firstName} ${selectedUser.lastName}`)}
-                    >
-                      <Ionicons name="person-remove" size={20} color={theme.colors.danger} />
-                      <AppText style={styles.deactivateButtonText}>Deactivate User</AppText>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.reactivateButton}
-                      onPress={() => handleReactivateUser(selectedUser.id, `${selectedUser.firstName} ${selectedUser.lastName}`)}
-                    >
-                      <Ionicons name="person-add" size={20} color={theme.colors.brandGreen} />
-                      <AppText style={styles.reactivateButtonText}>Reactivate User</AppText>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
+                    {selectedUser.isActive !== false ? (
+                      <TouchableOpacity
+                        style={styles.deactivateButton}
+                        onPress={() =>
+                          handleDeactivateUser(
+                            selectedUser.id,
+                            `${selectedUser.firstName} ${selectedUser.lastName}`,
+                          )
+                        }
+                      >
+                        <Ionicons
+                          name="person-remove"
+                          size={20}
+                          color={theme.colors.danger}
+                        />
+                        <AppText style={styles.deactivateButtonText}>
+                          Deactivate User
+                        </AppText>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.reactivateButton}
+                        onPress={() =>
+                          handleReactivateUser(
+                            selectedUser.id,
+                            `${selectedUser.firstName} ${selectedUser.lastName}`,
+                          )
+                        }
+                      >
+                        <Ionicons
+                          name="person-add"
+                          size={20}
+                          color={theme.colors.brandGreen}
+                        />
+                        <AppText style={styles.reactivateButtonText}>
+                          Reactivate User
+                        </AppText>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
 
               <View style={{ height: 40 }} />
             </ScrollView>
@@ -526,7 +718,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       >
         <View style={styles.roleModalOverlay}>
           <View style={styles.roleModalContent}>
-            <AppText variant="h3" style={styles.roleModalTitle}>Change Role</AppText>
+            <AppText variant="h3" style={styles.roleModalTitle}>
+              Change Role
+            </AppText>
             <AppText style={styles.roleModalSubtitle}>
               Select a new role for {selectedUser.firstName}
             </AppText>
@@ -541,16 +735,27 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                 onPress={() => handleUpdateRole(option.id)}
                 disabled={updatingRole || selectedUser.role === option.id}
               >
-                <View style={[styles.roleOptionDot, { backgroundColor: option.color }]} />
-                <AppText style={[
-                  styles.roleOptionText,
-                  selectedUser.role === option.id && styles.roleOptionTextCurrent,
-                ]}>
+                <View
+                  style={[
+                    styles.roleOptionDot,
+                    { backgroundColor: option.color },
+                  ]}
+                />
+                <AppText
+                  style={[
+                    styles.roleOptionText,
+                    selectedUser.role === option.id &&
+                      styles.roleOptionTextCurrent,
+                  ]}
+                >
                   {option.label}
                   {selectedUser.role === option.id && " (Current)"}
                 </AppText>
                 {updatingRole && selectedUser.role !== option.id && (
-                  <ActivityIndicator size="small" color={theme.colors.brandBlue} />
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.brandBlue}
+                  />
                 )}
               </TouchableOpacity>
             ))}
@@ -585,9 +790,15 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                   onPress={() => setShowCreateModal(false)}
                   style={styles.modalCloseBtn}
                 >
-                  <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                  <Ionicons
+                    name="close"
+                    size={24}
+                    color={theme.colors.textPrimary}
+                  />
                 </TouchableOpacity>
-                <AppText variant="h3" style={styles.modalTitle}>Create User</AppText>
+                <AppText variant="h3" style={styles.modalTitle}>
+                  Create User
+                </AppText>
                 <View style={{ width: 40 }} />
               </View>
 
@@ -598,7 +809,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                   placeholder="First name"
                   placeholderTextColor={theme.colors.textMuted}
                   value={newUser.firstName}
-                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, firstName: text }))}
+                  onChangeText={(text) =>
+                    setNewUser((prev) => ({ ...prev, firstName: text }))
+                  }
                 />
               </View>
 
@@ -609,7 +822,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                   placeholder="Last name"
                   placeholderTextColor={theme.colors.textMuted}
                   value={newUser.lastName}
-                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, lastName: text }))}
+                  onChangeText={(text) =>
+                    setNewUser((prev) => ({ ...prev, lastName: text }))
+                  }
                 />
               </View>
 
@@ -622,7 +837,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   value={newUser.email}
-                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, email: text }))}
+                  onChangeText={(text) =>
+                    setNewUser((prev) => ({ ...prev, email: text }))
+                  }
                 />
               </View>
 
@@ -634,7 +851,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                   placeholderTextColor={theme.colors.textMuted}
                   secureTextEntry
                   value={newUser.password}
-                  onChangeText={(text) => setNewUser((prev) => ({ ...prev, password: text }))}
+                  onChangeText={(text) =>
+                    setNewUser((prev) => ({ ...prev, password: text }))
+                  }
                 />
               </View>
 
@@ -648,10 +867,19 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                         styles.roleChip,
                         newUser.role === option.id && styles.roleChipActive,
                       ]}
-                      onPress={() => setNewUser((prev) => ({ ...prev, role: option.id }))}
+                      onPress={() =>
+                        setNewUser((prev) => ({ ...prev, role: option.id }))
+                      }
                     >
-                      <View style={[styles.roleChipDot, { backgroundColor: option.color }]} />
-                      <AppText style={styles.roleChipText}>{option.label}</AppText>
+                      <View
+                        style={[
+                          styles.roleChipDot,
+                          { backgroundColor: option.color },
+                        ]}
+                      />
+                      <AppText style={styles.roleChipText}>
+                        {option.label}
+                      </AppText>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -665,9 +893,12 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                       key={option}
                       style={[
                         styles.choiceChip,
-                        newUser.department === option && styles.choiceChipActive,
+                        newUser.department === option &&
+                          styles.choiceChipActive,
                       ]}
-                      onPress={() => setNewUser((prev) => ({ ...prev, department: option }))}
+                      onPress={() =>
+                        setNewUser((prev) => ({ ...prev, department: option }))
+                      }
                     >
                       <AppText style={styles.choiceChipText}>{option}</AppText>
                     </TouchableOpacity>
@@ -685,7 +916,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                         styles.choiceChip,
                         newUser.position === option && styles.choiceChipActive,
                       ]}
-                      onPress={() => setNewUser((prev) => ({ ...prev, position: option }))}
+                      onPress={() =>
+                        setNewUser((prev) => ({ ...prev, position: option }))
+                      }
                     >
                       <AppText style={styles.choiceChipText}>{option}</AppText>
                     </TouchableOpacity>
@@ -701,7 +934,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
                 {creatingUser ? (
                   <ActivityIndicator color={theme.colors.textPrimary} />
                 ) : (
-                  <AppText style={styles.createUserButtonText}>Create User</AppText>
+                  <AppText style={styles.createUserButtonText}>
+                    Create User
+                  </AppText>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -714,20 +949,29 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.colors.textPrimary}
+          />
         </TouchableOpacity>
-        <AppText variant="h2" style={styles.title}>Users</AppText>
+        <AppText variant="h2" style={styles.title}>
+          Users
+        </AppText>
         <View style={styles.headerRight}>
-            <AppText style={styles.userCount}>{users.length} total</AppText>
-            {currentUser?.role === "admin" && (
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setShowCreateModal(true)}
-              >
-                <Ionicons name="add" size={18} color={theme.colors.textPrimary} />
-              </TouchableOpacity>
-            )}
+          <AppText style={styles.userCount}>{users.length} total</AppText>
+          {currentUser?.role === "admin" && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setShowCreateModal(true)}
+            >
+              <Ionicons name="add" size={18} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -743,14 +987,18 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
         />
         {search ? (
           <TouchableOpacity onPress={() => setSearch("")}>
-            <Ionicons name="close-circle" size={18} color={theme.colors.textMuted} />
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color={theme.colors.textMuted}
+            />
           </TouchableOpacity>
         ) : null}
       </View>
 
       {/* Role Filter */}
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.filterScroll}
       >
@@ -764,12 +1012,18 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
             onPress={() => setActiveFilter(filter.key)}
           >
             {filter.color ? (
-              <View style={[styles.filterDot, { backgroundColor: filter.color }]} />
+              <View
+                style={[styles.filterDot, { backgroundColor: filter.color }]}
+              />
             ) : (
-              <Ionicons 
-                name={filter.icon} 
-                size={14} 
-                color={activeFilter === filter.key ? theme.colors.textPrimary : theme.colors.textMuted}
+              <Ionicons
+                name={filter.icon}
+                size={14}
+                color={
+                  activeFilter === filter.key
+                    ? theme.colors.textPrimary
+                    : theme.colors.textMuted
+                }
                 style={{ marginRight: 6 }}
               />
             )}
@@ -806,7 +1060,11 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="people-outline" size={48} color={theme.colors.textMuted} />
+              <Ionicons
+                name="people-outline"
+                size={48}
+                color={theme.colors.textMuted}
+              />
               <AppText style={styles.emptyText}>
                 {search ? "No users found" : "No users yet"}
               </AppText>

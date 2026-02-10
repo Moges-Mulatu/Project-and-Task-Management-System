@@ -48,6 +48,10 @@ const request = async (path, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      // If rate limited, show friendly message
+      if (response.status === 429) {
+        throw new Error(data.message || "Too many attempts. Please try again later.");
+      }
       // If unauthorized, token might be expired - clear it
       if (response.status === 401) {
         console.log("Auth failed - token may be expired");
@@ -166,6 +170,9 @@ const api = {
     request(`/users/${id}/reactivate`, {
       method: "PATCH",
     }),
+
+  // System stats (dashboard counts)
+  getSystemStats: () => request("/system-stats"),
 };
 
 export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth };

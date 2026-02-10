@@ -1,5 +1,6 @@
 import TokenUtil from '../utils/token.util.js';
 import User from '../models/user.model.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 class AuthService {
     /**
@@ -16,7 +17,7 @@ class AuthService {
             }
 
             // Force role to 'team_member' for public registration (security)
-            userData.role = 'team_member';
+            userData.role = ROLES.TEAM_MEMBER;
 
             // Create new user (password hashing happens in the model)
             const user = await User.create(userData);
@@ -46,7 +47,6 @@ class AuthService {
             if (!user) {
                 throw new Error('Invalid email or password');
             }
-
             // Validate password
             const isPasswordValid = await user.validatePassword(password);
             if (!isPasswordValid) {

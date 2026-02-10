@@ -6,12 +6,21 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "db:check": "node scripts/db-check.js",
+    "login:check": "node scripts/login-check.js",
+    "hash:check": "node scripts/hash-check.js",
+    "reset:passwords": "node scripts/reset-passwords.js",
+    "add:member": "node scripts/add-member-to-team.js",
+    "reg:check": "node scripts/reg-check.js",
     "seed": "node scripts/seed.js",
     "test": "node scripts/test-api.js",
     "test:admin": "node scripts/test-admin.js",
     "test:pm": "node scripts/test-pm.js",
     "test:member": "node scripts/test-member.js",
-    "test:audit": "node scripts/super-audit.js"
+    "test:audit": "node scripts/super-audit.js",
+    "test:visibility": "node scripts/test-project-visibility.js",
+    "test:admin-full": "node admin-automated-test.mjs",
+    "debug:db": "node debug_db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -19,12 +28,13 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.22.1",
+    "express-rate-limit": "^8.2.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "mysql2": "^3.16.2",
     "node-fetch": "^3.3.2",
-    "uuid": "^11.0.5"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

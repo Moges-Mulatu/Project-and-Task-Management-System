@@ -75,7 +75,11 @@ const CurvedTabBar = ({ state, descriptors, navigation }) => {
                 <TouchableOpacity onPress={onPress} style={styles.fabTouchable}>
                   <View style={styles.fabGlow} />
                   <View style={styles.fab}>
-                    <Ionicons name="add" size={30} color={theme.colors.textPrimary} />
+                    <Ionicons
+                      name="add"
+                      size={30}
+                      color={theme.colors.textPrimary}
+                    />
                   </View>
                 </TouchableOpacity>
               </View>
@@ -89,9 +93,15 @@ const CurvedTabBar = ({ state, descriptors, navigation }) => {
               style={styles.tabItem}
             >
               <Ionicons
-                name={isFocused ? iconMap[route.name] : `${iconMap[route.name]}-outline`}
+                name={
+                  isFocused
+                    ? iconMap[route.name]
+                    : `${iconMap[route.name]}-outline`
+                }
                 size={24}
-                color={isFocused ? theme.colors.accentBlue : theme.colors.textMuted}
+                color={
+                  isFocused ? theme.colors.accentBlue : theme.colors.textMuted
+                }
               />
               {isFocused && <View style={styles.activeIndicator} />}
             </TouchableOpacity>

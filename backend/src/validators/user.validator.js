@@ -4,17 +4,18 @@
  */
 class UserValidator {
     /**
-     * Rules for creating a user (Admin only)
+     * Rules for creating a new user
      */
     static get create() {
         return [
             { field: 'firstName', required: true, type: 'string' },
             { field: 'lastName', required: true, type: 'string' },
             { field: 'email', required: true, type: 'email' },
-            { field: 'password', required: true, minLength: 6 },
+            { field: 'password', required: true, type: 'string' },
             { field: 'role', required: true, enum: ['admin', 'project_manager', 'team_member'] }
         ];
     }
+
     /**
      * Rules for updating user profile
      */
@@ -22,7 +23,10 @@ class UserValidator {
         return [
             { field: 'firstName', required: false, type: 'string' },
             { field: 'lastName', required: false, type: 'string' },
-            { field: 'email', required: false, type: 'email' }
+            { field: 'email', required: false, type: 'email' },
+            { field: 'phone', required: false, type: 'string' },
+            { field: 'department', required: false, type: 'string' },
+            { field: 'position', required: false, type: 'string' }
         ];
     }
 
