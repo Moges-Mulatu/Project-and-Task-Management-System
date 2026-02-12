@@ -9,9 +9,11 @@ class TaskValidator {
     static get create() {
         return [
             { field: 'title', required: true, type: 'string' },
+            { field: 'description', required: true, type: 'string' },
             { field: 'projectId', required: true },
             { field: 'assignedTo', required: true },
-            { field: 'deadline', required: true, type: 'date' },
+            { field: 'dueDate', required: true, type: 'date' },
+            { field: 'deadline', required: false, type: 'date' },
             { field: 'priority', required: false, enum: ['low', 'medium', 'high', 'critical'] },
             { field: 'type', required: false, enum: ['task', 'bug', 'feature'] }
         ];
