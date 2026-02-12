@@ -306,8 +306,8 @@ const CreateProjectScreen = ({ navigation, user }) => {
             endDate: { day: "", month: "", year: "" },
           }}
           validationSchema={CreateProjectSchema}
-          validateOnChange={false}
-          validateOnBlur={false}
+          validateOnChange={true}
+          validateOnBlur={true}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {

@@ -173,8 +173,8 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
             estimatedHours: "",
           }}
           validationSchema={CreateTaskSchema}
-          validateOnChange={false}
-          validateOnBlur={false}
+          validateOnChange={true}
+          validateOnBlur={true}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {
@@ -585,7 +585,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                   showsHorizontalScrollIndicator={false}
                   style={styles.horizontalScroll}
                 >
-                  {users.map((u) => {
+                  {users.filter((u) => u.role !== "admin").map((u) => {
                     const isSelected = values.assignedTo === u.id;
                     return (
                       <TouchableOpacity

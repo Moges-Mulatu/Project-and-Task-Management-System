@@ -87,6 +87,11 @@ const api = {
       body: JSON.stringify(payload),
     }),
   getProfile: () => request("/users/me"),
+  updateProfile: (payload) =>
+    request("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
   getProjects: () => request("/projects"),
   getProject: (id) => request(`/projects/${id}`),
   createProject: (payload) =>

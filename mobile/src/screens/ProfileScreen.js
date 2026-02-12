@@ -23,8 +23,12 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
   const [editForm, setEditForm] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
+    phone: user?.phone || "",
+    department: user?.department || "",
+    position: user?.position || "",
   });
   const [saving, setSaving] = useState(false);
+  const [profileData, setProfileData] = useState(user);
   const [stats, setStats] = useState({ projects: 0, tasks: 0 });
 
   useEffect(() => {
@@ -48,17 +52,26 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
 
   const handleSaveProfile = async () => {
     if (!editForm.firstName.trim() || !editForm.lastName.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert("Error", "First name and last name are required");
       return;
     }
     setSaving(true);
-    // Note: Backend would need an update profile endpoint
-    // For now, just close the modal
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const payload = {};
+      if (editForm.firstName.trim()) payload.firstName = editForm.firstName.trim();
+      if (editForm.lastName.trim()) payload.lastName = editForm.lastName.trim();
+      if (editForm.phone.trim()) payload.phone = editForm.phone.trim();
+      if (editForm.department.trim()) payload.department = editForm.department.trim();
+      if (editForm.position.trim()) payload.position = editForm.position.trim();
+      const response = await api.updateProfile(payload);
+      setProfileData(response.data || { ...profileData, ...payload });
       setShowEditModal(false);
-      Alert.alert("Info", "Profile update requires backend implementation");
-    }, 500);
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (err) {
+      Alert.alert("Error", err.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -87,7 +100,16 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
     { 
       icon: "person-outline", 
       label: "Edit Profile", 
-      onPress: () => setShowEditModal(true),
+      onPress: () => {
+        setEditForm({
+          firstName: profileData?.firstName || "",
+          lastName: profileData?.lastName || "",
+          phone: profileData?.phone || "",
+          department: profileData?.department || "",
+          position: profileData?.position || "",
+        });
+        setShowEditModal(true);
+      },
       color: theme.colors.brandBlue,
     },
     { 
@@ -119,15 +141,15 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 style={styles.avatarGradient}
               >
                 <AppText style={styles.avatarText}>
-                  {user?.firstName?.[0] || "U"}{user?.lastName?.[0] || ""}
+                  {profileData?.firstName?.[0] || "U"}{profileData?.lastName?.[0] || ""}
                 </AppText>
               </LinearGradient>
             </View>
 
             <AppText variant="h2" style={styles.userName}>
-              {user?.firstName || "User"} {user?.lastName || ""}
+              {profileData?.firstName || "User"} {profileData?.lastName || ""}
             </AppText>
-            <AppText style={styles.userEmail}>{user?.email || "No email"}</AppText>
+            <AppText style={styles.userEmail}>{profileData?.email || "No email"}</AppText>
 
             <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(user?.role) + "30" }]}>
               <AppText style={[styles.roleText, { color: getRoleBadgeColor(user?.role) }]}>
@@ -242,6 +264,40 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                   value={editForm.lastName}
                   onChangeText={(text) => setEditForm({ ...editForm, lastName: text })}
                   placeholder="Enter last name"
+                  placeholderTextColor={theme.colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <AppText style={styles.inputLabel}>Phone</AppText>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editForm.phone}
+                  onChangeText={(text) => setEditForm({ ...editForm, phone: text })}
+                  placeholder="Enter phone number"
+                  placeholderTextColor={theme.colors.textMuted}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <AppText style={styles.inputLabel}>Department</AppText>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editForm.department}
+                  onChangeText={(text) => setEditForm({ ...editForm, department: text })}
+                  placeholder="Enter department"
+                  placeholderTextColor={theme.colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <AppText style={styles.inputLabel}>Position</AppText>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editForm.position}
+                  onChangeText={(text) => setEditForm({ ...editForm, position: text })}
+                  placeholder="Enter position"
                   placeholderTextColor={theme.colors.textMuted}
                 />
               </View>

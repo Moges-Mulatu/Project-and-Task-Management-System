@@ -94,9 +94,14 @@ const CreateTeamScreen = ({ navigation, user }) => {
     );
   }
 
-  // Filter users who can be team leads (admins and PMs)
+  // Filter users who can be team leads (PMs only — admins don't participate in projects)
   const potentialLeads = users.filter(
-    (u) => u.role === "admin" || u.role === "project_manager",
+    (u) => u.role === "project_manager",
+  );
+
+  // Non-admin users eligible for member selection (teamLeadId filtered inside Formik)
+  const nonAdminUsers = users.filter(
+    (u) => u.role !== "admin",
   );
 
   return (
@@ -125,8 +130,8 @@ const CreateTeamScreen = ({ navigation, user }) => {
             selectedMembers: [],
           }}
           validationSchema={CreateTeamSchema}
-          validateOnChange={false}
-          validateOnBlur={false}
+          validateOnChange={true}
+          validateOnBlur={true}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {
@@ -318,7 +323,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
                 </View>
 
                 <View style={styles.membersGrid}>
-                  {users
+                  {nonAdminUsers
                     .filter((u) => u.id !== values.teamLeadId)
                     .map((u) => {
                       const isSelected = values.selectedMembers.includes(u.id);

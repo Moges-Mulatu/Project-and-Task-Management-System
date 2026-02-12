@@ -9,6 +9,7 @@ class TeamValidator {
   static get create() {
     return [
       { field: "name", required: true, type: "string" },
+      { field: "description", required: false, type: "string" },
       { field: "department", required: true, type: "string" },
       { field: "teamLeadId", required: true },
     ];
