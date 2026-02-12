@@ -306,8 +306,8 @@ const CreateProjectScreen = ({ navigation, user }) => {
             endDate: { day: "", month: "", year: "" },
           }}
           validationSchema={CreateProjectSchema}
-          validateOnChange={true}
-          validateOnBlur={true}
+          validateOnChange={false}
+          validateOnBlur={false}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {
@@ -348,7 +348,18 @@ const CreateProjectScreen = ({ navigation, user }) => {
             isSubmitting,
             status,
             setFieldValue,
-          }) => (
+            setFieldError,
+          }) => {
+            // Helper: clear error when user changes a field
+            const changeAndClear = (name) => (text) => {
+              handleChange(name)(text);
+              if (errors[name]) setFieldError(name, undefined);
+            };
+            const setAndClear = (name, value) => {
+              setFieldValue(name, value);
+              if (errors[name]) setFieldError(name, undefined);
+            };
+            return (
             <AppCard accentColor={theme.colors.brandGreen}>
               {/* Project Name */}
               <View style={styles.inputGroup}>
@@ -359,7 +370,7 @@ const CreateProjectScreen = ({ navigation, user }) => {
                     placeholder="Enter project name..."
                     placeholderTextColor={theme.colors.textMuted}
                     value={values.name}
-                    onChangeText={handleChange("name")}
+                    onChangeText={changeAndClear("name")}
                     onBlur={handleBlur("name")}
                     maxLength={100}
                   />
@@ -381,7 +392,7 @@ const CreateProjectScreen = ({ navigation, user }) => {
                     placeholder="Describe your project goals and scope..."
                     placeholderTextColor={theme.colors.textMuted}
                     value={values.description}
-                    onChangeText={handleChange("description")}
+                    onChangeText={changeAndClear("description")}
                     onBlur={handleBlur("description")}
                     multiline
                     numberOfLines={4}
@@ -413,7 +424,7 @@ const CreateProjectScreen = ({ navigation, user }) => {
                           borderColor: getPriorityColor(p),
                         },
                       ]}
-                      onPress={() => setFieldValue("priority", p)}
+                      onPress={() => setAndClear("priority", p)}
                     >
                       <Ionicons
                         name={getPriorityIcon(p)}
@@ -653,7 +664,7 @@ const CreateProjectScreen = ({ navigation, user }) => {
                           values.teamId === t.id && styles.teamChipActive,
                         ]}
                         onPress={() =>
-                          setFieldValue(
+                          setAndClear(
                             "teamId",
                             values.teamId === t.id ? "" : t.id,
                           )
@@ -752,7 +763,7 @@ const CreateProjectScreen = ({ navigation, user }) => {
                 </LinearGradient>
               </TouchableOpacity>
             </AppCard>
-          )}
+          )}}
         </Formik>
 
         <View style={{ height: 100 }} />

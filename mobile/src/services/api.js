@@ -50,7 +50,9 @@ const request = async (path, options = {}) => {
     if (!response.ok) {
       // If rate limited, show friendly message
       if (response.status === 429) {
-        throw new Error(data.message || "Too many attempts. Please try again later.");
+        throw new Error(
+          data.message || "Too many attempts. Please try again later.",
+        );
       }
       // If unauthorized, token might be expired - clear it
       if (response.status === 401) {

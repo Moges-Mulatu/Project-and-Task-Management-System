@@ -58,10 +58,12 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
     setSaving(true);
     try {
       const payload = {};
-      if (editForm.firstName.trim()) payload.firstName = editForm.firstName.trim();
+      if (editForm.firstName.trim())
+        payload.firstName = editForm.firstName.trim();
       if (editForm.lastName.trim()) payload.lastName = editForm.lastName.trim();
       if (editForm.phone.trim()) payload.phone = editForm.phone.trim();
-      if (editForm.department.trim()) payload.department = editForm.department.trim();
+      if (editForm.department.trim())
+        payload.department = editForm.department.trim();
       if (editForm.position.trim()) payload.position = editForm.position.trim();
       const response = await api.updateProfile(payload);
       setProfileData(response.data || { ...profileData, ...payload });
@@ -75,14 +77,10 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      "Log Out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Log Out", style: "destructive", onPress: onLogout },
-      ]
-    );
+    Alert.alert("Log Out", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log Out", style: "destructive", onPress: onLogout },
+    ]);
   };
 
   const getRoleBadgeColor = (role) => {
@@ -97,9 +95,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
   };
 
   const menuItems = [
-    { 
-      icon: "person-outline", 
-      label: "Edit Profile", 
+    {
+      icon: "person-outline",
+      label: "Edit Profile",
       onPress: () => {
         setEditForm({
           firstName: profileData?.firstName || "",
@@ -112,9 +110,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
       },
       color: theme.colors.brandBlue,
     },
-    { 
-      icon: "information-circle-outline", 
-      label: "About App", 
+    {
+      icon: "information-circle-outline",
+      label: "About App",
       onPress: () => setShowAboutModal(true),
       color: theme.colors.brandGreen,
     },
@@ -124,10 +122,19 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={theme.colors.textPrimary}
+            />
           </TouchableOpacity>
-          <AppText variant="h3" style={styles.headerTitle}>Profile</AppText>
+          <AppText variant="h3" style={styles.headerTitle}>
+            Profile
+          </AppText>
           <View style={{ width: 40 }} />
         </View>
 
@@ -141,7 +148,8 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 style={styles.avatarGradient}
               >
                 <AppText style={styles.avatarText}>
-                  {profileData?.firstName?.[0] || "U"}{profileData?.lastName?.[0] || ""}
+                  {profileData?.firstName?.[0] || "U"}
+                  {profileData?.lastName?.[0] || ""}
                 </AppText>
               </LinearGradient>
             </View>
@@ -149,10 +157,22 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
             <AppText variant="h2" style={styles.userName}>
               {profileData?.firstName || "User"} {profileData?.lastName || ""}
             </AppText>
-            <AppText style={styles.userEmail}>{profileData?.email || "No email"}</AppText>
+            <AppText style={styles.userEmail}>
+              {profileData?.email || "No email"}
+            </AppText>
 
-            <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(user?.role) + "30" }]}>
-              <AppText style={[styles.roleText, { color: getRoleBadgeColor(user?.role) }]}>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: getRoleBadgeColor(user?.role) + "30" },
+              ]}
+            >
+              <AppText
+                style={[
+                  styles.roleText,
+                  { color: getRoleBadgeColor(user?.role) },
+                ]}
+              >
                 {user?.role?.replace("_", " ") || "Team Member"}
               </AppText>
             </View>
@@ -161,38 +181,65 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.statCard}
             onPress={() => {
               navigation.navigate("MainTabs", { screen: "Projects" });
             }}
           >
-            <View style={[styles.statIcon, { backgroundColor: theme.colors.brandBlue + "30" }]}>
-              <Ionicons name="briefcase" size={20} color={theme.colors.brandBlue} />
+            <View
+              style={[
+                styles.statIcon,
+                { backgroundColor: theme.colors.brandBlue + "30" },
+              ]}
+            >
+              <Ionicons
+                name="briefcase"
+                size={20}
+                color={theme.colors.brandBlue}
+              />
             </View>
             <AppText style={styles.statValue}>{stats.projects}</AppText>
             <AppText style={styles.statLabel}>Projects</AppText>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.statCard}
             onPress={() => {
               navigation.navigate("MainTabs", { screen: "Tasks" });
             }}
           >
-            <View style={[styles.statIcon, { backgroundColor: theme.colors.brandGreen + "30" }]}>
-              <Ionicons name="checkbox" size={20} color={theme.colors.brandGreen} />
+            <View
+              style={[
+                styles.statIcon,
+                { backgroundColor: theme.colors.brandGreen + "30" },
+              ]}
+            >
+              <Ionicons
+                name="checkbox"
+                size={20}
+                color={theme.colors.brandGreen}
+              />
             </View>
             <AppText style={styles.statValue}>{stats.tasks}</AppText>
             <AppText style={styles.statLabel}>Tasks</AppText>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.statCard}
             onPress={() => {
               navigation.navigate("MainTabs", { screen: "Teams" });
             }}
           >
-            <View style={[styles.statIcon, { backgroundColor: theme.colors.accentPink + "30" }]}>
-              <Ionicons name="people" size={20} color={theme.colors.accentPink} />
+            <View
+              style={[
+                styles.statIcon,
+                { backgroundColor: theme.colors.accentPink + "30" },
+              ]}
+            >
+              <Ionicons
+                name="people"
+                size={20}
+                color={theme.colors.accentPink}
+              />
             </View>
             <AppText style={styles.statValue}>→</AppText>
             <AppText style={styles.statLabel}>Teams</AppText>
@@ -204,16 +251,28 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={item.label}
-              style={[styles.menuItem, index < menuItems.length - 1 && styles.menuItemBorder]}
+              style={[
+                styles.menuItem,
+                index < menuItems.length - 1 && styles.menuItemBorder,
+              ]}
               onPress={item.onPress}
             >
               <View style={styles.menuItemLeft}>
-                <View style={[styles.menuIconBg, { backgroundColor: item.color + "20" }]}>
+                <View
+                  style={[
+                    styles.menuIconBg,
+                    { backgroundColor: item.color + "20" },
+                  ]}
+                >
                   <Ionicons name={item.icon} size={20} color={item.color} />
                 </View>
                 <AppText style={styles.menuItemText}>{item.label}</AppText>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.textMuted}
+              />
             </TouchableOpacity>
           ))}
         </AppCard>
@@ -221,7 +280,11 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <View style={styles.logoutContent}>
-            <Ionicons name="log-out-outline" size={22} color={theme.colors.danger} />
+            <Ionicons
+              name="log-out-outline"
+              size={22}
+              color={theme.colors.danger}
+            />
             <AppText style={styles.logoutText}>Log Out</AppText>
           </View>
         </TouchableOpacity>
@@ -239,9 +302,15 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <AppText variant="h3" style={styles.modalTitle}>Edit Profile</AppText>
+              <AppText variant="h3" style={styles.modalTitle}>
+                Edit Profile
+              </AppText>
               <TouchableOpacity onPress={() => setShowEditModal(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.textPrimary}
+                />
               </TouchableOpacity>
             </View>
 
@@ -251,7 +320,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.firstName}
-                  onChangeText={(text) => setEditForm({ ...editForm, firstName: text })}
+                  onChangeText={(text) =>
+                    setEditForm({ ...editForm, firstName: text })
+                  }
                   placeholder="Enter first name"
                   placeholderTextColor={theme.colors.textMuted}
                 />
@@ -262,7 +333,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.lastName}
-                  onChangeText={(text) => setEditForm({ ...editForm, lastName: text })}
+                  onChangeText={(text) =>
+                    setEditForm({ ...editForm, lastName: text })
+                  }
                   placeholder="Enter last name"
                   placeholderTextColor={theme.colors.textMuted}
                 />
@@ -273,7 +346,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.phone}
-                  onChangeText={(text) => setEditForm({ ...editForm, phone: text })}
+                  onChangeText={(text) =>
+                    setEditForm({ ...editForm, phone: text })
+                  }
                   placeholder="Enter phone number"
                   placeholderTextColor={theme.colors.textMuted}
                   keyboardType="phone-pad"
@@ -285,7 +360,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.department}
-                  onChangeText={(text) => setEditForm({ ...editForm, department: text })}
+                  onChangeText={(text) =>
+                    setEditForm({ ...editForm, department: text })
+                  }
                   placeholder="Enter department"
                   placeholderTextColor={theme.colors.textMuted}
                 />
@@ -296,7 +373,9 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.position}
-                  onChangeText={(text) => setEditForm({ ...editForm, position: text })}
+                  onChangeText={(text) =>
+                    setEditForm({ ...editForm, position: text })
+                  }
                   placeholder="Enter position"
                   placeholderTextColor={theme.colors.textMuted}
                 />
@@ -307,19 +386,29 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <View style={[styles.modalInput, styles.disabledInput]}>
                   <AppText style={styles.disabledText}>{user?.email}</AppText>
                 </View>
-                <AppText style={styles.inputHint}>Email cannot be changed</AppText>
+                <AppText style={styles.inputHint}>
+                  Email cannot be changed
+                </AppText>
               </View>
 
               <View style={styles.inputGroup}>
                 <AppText style={styles.inputLabel}>Role</AppText>
                 <View style={[styles.modalInput, styles.disabledInput]}>
-                  <AppText style={styles.disabledText}>{user?.role?.replace("_", " ")}</AppText>
+                  <AppText style={styles.disabledText}>
+                    {user?.role?.replace("_", " ")}
+                  </AppText>
                 </View>
-                <AppText style={styles.inputHint}>Contact admin to change role</AppText>
+                <AppText style={styles.inputHint}>
+                  Contact admin to change role
+                </AppText>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile} disabled={saving}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSaveProfile}
+              disabled={saving}
+            >
               <LinearGradient
                 colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
                 start={{ x: 0, y: 0 }}
@@ -344,8 +433,8 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
         animationType="fade"
         onRequestClose={() => setShowAboutModal(false)}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
+        <TouchableOpacity
+          style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowAboutModal(false)}
         >
@@ -358,28 +447,42 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                 <AppText style={styles.aboutIconText}>D</AppText>
               </LinearGradient>
             </View>
-            
-            <AppText variant="h2" style={styles.aboutTitle}>Debo Task Manager</AppText>
+
+            <AppText variant="h2" style={styles.aboutTitle}>
+              Debo Task Manager
+            </AppText>
             <AppText style={styles.aboutVersion}>Version 1.0.0</AppText>
-            
+
             <View style={styles.aboutDivider} />
-            
+
             <AppText style={styles.aboutDesc}>
               A project and task management system for Debo Engineering interns.
             </AppText>
-            
+
             <View style={styles.aboutInfo}>
               <View style={styles.aboutInfoRow}>
-                <Ionicons name="code-slash" size={16} color={theme.colors.brandBlue} />
-                <AppText style={styles.aboutInfoText}>React Native + Expo</AppText>
+                <Ionicons
+                  name="code-slash"
+                  size={16}
+                  color={theme.colors.brandBlue}
+                />
+                <AppText style={styles.aboutInfoText}>
+                  React Native + Expo
+                </AppText>
               </View>
               <View style={styles.aboutInfoRow}>
-                <Ionicons name="server" size={16} color={theme.colors.brandGreen} />
+                <Ionicons
+                  name="server"
+                  size={16}
+                  color={theme.colors.brandGreen}
+                />
                 <AppText style={styles.aboutInfoText}>Node.js + MySQL</AppText>
               </View>
             </View>
-            
-            <AppText style={styles.aboutCopyright}>© 2026 Debo Engineering</AppText>
+
+            <AppText style={styles.aboutCopyright}>
+              © 2026 Debo Engineering
+            </AppText>
           </View>
         </TouchableOpacity>
       </Modal>

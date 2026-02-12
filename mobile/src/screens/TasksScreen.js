@@ -283,8 +283,7 @@ const TasksScreen = ({ navigation, user }) => {
     }
 
     const canDelete =
-      user?.role === "project_manager" ||
-      item.assignedBy === user?.id;
+      user?.role === "project_manager" || item.assignedBy === user?.id;
     const isSelected = selectedTaskId === item.id;
 
     return (

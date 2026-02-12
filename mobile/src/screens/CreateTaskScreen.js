@@ -173,8 +173,8 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
             estimatedHours: "",
           }}
           validationSchema={CreateTaskSchema}
-          validateOnChange={true}
-          validateOnBlur={true}
+          validateOnChange={false}
+          validateOnBlur={false}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {
@@ -215,7 +215,20 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
             status,
             setFieldValue,
             setFieldTouched,
-          }) => (
+            setFieldError,
+          }) => {
+            // Helper: wrap setFieldValue to also clear error
+            const setField = (name, value) => {
+              setFieldValue(name, value);
+              setFieldTouched(name, true);
+              if (errors[name]) setFieldError(name, undefined);
+            };
+            // Helper: wrap handleChange to also clear error
+            const handleChangeAndClear = (name) => (text) => {
+              handleChange(name)(text);
+              if (errors[name]) setFieldError(name, undefined);
+            };
+            return (
             <View style={styles.form}>
               {/* Title */}
               <View style={styles.inputGroup}>
@@ -225,7 +238,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                   placeholder="Enter task title..."
                   placeholderTextColor={theme.colors.textMuted}
                   value={values.title}
-                  onChangeText={handleChange("title")}
+                  onChangeText={handleChangeAndClear("title")}
                   onBlur={handleBlur("title")}
                   maxLength={100}
                 />
@@ -247,7 +260,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                   placeholder="Add more details about this task..."
                   placeholderTextColor={theme.colors.textMuted}
                   value={values.description}
-                  onChangeText={handleChange("description")}
+                  onChangeText={handleChangeAndClear("description")}
                   onBlur={handleBlur("description")}
                   multiline
                   numberOfLines={3}
@@ -277,8 +290,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                         values.projectId === p.id && styles.projectChipActive,
                       ]}
                       onPress={() => {
-                        setFieldValue("projectId", p.id);
-                        setFieldTouched("projectId", true);
+                        setField("projectId", p.id);
                       }}
                     >
                       <Ionicons
@@ -330,8 +342,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                         },
                       ]}
                       onPress={() => {
-                        setFieldValue("priority", p.id);
-                        setFieldTouched("priority", true);
+                        setField("priority", p.id);
                       }}
                     >
                       <View
@@ -368,8 +379,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                         values.type === t.id && styles.typeChipActive,
                       ]}
                       onPress={() => {
-                        setFieldValue("type", t.id);
-                        setFieldTouched("type", true);
+                        setField("type", t.id);
                       }}
                     >
                       <Ionicons
@@ -414,6 +424,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           text.replace(/[^0-9]/g, "").slice(0, 2),
                         );
                         setFieldTouched("deadline.day", true);
+                        if (errors.deadline) setFieldError("deadline", undefined);
                       }}
                       keyboardType="number-pad"
                       maxLength={2}
@@ -433,6 +444,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           text.replace(/[^0-9]/g, "").slice(0, 2),
                         );
                         setFieldTouched("deadline.month", true);
+                        if (errors.deadline) setFieldError("deadline", undefined);
                       }}
                       keyboardType="number-pad"
                       maxLength={2}
@@ -452,6 +464,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           text.replace(/[^0-9]/g, "").slice(0, 4),
                         );
                         setFieldTouched("deadline.year", true);
+                        if (errors.deadline) setFieldError("deadline", undefined);
                       }}
                       keyboardType="number-pad"
                       maxLength={4}
@@ -467,6 +480,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                         year: String(today.getFullYear()),
                       });
                       setFieldTouched("deadline", true);
+                      if (errors.deadline) setFieldError("deadline", undefined);
                     }}
                   >
                     <Ionicons
@@ -495,6 +509,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           year: String(date.getFullYear()),
                         });
                         setFieldTouched("deadline", true);
+                        if (errors.deadline) setFieldError("deadline", undefined);
                       }}
                     >
                       <AppText style={styles.quickDateText}>
@@ -532,8 +547,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           styles.hoursChipActive,
                       ]}
                       onPress={() => {
-                        setFieldValue("estimatedHours", String(hours));
-                        setFieldTouched("estimatedHours", true);
+                        setField("estimatedHours", String(hours));
                       }}
                     >
                       <AppText
@@ -558,11 +572,10 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           : values.estimatedHours
                       }
                       onChangeText={(text) => {
-                        setFieldValue(
+                        setField(
                           "estimatedHours",
                           text.replace(/[^0-9]/g, ""),
                         );
-                        setFieldTouched("estimatedHours", true);
                       }}
                       keyboardType="number-pad"
                       maxLength={3}
@@ -585,49 +598,50 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                   showsHorizontalScrollIndicator={false}
                   style={styles.horizontalScroll}
                 >
-                  {users.filter((u) => u.role !== "admin").map((u) => {
-                    const isSelected = values.assignedTo === u.id;
-                    return (
-                      <TouchableOpacity
-                        key={u.id}
-                        style={[
-                          styles.userChip,
-                          isSelected && styles.userChipActive,
-                        ]}
-                        onPress={() => {
-                          setFieldValue("assignedTo", u.id);
-                          setFieldTouched("assignedTo", true);
-                        }}
-                      >
-                        <View
+                  {users
+                    .filter((u) => u.role !== "admin")
+                    .map((u) => {
+                      const isSelected = values.assignedTo === u.id;
+                      return (
+                        <TouchableOpacity
+                          key={u.id}
                           style={[
-                            styles.userAvatar,
-                            isSelected && styles.userAvatarActive,
+                            styles.userChip,
+                            isSelected && styles.userChipActive,
                           ]}
+                          onPress={() => {
+                          setField("assignedTo", u.id);
+                          }}
                         >
-                          <AppText style={styles.userAvatarText}>
-                            {u.firstName?.[0]}
+                          <View
+                            style={[
+                              styles.userAvatar,
+                              isSelected && styles.userAvatarActive,
+                            ]}
+                          >
+                            <AppText style={styles.userAvatarText}>
+                              {u.firstName?.[0]}
+                            </AppText>
+                          </View>
+                          <AppText
+                            style={[
+                              styles.userName,
+                              isSelected && styles.userNameActive,
+                            ]}
+                          >
+                            {u.firstName}
                           </AppText>
-                        </View>
-                        <AppText
-                          style={[
-                            styles.userName,
-                            isSelected && styles.userNameActive,
-                          ]}
-                        >
-                          {u.firstName}
-                        </AppText>
-                        {isSelected && (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={16}
-                            color={theme.colors.brandGreen}
-                            style={{ marginLeft: 4 }}
-                          />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
+                          {isSelected && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={16}
+                              color={theme.colors.brandGreen}
+                              style={{ marginLeft: 4 }}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
                 </ScrollView>
                 {touched.assignedTo && errors.assignedTo && (
                   <AppText style={styles.fieldError}>
@@ -677,7 +691,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          )}
+          )}}
         </Formik>
 
         <View style={{ height: 100 }} />

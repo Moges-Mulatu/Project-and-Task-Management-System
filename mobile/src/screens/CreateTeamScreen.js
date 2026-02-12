@@ -95,14 +95,10 @@ const CreateTeamScreen = ({ navigation, user }) => {
   }
 
   // Filter users who can be team leads (PMs only — admins don't participate in projects)
-  const potentialLeads = users.filter(
-    (u) => u.role === "project_manager",
-  );
+  const potentialLeads = users.filter((u) => u.role === "project_manager");
 
   // Non-admin users eligible for member selection (teamLeadId filtered inside Formik)
-  const nonAdminUsers = users.filter(
-    (u) => u.role !== "admin",
-  );
+  const nonAdminUsers = users.filter((u) => u.role !== "admin");
 
   return (
     <ScreenContainer>
@@ -130,8 +126,8 @@ const CreateTeamScreen = ({ navigation, user }) => {
             selectedMembers: [],
           }}
           validationSchema={CreateTeamSchema}
-          validateOnChange={true}
-          validateOnBlur={true}
+          validateOnChange={false}
+          validateOnBlur={false}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             setStatus("");
             try {
@@ -177,6 +173,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
             status,
             setFieldValue,
             setFieldTouched,
+            setFieldError,
           }) => (
             <View style={styles.form}>
               {/* Team Name */}
@@ -187,7 +184,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
                   placeholder="Enter team name..."
                   placeholderTextColor={theme.colors.textMuted}
                   value={values.name}
-                  onChangeText={handleChange("name")}
+                  onChangeText={(text) => { handleChange("name")(text); if (errors.name) setFieldError("name", undefined); }}
                   onBlur={handleBlur("name")}
                   maxLength={50}
                 />
@@ -204,7 +201,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
                   placeholder="What does this team work on?"
                   placeholderTextColor={theme.colors.textMuted}
                   value={values.description}
-                  onChangeText={handleChange("description")}
+                  onChangeText={(text) => { handleChange("description")(text); if (errors.description) setFieldError("description", undefined); }}
                   onBlur={handleBlur("description")}
                   multiline
                   numberOfLines={3}
@@ -232,6 +229,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
                       onPress={() => {
                         setFieldValue("department", dept);
                         setFieldTouched("department", true);
+                        if (errors.department) setFieldError("department", undefined);
                       }}
                     >
                       <AppText
@@ -268,6 +266,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
                         onPress={() => {
                           setFieldValue("teamLeadId", u.id);
                           setFieldTouched("teamLeadId", true);
+                          if (errors.teamLeadId) setFieldError("teamLeadId", undefined);
                         }}
                       >
                         <LinearGradient
@@ -342,6 +341,7 @@ const CreateTeamScreen = ({ navigation, user }) => {
                               : [...values.selectedMembers, u.id];
                             setFieldValue("selectedMembers", newMembers);
                             setFieldTouched("selectedMembers", true);
+                            if (errors.selectedMembers) setFieldError("selectedMembers", undefined);
                           }}
                         >
                           {isSelected && (
