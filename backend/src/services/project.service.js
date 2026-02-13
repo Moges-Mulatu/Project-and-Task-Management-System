@@ -158,8 +158,8 @@ class ProjectService {
                 throw new Error('Project not found');
             }
 
-            // Ownership check: only the assigned PM can delete
-            if (project.projectManagerId !== requesterId) {
+            // Ownership check: admins can delete any project, PMs can only delete their own
+            if (requesterRole !== ROLES.ADMIN && project.projectManagerId !== requesterId) {
                 throw new Error('You can only delete projects you manage');
             }
 

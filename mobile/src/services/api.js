@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://10.0.2.2:5000/api/v1";
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
 
 const TOKEN_KEY = "debo_auth_token";
 const USER_KEY = "debo_auth_user";
@@ -23,6 +23,12 @@ const loadAuth = async () => {
 const clearAuth = async () => {
   await AsyncStorage.removeItem(TOKEN_KEY);
   await AsyncStorage.removeItem(USER_KEY);
+};
+
+// Callback invoked when a 401 is received (set by App.js to force logout)
+let _onUnauthorized = null;
+const setOnUnauthorized = (cb) => {
+  _onUnauthorized = cb;
 };
 
 const request = async (path, options = {}) => {
@@ -54,9 +60,10 @@ const request = async (path, options = {}) => {
           data.message || "Too many attempts. Please try again later.",
         );
       }
-      // If unauthorized, token might be expired - clear it
-      if (response.status === 401) {
-        console.log("Auth failed - token may be expired");
+      // If unauthorized, clear auth and trigger logout
+      if (response.status === 401 && !path.startsWith("/auth/")) {
+        await clearAuth();
+        if (_onUnauthorized) _onUnauthorized();
       }
       throw new Error(data.message || "Request failed");
     }
@@ -136,6 +143,10 @@ const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  removeTeamMember: (teamId, userId) =>
+    request(`/teams/${teamId}/members/${userId}`, {
+      method: "DELETE",
+    }),
   // Reports
   getReports: (params) => request(`/reports${buildQuery(params)}`),
   getReport: (id) => request(`/reports/${id}`),
@@ -182,4 +193,4 @@ const api = {
   getSystemStats: () => request("/system-stats"),
 };
 
-export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth };
+export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth, setOnUnauthorized };

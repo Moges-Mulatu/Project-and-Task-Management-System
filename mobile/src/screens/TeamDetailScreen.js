@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AppText from "../components/AppText";
 import AppCard from "../components/AppCard";
 import ScreenContainer from "../components/ScreenContainer";
+import { showAlert } from "../components/CustomAlert";
 import theme from "../theme";
 import { api } from "../services/api";
 
@@ -111,6 +112,39 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
   const memberCount = team.currentMemberCount || members.length;
   const projectCount = projects.length;
   const taskCount = tasks.length;
+
+  const canManageMembers =
+    user?.role === "admin" || user?.role === "project_manager";
+
+  const handleRemoveMember = (member) => {
+    const memberName =
+      `${member.firstName} ${member.lastName}`.trim() || "this member";
+    showAlert(
+      "confirm",
+      "Remove Member",
+      `Are you sure you want to remove ${memberName} from this team?`,
+      {
+        confirmText: "Remove",
+        onConfirm: async () => {
+          try {
+            await api.removeTeamMember(team.id, member.id);
+            setMembers((prev) => prev.filter((m) => m.id !== member.id));
+            showAlert(
+              "success",
+              "Success",
+              `${memberName} has been removed from the team.`,
+            );
+          } catch (err) {
+            showAlert(
+              "error",
+              "Error",
+              err.message || "Failed to remove member",
+            );
+          }
+        },
+      },
+    );
+  };
 
   return (
     <ScreenContainer>
@@ -276,6 +310,20 @@ const TeamDetailScreen = ({ route, navigation, user }) => {
                       {getRoleLabel(member.role)}
                     </AppText>
                   </View>
+
+                  {canManageMembers && (
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveMember(member)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={22}
+                        color={theme.colors.danger}
+                      />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </AppCard>
             </TouchableOpacity>
@@ -629,6 +677,10 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: 10,
     fontWeight: "600",
+  },
+  removeButton: {
+    marginLeft: 8,
+    padding: 2,
   },
   emptyMembers: {
     alignItems: "center",

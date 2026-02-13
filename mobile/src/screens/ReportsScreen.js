@@ -7,8 +7,8 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
-  Alert,
 } from "react-native";
+import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,10 +29,11 @@ const ReportsScreen = ({ navigation, user }) => {
   // Restrict access to project_manager only (per spec: PM monitors project progress)
   React.useEffect(() => {
     if (user?.role !== "project_manager") {
-      Alert.alert(
+      showAlert(
+        "warning",
         "Access Denied",
         "Only project managers can access reports to monitor progress.",
-        [{ text: "OK", onPress: () => navigation.goBack() }],
+        { onDismiss: () => navigation.goBack() },
       );
     }
   }, [user, navigation]);
@@ -84,7 +85,8 @@ const ReportsScreen = ({ navigation, user }) => {
     try {
       if (reportTypeToGenerate === "project_summary") {
         if (!selectedProject) {
-          Alert.alert(
+          showAlert(
+            "warning",
             "Select Project",
             "Please select a project to generate a summary report.",
           );
@@ -92,13 +94,15 @@ const ReportsScreen = ({ navigation, user }) => {
           return;
         }
         await api.generateProjectSummary(selectedProject.id);
-        Alert.alert(
+        showAlert(
+          "success",
           "Success",
           "Project summary report generated successfully!",
         );
       } else if (reportTypeToGenerate === "team_performance") {
         if (!selectedTeam) {
-          Alert.alert(
+          showAlert(
+            "warning",
             "Select Team",
             "Please select a team to generate a performance report.",
           );
@@ -136,7 +140,8 @@ const ReportsScreen = ({ navigation, user }) => {
           },
           status: "completed",
         });
-        Alert.alert(
+        showAlert(
+          "success",
           "Success",
           "Team performance report generated successfully!",
         );
@@ -183,7 +188,8 @@ const ReportsScreen = ({ navigation, user }) => {
           },
           status: "completed",
         });
-        Alert.alert(
+        showAlert(
+          "success",
           "Success",
           "Task bottlenecks report generated successfully!",
         );
@@ -195,32 +201,33 @@ const ReportsScreen = ({ navigation, user }) => {
       setReportTypeToGenerate("project_summary");
       loadData(); // Refresh the list
     } catch (err) {
-      Alert.alert("Error", err.message || "Failed to generate report");
+      showAlert("error", "Error", err.message || "Failed to generate report");
     } finally {
       setGenerating(false);
     }
   };
 
   const handleDeleteReport = (reportId) => {
-    Alert.alert(
+    showAlert(
+      "confirm",
       "Delete Report",
       "Are you sure you want to delete this report?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteReport(reportId);
-              setReports(reports.filter((r) => r.id !== reportId));
-              setShowReportDetail(null);
-            } catch (err) {
-              Alert.alert("Error", err.message || "Failed to delete report");
-            }
-          },
+      {
+        confirmText: "Delete",
+        onConfirm: async () => {
+          try {
+            await api.deleteReport(reportId);
+            setReports(reports.filter((r) => r.id !== reportId));
+            setShowReportDetail(null);
+          } catch (err) {
+            showAlert(
+              "error",
+              "Error",
+              err.message || "Failed to delete report",
+            );
+          }
         },
-      ],
+      },
     );
   };
 

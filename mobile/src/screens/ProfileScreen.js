@@ -7,8 +7,8 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from "react-native";
+import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AppText from "../components/AppText";
@@ -52,7 +52,7 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
 
   const handleSaveProfile = async () => {
     if (!editForm.firstName.trim() || !editForm.lastName.trim()) {
-      Alert.alert("Error", "First name and last name are required");
+      showAlert("error", "Error", "First name and last name are required");
       return;
     }
     setSaving(true);
@@ -68,19 +68,19 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
       const response = await api.updateProfile(payload);
       setProfileData(response.data || { ...profileData, ...payload });
       setShowEditModal(false);
-      Alert.alert("Success", "Profile updated successfully");
+      showAlert("success", "Success", "Profile updated successfully");
     } catch (err) {
-      Alert.alert("Error", err.message || "Failed to update profile");
+      showAlert("error", "Error", err.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Log Out", style: "destructive", onPress: onLogout },
-    ]);
+    showAlert("confirm", "Log Out", "Are you sure you want to log out?", {
+      confirmText: "Log Out",
+      onConfirm: onLogout,
+    });
   };
 
   const getRoleBadgeColor = (role) => {
@@ -314,7 +314,10 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
+            <ScrollView
+              style={styles.modalBody}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.inputGroup}>
                 <AppText style={styles.inputLabel}>First Name</AppText>
                 <TextInput
@@ -402,26 +405,30 @@ const ProfileScreen = ({ navigation, user, onLogout }) => {
                   Contact admin to change role
                 </AppText>
               </View>
-            </View>
 
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSaveProfile}
-              disabled={saving}
-            >
-              <LinearGradient
-                colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.saveButtonGradient}
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSaveProfile}
+                disabled={saving}
               >
-                {saving ? (
-                  <ActivityIndicator color={theme.colors.textPrimary} />
-                ) : (
-                  <AppText style={styles.saveButtonText}>Save Changes</AppText>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={[theme.colors.brandBlue, theme.colors.brandGreen]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.saveButtonGradient}
+                >
+                  {saving ? (
+                    <ActivityIndicator color={theme.colors.textPrimary} />
+                  ) : (
+                    <AppText style={styles.saveButtonText}>
+                      Save Changes
+                    </AppText>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
           </View>
         </View>
       </Modal>

@@ -5,8 +5,8 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from "react-native";
+import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "../components/AppText";
@@ -43,30 +43,28 @@ const ProjectsScreen = ({ navigation, user }) => {
   );
 
   const handleDeleteProject = useCallback(async (project) => {
-    Alert.alert(
+    showAlert(
+      "confirm",
       "Delete Project",
       `Are you sure you want to delete "${project.name}"? This will delete all associated tasks and cannot be undone.`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
+      {
+        confirmText: "Delete",
+        onConfirm: async () => {
+          try {
+            await api.deleteProject(project.id);
+            setProjects((prevProjects) =>
+              prevProjects.filter((p) => p.id !== project.id),
+            );
+            showAlert("success", "Success", "Project deleted successfully");
+          } catch (err) {
+            showAlert(
+              "error",
+              "Error",
+              err.message || "Failed to delete project",
+            );
+          }
         },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteProject(project.id);
-              setProjects((prevProjects) =>
-                prevProjects.filter((p) => p.id !== project.id),
-              );
-              Alert.alert("Success", "Project deleted successfully");
-            } catch (err) {
-              Alert.alert("Error", err.message || "Failed to delete project");
-            }
-          },
-        },
-      ],
+      },
     );
   }, []);
 

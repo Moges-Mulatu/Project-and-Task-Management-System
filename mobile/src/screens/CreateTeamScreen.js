@@ -184,7 +184,10 @@ const CreateTeamScreen = ({ navigation, user }) => {
                   placeholder="Enter team name..."
                   placeholderTextColor={theme.colors.textMuted}
                   value={values.name}
-                  onChangeText={(text) => { handleChange("name")(text); if (errors.name) setFieldError("name", undefined); }}
+                  onChangeText={(text) => {
+                    handleChange("name")(text);
+                    if (errors.name) setFieldError("name", undefined);
+                  }}
                   onBlur={handleBlur("name")}
                   maxLength={50}
                 />
@@ -201,7 +204,11 @@ const CreateTeamScreen = ({ navigation, user }) => {
                   placeholder="What does this team work on?"
                   placeholderTextColor={theme.colors.textMuted}
                   value={values.description}
-                  onChangeText={(text) => { handleChange("description")(text); if (errors.description) setFieldError("description", undefined); }}
+                  onChangeText={(text) => {
+                    handleChange("description")(text);
+                    if (errors.description)
+                      setFieldError("description", undefined);
+                  }}
                   onBlur={handleBlur("description")}
                   multiline
                   numberOfLines={3}
@@ -229,7 +236,8 @@ const CreateTeamScreen = ({ navigation, user }) => {
                       onPress={() => {
                         setFieldValue("department", dept);
                         setFieldTouched("department", true);
-                        if (errors.department) setFieldError("department", undefined);
+                        if (errors.department)
+                          setFieldError("department", undefined);
                       }}
                     >
                       <AppText
@@ -266,7 +274,8 @@ const CreateTeamScreen = ({ navigation, user }) => {
                         onPress={() => {
                           setFieldValue("teamLeadId", u.id);
                           setFieldTouched("teamLeadId", true);
-                          if (errors.teamLeadId) setFieldError("teamLeadId", undefined);
+                          if (errors.teamLeadId)
+                            setFieldError("teamLeadId", undefined);
                         }}
                       >
                         <LinearGradient
@@ -341,7 +350,8 @@ const CreateTeamScreen = ({ navigation, user }) => {
                               : [...values.selectedMembers, u.id];
                             setFieldValue("selectedMembers", newMembers);
                             setFieldTouched("selectedMembers", true);
-                            if (errors.selectedMembers) setFieldError("selectedMembers", undefined);
+                            if (errors.selectedMembers)
+                              setFieldError("selectedMembers", undefined);
                           }}
                         >
                           {isSelected && (

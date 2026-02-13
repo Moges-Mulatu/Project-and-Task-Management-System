@@ -229,469 +229,482 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
               if (errors[name]) setFieldError(name, undefined);
             };
             return (
-            <View style={styles.form}>
-              {/* Title */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Title</AppText>
-                <TextInput
-                  style={[styles.input, styles.titleInput]}
-                  placeholder="Enter task title..."
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={values.title}
-                  onChangeText={handleChangeAndClear("title")}
-                  onBlur={handleBlur("title")}
-                  maxLength={100}
-                />
-                <View style={styles.inputFooter}>
-                  <AppText style={styles.charCount}>
-                    {values.title.length}/100
-                  </AppText>
-                  {touched.title && errors.title && (
-                    <AppText style={styles.fieldError}>{errors.title}</AppText>
-                  )}
-                </View>
-              </View>
-
-              {/* Description */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Description</AppText>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Add more details about this task..."
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={values.description}
-                  onChangeText={handleChangeAndClear("description")}
-                  onBlur={handleBlur("description")}
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
-                  maxLength={500}
-                />
-                {touched.description && errors.description && (
-                  <AppText style={styles.fieldError}>
-                    {errors.description}
-                  </AppText>
-                )}
-              </View>
-
-              {/* Project Selection */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Project</AppText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.horizontalScroll}
-                >
-                  {projects.map((p) => (
-                    <TouchableOpacity
-                      key={p.id}
-                      style={[
-                        styles.projectChip,
-                        values.projectId === p.id && styles.projectChipActive,
-                      ]}
-                      onPress={() => {
-                        setField("projectId", p.id);
-                      }}
-                    >
-                      <Ionicons
-                        name="folder"
-                        size={14}
-                        color={
-                          values.projectId === p.id
-                            ? theme.colors.textPrimary
-                            : theme.colors.textSecondary
-                        }
-                      />
-                      <AppText
-                        style={[
-                          styles.projectChipText,
-                          values.projectId === p.id &&
-                            styles.projectChipTextActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {p.name}
+              <View style={styles.form}>
+                {/* Title */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Title</AppText>
+                  <TextInput
+                    style={[styles.input, styles.titleInput]}
+                    placeholder="Enter task title..."
+                    placeholderTextColor={theme.colors.textMuted}
+                    value={values.title}
+                    onChangeText={handleChangeAndClear("title")}
+                    onBlur={handleBlur("title")}
+                    maxLength={100}
+                  />
+                  <View style={styles.inputFooter}>
+                    <AppText style={styles.charCount}>
+                      {values.title.length}/100
+                    </AppText>
+                    {touched.title && errors.title && (
+                      <AppText style={styles.fieldError}>
+                        {errors.title}
                       </AppText>
-                    </TouchableOpacity>
-                  ))}
-                  {projects.length === 0 && (
-                    <AppText style={styles.noData}>
-                      No projects available
+                    )}
+                  </View>
+                </View>
+
+                {/* Description */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Description</AppText>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Add more details about this task..."
+                    placeholderTextColor={theme.colors.textMuted}
+                    value={values.description}
+                    onChangeText={handleChangeAndClear("description")}
+                    onBlur={handleBlur("description")}
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                    maxLength={500}
+                  />
+                  {touched.description && errors.description && (
+                    <AppText style={styles.fieldError}>
+                      {errors.description}
                     </AppText>
                   )}
-                </ScrollView>
-                {touched.projectId && errors.projectId && (
-                  <AppText style={styles.fieldError}>
-                    {errors.projectId}
-                  </AppText>
-                )}
-              </View>
-
-              {/* Priority */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Priority</AppText>
-                <View style={styles.optionsRow}>
-                  {PRIORITIES.map((p) => (
-                    <TouchableOpacity
-                      key={p.id}
-                      style={[
-                        styles.priorityChip,
-                        values.priority === p.id && {
-                          backgroundColor: p.color,
-                          borderColor: p.color,
-                        },
-                      ]}
-                      onPress={() => {
-                        setField("priority", p.id);
-                      }}
-                    >
-                      <View
-                        style={[
-                          styles.priorityDot,
-                          { backgroundColor: p.color },
-                        ]}
-                      />
-                      <AppText
-                        style={[
-                          styles.priorityText,
-                          values.priority === p.id && styles.priorityTextActive,
-                        ]}
-                      >
-                        {p.label}
-                      </AppText>
-                    </TouchableOpacity>
-                  ))}
                 </View>
-                {touched.priority && errors.priority && (
-                  <AppText style={styles.fieldError}>{errors.priority}</AppText>
-                )}
-              </View>
 
-              {/* Type */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Type</AppText>
-                <View style={styles.optionsRow}>
-                  {TYPES.map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[
-                        styles.typeChip,
-                        values.type === t.id && styles.typeChipActive,
-                      ]}
-                      onPress={() => {
-                        setField("type", t.id);
-                      }}
-                    >
-                      <Ionicons
-                        name={t.icon}
-                        size={16}
-                        color={
-                          values.type === t.id
-                            ? theme.colors.textPrimary
-                            : theme.colors.textMuted
-                        }
-                      />
-                      <AppText
-                        style={[
-                          styles.typeText,
-                          values.type === t.id && styles.typeTextActive,
-                        ]}
-                      >
-                        {t.label}
-                      </AppText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                {touched.type && errors.type && (
-                  <AppText style={styles.fieldError}>{errors.type}</AppText>
-                )}
-              </View>
-
-              {/* Deadline - Required */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Deadline *</AppText>
-                <View style={styles.dateRow}>
-                  <View style={styles.dateInput}>
-                    <AppText style={styles.dateLabel}>Day</AppText>
-                    <TextInput
-                      style={styles.dateField}
-                      placeholder="DD"
-                      placeholderTextColor={theme.colors.textMuted}
-                      value={values.deadline.day}
-                      onChangeText={(text) => {
-                        setFieldValue(
-                          "deadline.day",
-                          text.replace(/[^0-9]/g, "").slice(0, 2),
-                        );
-                        setFieldTouched("deadline.day", true);
-                        if (errors.deadline) setFieldError("deadline", undefined);
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                  </View>
-                  <AppText style={styles.dateSeparator}>/</AppText>
-                  <View style={styles.dateInput}>
-                    <AppText style={styles.dateLabel}>Month</AppText>
-                    <TextInput
-                      style={styles.dateField}
-                      placeholder="MM"
-                      placeholderTextColor={theme.colors.textMuted}
-                      value={values.deadline.month}
-                      onChangeText={(text) => {
-                        setFieldValue(
-                          "deadline.month",
-                          text.replace(/[^0-9]/g, "").slice(0, 2),
-                        );
-                        setFieldTouched("deadline.month", true);
-                        if (errors.deadline) setFieldError("deadline", undefined);
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                  </View>
-                  <AppText style={styles.dateSeparator}>/</AppText>
-                  <View style={[styles.dateInput, { flex: 1.5 }]}>
-                    <AppText style={styles.dateLabel}>Year</AppText>
-                    <TextInput
-                      style={styles.dateField}
-                      placeholder="YYYY"
-                      placeholderTextColor={theme.colors.textMuted}
-                      value={values.deadline.year}
-                      onChangeText={(text) => {
-                        setFieldValue(
-                          "deadline.year",
-                          text.replace(/[^0-9]/g, "").slice(0, 4),
-                        );
-                        setFieldTouched("deadline.year", true);
-                        if (errors.deadline) setFieldError("deadline", undefined);
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={4}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={styles.todayButton}
-                    onPress={() => {
-                      const today = new Date();
-                      setFieldValue("deadline", {
-                        day: String(today.getDate()),
-                        month: String(today.getMonth() + 1),
-                        year: String(today.getFullYear()),
-                      });
-                      setFieldTouched("deadline", true);
-                      if (errors.deadline) setFieldError("deadline", undefined);
-                    }}
+                {/* Project Selection */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Project</AppText>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.horizontalScroll}
                   >
-                    <Ionicons
-                      name="today"
-                      size={18}
-                      color={theme.colors.brandGreen}
-                    />
-                  </TouchableOpacity>
+                    {projects.map((p) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={[
+                          styles.projectChip,
+                          values.projectId === p.id && styles.projectChipActive,
+                        ]}
+                        onPress={() => {
+                          setField("projectId", p.id);
+                        }}
+                      >
+                        <Ionicons
+                          name="folder"
+                          size={14}
+                          color={
+                            values.projectId === p.id
+                              ? theme.colors.textPrimary
+                              : theme.colors.textSecondary
+                          }
+                        />
+                        <AppText
+                          style={[
+                            styles.projectChipText,
+                            values.projectId === p.id &&
+                              styles.projectChipTextActive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {p.name}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                    {projects.length === 0 && (
+                      <AppText style={styles.noData}>
+                        No projects available
+                      </AppText>
+                    )}
+                  </ScrollView>
+                  {touched.projectId && errors.projectId && (
+                    <AppText style={styles.fieldError}>
+                      {errors.projectId}
+                    </AppText>
+                  )}
                 </View>
-                <View style={styles.quickDates}>
-                  {[
-                    { label: "Today", days: 0 },
-                    { label: "Tomorrow", days: 1 },
-                    { label: "+1 Week", days: 7 },
-                    { label: "+2 Weeks", days: 14 },
-                  ].map((option) => (
+
+                {/* Priority */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Priority</AppText>
+                  <View style={styles.optionsRow}>
+                    {PRIORITIES.map((p) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={[
+                          styles.priorityChip,
+                          values.priority === p.id && {
+                            backgroundColor: p.color,
+                            borderColor: p.color,
+                          },
+                        ]}
+                        onPress={() => {
+                          setField("priority", p.id);
+                        }}
+                      >
+                        <View
+                          style={[
+                            styles.priorityDot,
+                            { backgroundColor: p.color },
+                          ]}
+                        />
+                        <AppText
+                          style={[
+                            styles.priorityText,
+                            values.priority === p.id &&
+                              styles.priorityTextActive,
+                          ]}
+                        >
+                          {p.label}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {touched.priority && errors.priority && (
+                    <AppText style={styles.fieldError}>
+                      {errors.priority}
+                    </AppText>
+                  )}
+                </View>
+
+                {/* Type */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Type</AppText>
+                  <View style={styles.optionsRow}>
+                    {TYPES.map((t) => (
+                      <TouchableOpacity
+                        key={t.id}
+                        style={[
+                          styles.typeChip,
+                          values.type === t.id && styles.typeChipActive,
+                        ]}
+                        onPress={() => {
+                          setField("type", t.id);
+                        }}
+                      >
+                        <Ionicons
+                          name={t.icon}
+                          size={16}
+                          color={
+                            values.type === t.id
+                              ? theme.colors.textPrimary
+                              : theme.colors.textMuted
+                          }
+                        />
+                        <AppText
+                          style={[
+                            styles.typeText,
+                            values.type === t.id && styles.typeTextActive,
+                          ]}
+                        >
+                          {t.label}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {touched.type && errors.type && (
+                    <AppText style={styles.fieldError}>{errors.type}</AppText>
+                  )}
+                </View>
+
+                {/* Deadline - Required */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Deadline *</AppText>
+                  <View style={styles.dateRow}>
+                    <View style={styles.dateInput}>
+                      <AppText style={styles.dateLabel}>Day</AppText>
+                      <TextInput
+                        style={styles.dateField}
+                        placeholder="DD"
+                        placeholderTextColor={theme.colors.textMuted}
+                        value={values.deadline.day}
+                        onChangeText={(text) => {
+                          setFieldValue(
+                            "deadline.day",
+                            text.replace(/[^0-9]/g, "").slice(0, 2),
+                          );
+                          setFieldTouched("deadline.day", true);
+                          if (errors.deadline)
+                            setFieldError("deadline", undefined);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                      />
+                    </View>
+                    <AppText style={styles.dateSeparator}>/</AppText>
+                    <View style={styles.dateInput}>
+                      <AppText style={styles.dateLabel}>Month</AppText>
+                      <TextInput
+                        style={styles.dateField}
+                        placeholder="MM"
+                        placeholderTextColor={theme.colors.textMuted}
+                        value={values.deadline.month}
+                        onChangeText={(text) => {
+                          setFieldValue(
+                            "deadline.month",
+                            text.replace(/[^0-9]/g, "").slice(0, 2),
+                          );
+                          setFieldTouched("deadline.month", true);
+                          if (errors.deadline)
+                            setFieldError("deadline", undefined);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                      />
+                    </View>
+                    <AppText style={styles.dateSeparator}>/</AppText>
+                    <View style={[styles.dateInput, { flex: 1.5 }]}>
+                      <AppText style={styles.dateLabel}>Year</AppText>
+                      <TextInput
+                        style={styles.dateField}
+                        placeholder="YYYY"
+                        placeholderTextColor={theme.colors.textMuted}
+                        value={values.deadline.year}
+                        onChangeText={(text) => {
+                          setFieldValue(
+                            "deadline.year",
+                            text.replace(/[^0-9]/g, "").slice(0, 4),
+                          );
+                          setFieldTouched("deadline.year", true);
+                          if (errors.deadline)
+                            setFieldError("deadline", undefined);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                      />
+                    </View>
                     <TouchableOpacity
-                      key={option.label}
-                      style={styles.quickDateChip}
+                      style={styles.todayButton}
                       onPress={() => {
-                        const date = new Date();
-                        date.setDate(date.getDate() + option.days);
+                        const today = new Date();
                         setFieldValue("deadline", {
-                          day: String(date.getDate()),
-                          month: String(date.getMonth() + 1),
-                          year: String(date.getFullYear()),
+                          day: String(today.getDate()),
+                          month: String(today.getMonth() + 1),
+                          year: String(today.getFullYear()),
                         });
                         setFieldTouched("deadline", true);
-                        if (errors.deadline) setFieldError("deadline", undefined);
+                        if (errors.deadline)
+                          setFieldError("deadline", undefined);
                       }}
                     >
-                      <AppText style={styles.quickDateText}>
-                        {option.label}
-                      </AppText>
+                      <Ionicons
+                        name="today"
+                        size={18}
+                        color={theme.colors.brandGreen}
+                      />
                     </TouchableOpacity>
-                  ))}
+                  </View>
+                  <View style={styles.quickDates}>
+                    {[
+                      { label: "Today", days: 0 },
+                      { label: "Tomorrow", days: 1 },
+                      { label: "+1 Week", days: 7 },
+                      { label: "+2 Weeks", days: 14 },
+                    ].map((option) => (
+                      <TouchableOpacity
+                        key={option.label}
+                        style={styles.quickDateChip}
+                        onPress={() => {
+                          const date = new Date();
+                          date.setDate(date.getDate() + option.days);
+                          setFieldValue("deadline", {
+                            day: String(date.getDate()),
+                            month: String(date.getMonth() + 1),
+                            year: String(date.getFullYear()),
+                          });
+                          setFieldTouched("deadline", true);
+                          if (errors.deadline)
+                            setFieldError("deadline", undefined);
+                        }}
+                      >
+                        <AppText style={styles.quickDateText}>
+                          {option.label}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {touched.deadline &&
+                    (errors.deadline?.day ||
+                      errors.deadline?.month ||
+                      errors.deadline?.year ||
+                      errors.deadline) && (
+                      <AppText style={styles.fieldError}>
+                        {errors.deadline?.day ||
+                          errors.deadline?.month ||
+                          errors.deadline?.year ||
+                          (typeof errors.deadline === "string"
+                            ? errors.deadline
+                            : "")}
+                      </AppText>
+                    )}
                 </View>
-                {touched.deadline &&
-                  (errors.deadline?.day ||
-                    errors.deadline?.month ||
-                    errors.deadline?.year ||
-                    errors.deadline) && (
+
+                {/* Estimated Hours - Improved */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Estimated Hours</AppText>
+                  <View style={styles.hoursContainer}>
+                    {HOURS_OPTIONS.map((hours) => (
+                      <TouchableOpacity
+                        key={hours}
+                        style={[
+                          styles.hoursChip,
+                          values.estimatedHours === String(hours) &&
+                            styles.hoursChipActive,
+                        ]}
+                        onPress={() => {
+                          setField("estimatedHours", String(hours));
+                        }}
+                      >
+                        <AppText
+                          style={[
+                            styles.hoursText,
+                            values.estimatedHours === String(hours) &&
+                              styles.hoursTextActive,
+                          ]}
+                        >
+                          {hours}h
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                    <View style={styles.customHoursWrapper}>
+                      <TextInput
+                        style={styles.customHoursInput}
+                        placeholder="Other"
+                        placeholderTextColor={theme.colors.textMuted}
+                        value={
+                          HOURS_OPTIONS.includes(
+                            parseInt(values.estimatedHours),
+                          )
+                            ? ""
+                            : values.estimatedHours
+                        }
+                        onChangeText={(text) => {
+                          setField(
+                            "estimatedHours",
+                            text.replace(/[^0-9]/g, ""),
+                          );
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                      />
+                      <AppText style={styles.customHoursLabel}>hrs</AppText>
+                    </View>
+                  </View>
+                  {touched.estimatedHours && errors.estimatedHours && (
                     <AppText style={styles.fieldError}>
-                      {errors.deadline?.day ||
-                        errors.deadline?.month ||
-                        errors.deadline?.year ||
-                        (typeof errors.deadline === "string"
-                          ? errors.deadline
-                          : "")}
+                      {errors.estimatedHours}
                     </AppText>
                   )}
-              </View>
-
-              {/* Estimated Hours - Improved */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Estimated Hours</AppText>
-                <View style={styles.hoursContainer}>
-                  {HOURS_OPTIONS.map((hours) => (
-                    <TouchableOpacity
-                      key={hours}
-                      style={[
-                        styles.hoursChip,
-                        values.estimatedHours === String(hours) &&
-                          styles.hoursChipActive,
-                      ]}
-                      onPress={() => {
-                        setField("estimatedHours", String(hours));
-                      }}
-                    >
-                      <AppText
-                        style={[
-                          styles.hoursText,
-                          values.estimatedHours === String(hours) &&
-                            styles.hoursTextActive,
-                        ]}
-                      >
-                        {hours}h
-                      </AppText>
-                    </TouchableOpacity>
-                  ))}
-                  <View style={styles.customHoursWrapper}>
-                    <TextInput
-                      style={styles.customHoursInput}
-                      placeholder="Other"
-                      placeholderTextColor={theme.colors.textMuted}
-                      value={
-                        HOURS_OPTIONS.includes(parseInt(values.estimatedHours))
-                          ? ""
-                          : values.estimatedHours
-                      }
-                      onChangeText={(text) => {
-                        setField(
-                          "estimatedHours",
-                          text.replace(/[^0-9]/g, ""),
-                        );
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={3}
-                    />
-                    <AppText style={styles.customHoursLabel}>hrs</AppText>
-                  </View>
                 </View>
-                {touched.estimatedHours && errors.estimatedHours && (
-                  <AppText style={styles.fieldError}>
-                    {errors.estimatedHours}
-                  </AppText>
-                )}
-              </View>
 
-              {/* Assign To (Single User) */}
-              <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Assign To *</AppText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.horizontalScroll}
-                >
-                  {users
-                    .filter((u) => u.role !== "admin")
-                    .map((u) => {
-                      const isSelected = values.assignedTo === u.id;
-                      return (
-                        <TouchableOpacity
-                          key={u.id}
-                          style={[
-                            styles.userChip,
-                            isSelected && styles.userChipActive,
-                          ]}
-                          onPress={() => {
-                          setField("assignedTo", u.id);
-                          }}
-                        >
-                          <View
+                {/* Assign To (Single User) */}
+                <View style={styles.inputGroup}>
+                  <AppText style={styles.label}>Assign To *</AppText>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.horizontalScroll}
+                  >
+                    {users
+                      .filter((u) => u.role !== "admin")
+                      .map((u) => {
+                        const isSelected = values.assignedTo === u.id;
+                        return (
+                          <TouchableOpacity
+                            key={u.id}
                             style={[
-                              styles.userAvatar,
-                              isSelected && styles.userAvatarActive,
+                              styles.userChip,
+                              isSelected && styles.userChipActive,
                             ]}
+                            onPress={() => {
+                              setField("assignedTo", u.id);
+                            }}
                           >
-                            <AppText style={styles.userAvatarText}>
-                              {u.firstName?.[0]}
+                            <View
+                              style={[
+                                styles.userAvatar,
+                                isSelected && styles.userAvatarActive,
+                              ]}
+                            >
+                              <AppText style={styles.userAvatarText}>
+                                {u.firstName?.[0]}
+                              </AppText>
+                            </View>
+                            <AppText
+                              style={[
+                                styles.userName,
+                                isSelected && styles.userNameActive,
+                              ]}
+                            >
+                              {u.firstName}
                             </AppText>
-                          </View>
-                          <AppText
-                            style={[
-                              styles.userName,
-                              isSelected && styles.userNameActive,
-                            ]}
-                          >
-                            {u.firstName}
-                          </AppText>
-                          {isSelected && (
-                            <Ionicons
-                              name="checkmark-circle"
-                              size={16}
-                              color={theme.colors.brandGreen}
-                              style={{ marginLeft: 4 }}
-                            />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                </ScrollView>
-                {touched.assignedTo && errors.assignedTo && (
-                  <AppText style={styles.fieldError}>
-                    {errors.assignedTo}
-                  </AppText>
-                )}
-              </View>
-
-              {/* Error Message */}
-              {status ? (
-                <View style={styles.errorContainer}>
-                  <Ionicons
-                    name="alert-circle"
-                    size={18}
-                    color={theme.colors.danger}
-                  />
-                  <AppText style={styles.errorText}>{status}</AppText>
-                </View>
-              ) : null}
-
-              {/* Create Button */}
-              <TouchableOpacity
-                style={styles.createButton}
-                onPress={handleSubmit}
-                disabled={isSubmitting}
-              >
-                <LinearGradient
-                  colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator color={theme.colors.textPrimary} />
-                  ) : (
-                    <>
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={22}
-                        color={theme.colors.textPrimary}
-                      />
-                      <AppText style={styles.createButtonText}>
-                        Create Task
-                      </AppText>
-                    </>
+                            {isSelected && (
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={16}
+                                color={theme.colors.brandGreen}
+                                style={{ marginLeft: 4 }}
+                              />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                  </ScrollView>
+                  {touched.assignedTo && errors.assignedTo && (
+                    <AppText style={styles.fieldError}>
+                      {errors.assignedTo}
+                    </AppText>
                   )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          )}}
+                </View>
+
+                {/* Error Message */}
+                {status ? (
+                  <View style={styles.errorContainer}>
+                    <Ionicons
+                      name="alert-circle"
+                      size={18}
+                      color={theme.colors.danger}
+                    />
+                    <AppText style={styles.errorText}>{status}</AppText>
+                  </View>
+                ) : null}
+
+                {/* Create Button */}
+                <TouchableOpacity
+                  style={styles.createButton}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  <LinearGradient
+                    colors={[theme.colors.brandGreen, theme.colors.brandBlue]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color={theme.colors.textPrimary} />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={22}
+                          color={theme.colors.textPrimary}
+                        />
+                        <AppText style={styles.createButtonText}>
+                          Create Task
+                        </AppText>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            );
+          }}
         </Formik>
 
         <View style={{ height: 100 }} />

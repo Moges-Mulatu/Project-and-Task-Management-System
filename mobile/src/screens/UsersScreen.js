@@ -8,8 +8,8 @@ import {
   TextInput,
   Modal,
   ScrollView,
-  Alert,
 } from "react-native";
+import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -183,58 +183,70 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
   const handleDeactivateUser = (userId, userName) => {
     if (userId === currentUser?.id) {
-      Alert.alert(
+      showAlert(
+        "warning",
         "Cannot Deactivate",
         "You cannot deactivate your own account.",
       );
       return;
     }
 
-    Alert.alert(
+    showAlert(
+      "confirm",
       "Deactivate User",
       `Are you sure you want to deactivate ${userName}? They will no longer be able to access the system.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Deactivate",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deactivateUser(userId);
-              setShowUserModal(false);
-              setSelectedUser(null);
-              loadData(); // Refresh the list
-              Alert.alert("Success", `${userName} has been deactivated.`);
-            } catch (err) {
-              Alert.alert("Error", err.message || "Failed to deactivate user");
-            }
-          },
+      {
+        confirmText: "Deactivate",
+        onConfirm: async () => {
+          try {
+            await api.deactivateUser(userId);
+            setShowUserModal(false);
+            setSelectedUser(null);
+            loadData();
+            showAlert(
+              "success",
+              "Success",
+              `${userName} has been deactivated.`,
+            );
+          } catch (err) {
+            showAlert(
+              "error",
+              "Error",
+              err.message || "Failed to deactivate user",
+            );
+          }
         },
-      ],
+      },
     );
   };
 
   const handleReactivateUser = async (userId, userName) => {
-    Alert.alert(
+    showAlert(
+      "confirm",
       "Reactivate User",
       `Are you sure you want to reactivate ${userName}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reactivate",
-          onPress: async () => {
-            try {
-              await api.reactivateUser(userId);
-              setShowUserModal(false);
-              setSelectedUser(null);
-              loadData();
-              Alert.alert("Success", `${userName} has been reactivated.`);
-            } catch (err) {
-              Alert.alert("Error", err.message || "Failed to reactivate user");
-            }
-          },
+      {
+        confirmText: "Reactivate",
+        onConfirm: async () => {
+          try {
+            await api.reactivateUser(userId);
+            setShowUserModal(false);
+            setSelectedUser(null);
+            loadData();
+            showAlert(
+              "success",
+              "Success",
+              `${userName} has been reactivated.`,
+            );
+          } catch (err) {
+            showAlert(
+              "error",
+              "Error",
+              err.message || "Failed to reactivate user",
+            );
+          }
         },
-      ],
+      },
     );
   };
 
@@ -246,9 +258,13 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       setShowRoleModal(false);
       setSelectedUser({ ...selectedUser, role: newRole });
       loadData();
-      Alert.alert("Success", `Role updated to ${getRoleLabel(newRole)}.`);
+      showAlert(
+        "success",
+        "Success",
+        `Role updated to ${getRoleLabel(newRole)}.`,
+      );
     } catch (err) {
-      Alert.alert("Error", err.message || "Failed to update role");
+      showAlert("error", "Error", err.message || "Failed to update role");
     } finally {
       setUpdatingRole(false);
     }
@@ -273,7 +289,11 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       !newUser.email ||
       !newUser.password
     ) {
-      Alert.alert("Missing Fields", "Please fill all required fields.");
+      showAlert(
+        "warning",
+        "Missing Fields",
+        "Please fill all required fields.",
+      );
       return;
     }
 
@@ -291,9 +311,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       setShowCreateModal(false);
       resetNewUser();
       loadData();
-      Alert.alert("Success", "User created successfully.");
+      showAlert("success", "Success", "User created successfully.");
     } catch (err) {
-      Alert.alert("Error", err.message || "Failed to create user");
+      showAlert("error", "Error", err.message || "Failed to create user");
     } finally {
       setCreatingUser(false);
     }
