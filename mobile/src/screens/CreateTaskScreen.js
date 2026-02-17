@@ -154,7 +154,36 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
         const project = projects.find((p) => p.id === selectedProjectId);
         if (project?.teamId) {
           const res = await api.getTeamMembers(project.teamId);
-          setTeamMembers(res.data || []);
+          const members = res.data || [];
+
+          // Team members from API don't include user names,
+          // so fetch user details via search and match by userId
+          let allUsers = [];
+          try {
+            const usersRes = await api.searchUsers("@");
+            allUsers = usersRes.data || [];
+          } catch (e) {
+            console.error("Failed to search users:", e.message);
+          }
+
+          // Build a map of userId -> user details
+          const userMap = {};
+          allUsers.forEach((u) => {
+            userMap[u.id] = u;
+          });
+
+          // Enrich team members with user details
+          const enrichedMembers = members.map((m) => {
+            const userInfo = userMap[m.userId] || {};
+            return {
+              ...m,
+              firstName: userInfo.firstName || "",
+              lastName: userInfo.lastName || "",
+              email: userInfo.email || "",
+            };
+          });
+
+          setTeamMembers(enrichedMembers);
         } else {
           setTeamMembers([]);
         }
@@ -651,6 +680,12 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                     >
                       {teamMembers.map((m) => {
                         const isSelected = values.assignedTo === m.userId;
+                        const displayName = m.firstName && m.lastName
+                          ? `${m.firstName} ${m.lastName}`
+                          : m.firstName || m.email || m.userId?.slice(0, 8) || "User";
+                        const initials = m.firstName
+                          ? `${m.firstName[0]}${m.lastName?.[0] || ""}`
+                          : "?";
                         return (
                           <TouchableOpacity
                             key={m.userId}
@@ -669,7 +704,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                               ]}
                             >
                               <AppText style={styles.userAvatarText}>
-                                {m.firstName?.[0]}
+                                {initials}
                               </AppText>
                             </View>
                             <AppText
@@ -677,8 +712,9 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                                 styles.userName,
                                 isSelected && styles.userNameActive,
                               ]}
+                              numberOfLines={1}
                             >
-                              {m.firstName}
+                              {displayName}
                             </AppText>
                             {isSelected && (
                               <Ionicons
@@ -1025,6 +1061,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
     padding: theme.spacing.sm,
     borderRadius: 12,
+    maxWidth: 90,
   },
   userChipActive: {
     backgroundColor: theme.colors.brandGreen + "20",
