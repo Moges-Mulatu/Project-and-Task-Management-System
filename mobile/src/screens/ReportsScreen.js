@@ -26,13 +26,13 @@ const REPORT_TYPES = [
 ];
 
 const ReportsScreen = ({ navigation, user }) => {
-  // Restrict access to project_manager only (per spec: PM monitors project progress)
+  // Restrict access to project_manager and admin only
   React.useEffect(() => {
-    if (user?.role !== "project_manager") {
+    if (user?.role !== "project_manager" && user?.role !== "admin") {
       showAlert(
         "warning",
         "Access Denied",
-        "Only project managers can access reports to monitor progress.",
+        "Only project managers and admins can access reports.",
         { onDismiss: () => navigation.goBack() },
       );
     }

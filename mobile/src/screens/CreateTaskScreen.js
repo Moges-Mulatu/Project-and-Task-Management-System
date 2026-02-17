@@ -123,26 +123,50 @@ const CreateTaskSchema = Yup.object().shape({
 
 const CreateTaskScreen = ({ navigation, route, user }) => {
   const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    route.params?.projectId || "",
+  );
 
+  // Load projects on mount (accessible to all authenticated users)
   useEffect(() => {
-    const loadData = async () => {
+    const loadProjects = async () => {
       try {
-        const [projectsRes, usersRes, teamsRes] = await Promise.all([
-          api.getProjects(),
-          api.getUsers(),
-          api.getTeams(),
-        ]);
-        setProjects(projectsRes.data || []);
-        setUsers(usersRes.data || []);
-        setTeams(teamsRes.data || []);
+        const res = await api.getProjects();
+        setProjects(res.data || []);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load projects:", err.message);
       }
     };
-    loadData();
+    loadProjects();
   }, []);
+
+  // Load team members when a project is selected
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setTeamMembers([]);
+      return;
+    }
+    const loadMembers = async () => {
+      setLoadingMembers(true);
+      try {
+        const project = projects.find((p) => p.id === selectedProjectId);
+        if (project?.teamId) {
+          const res = await api.getTeamMembers(project.teamId);
+          setTeamMembers(res.data || []);
+        } else {
+          setTeamMembers([]);
+        }
+      } catch (err) {
+        console.error("Failed to load team members:", err.message);
+        setTeamMembers([]);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+    loadMembers();
+  }, [selectedProjectId, projects]);
 
   return (
     <ScreenContainer>
@@ -293,6 +317,10 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                         ]}
                         onPress={() => {
                           setField("projectId", p.id);
+                          if (p.id !== selectedProjectId) {
+                            setSelectedProjectId(p.id);
+                            setField("assignedTo", "");
+                          }
                         }}
                       >
                         <Ionicons
@@ -602,27 +630,36 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                   )}
                 </View>
 
-                {/* Assign To (Single User) */}
+                {/* Assign To (Team Members) */}
                 <View style={styles.inputGroup}>
                   <AppText style={styles.label}>Assign To *</AppText>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.horizontalScroll}
-                  >
-                    {users
-                      .filter((u) => u.role !== "admin")
-                      .map((u) => {
-                        const isSelected = values.assignedTo === u.id;
+                  {!values.projectId ? (
+                    <AppText style={styles.noData}>
+                      Select a project first
+                    </AppText>
+                  ) : loadingMembers ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.brandBlue}
+                      style={{ marginVertical: 8 }}
+                    />
+                  ) : (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={styles.horizontalScroll}
+                    >
+                      {teamMembers.map((m) => {
+                        const isSelected = values.assignedTo === m.userId;
                         return (
                           <TouchableOpacity
-                            key={u.id}
+                            key={m.userId}
                             style={[
                               styles.userChip,
                               isSelected && styles.userChipActive,
                             ]}
                             onPress={() => {
-                              setField("assignedTo", u.id);
+                              setField("assignedTo", m.userId);
                             }}
                           >
                             <View
@@ -632,7 +669,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                               ]}
                             >
                               <AppText style={styles.userAvatarText}>
-                                {u.firstName?.[0]}
+                                {m.firstName?.[0]}
                               </AppText>
                             </View>
                             <AppText
@@ -641,7 +678,7 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                                 isSelected && styles.userNameActive,
                               ]}
                             >
-                              {u.firstName}
+                              {m.firstName}
                             </AppText>
                             {isSelected && (
                               <Ionicons
@@ -654,7 +691,13 @@ const CreateTaskScreen = ({ navigation, route, user }) => {
                           </TouchableOpacity>
                         );
                       })}
-                  </ScrollView>
+                      {teamMembers.length === 0 && (
+                        <AppText style={styles.noData}>
+                          No team members found
+                        </AppText>
+                      )}
+                    </ScrollView>
+                  )}
                   {touched.assignedTo && errors.assignedTo && (
                     <AppText style={styles.fieldError}>
                       {errors.assignedTo}

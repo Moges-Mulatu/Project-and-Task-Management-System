@@ -279,7 +279,9 @@ const TasksScreen = ({ navigation, user }) => {
     }
 
     const canDelete =
-      user?.role === "project_manager" || item.assignedBy === user?.id;
+      user?.role === "admin" ||
+      user?.role === "project_manager" ||
+      item.assignedBy === user?.id;
     const isSelected = selectedTaskId === item.id;
 
     return (
@@ -412,7 +414,7 @@ const TasksScreen = ({ navigation, user }) => {
             {sections.length} project{sections.length !== 1 ? "s" : ""}
           </AppText>
         </View>
-        {user?.role === "project_manager" && (
+        {(user?.role === "project_manager" || user?.role === "admin") && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate("CreateTask")}

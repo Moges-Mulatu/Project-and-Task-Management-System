@@ -1,5 +1,6 @@
 import ReportService from '../services/report.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Report Controller
