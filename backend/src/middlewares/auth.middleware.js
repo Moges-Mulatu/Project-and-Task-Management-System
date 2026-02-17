@@ -30,13 +30,8 @@ export const protect = async (req, res, next) => {
                 return sendError(res, 'The user belonging to this token no longer exists', 401);
             }
 
-            // Check if user account is active
-            if (!user.isActive) {
-                return sendError(res, 'User account is deactivated', 401);
-            }
-
-            // Grant access to protected route (use toJSON to exclude password)
-            req.user = user.toJSON();
+            // Grant access to protected route
+            req.user = user;
             next();
         } catch (err) {
             return sendError(res, 'Not authorized to access this route', 401);

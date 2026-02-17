@@ -96,18 +96,8 @@ class Project {
     const values = [];
 
     if (options.teamId) {
-      if (Array.isArray(options.teamId)) {
-        // Handle array of teamIds (for team_member role with multiple teams)
-        if (options.teamId.length > 0) {
-          const placeholders = options.teamId.map(() => '?').join(', ');
-          query += ` AND teamId IN (${placeholders})`;
-          values.push(...options.teamId);
-        }
-      } else {
-        // Handle single teamId
-        query += ' AND teamId = ?';
-        values.push(options.teamId);
-      }
+      query += ' AND teamId = ?';
+      values.push(options.teamId);
     }
 
     if (options.projectManagerId) {

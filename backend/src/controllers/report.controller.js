@@ -1,6 +1,5 @@
 import ReportService from '../services/report.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
-import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Report Controller
@@ -28,11 +27,7 @@ class ReportController {
      */
     static async getAll(req, res) {
         try {
-            const filters = {
-                ...req.query,
-                projectManagerId: req.user.role === ROLES.PROJECT_MANAGER ? req.user.id : undefined
-            };
-            const reports = await ReportService.getReports(filters);
+            const reports = await ReportService.getReports(req.query);
             return sendSuccess(res, 'Reports retrieved successfully', reports);
         } catch (error) {
             return sendError(res, error.message, 500);
@@ -44,7 +39,7 @@ class ReportController {
      */
     static async getById(req, res) {
         try {
-            const report = await ReportService.getReportById(req.params.id, req.user.id, req.user.role);
+            const report = await ReportService.getReportById(req.params.id);
             return sendSuccess(res, 'Report retrieved successfully', report);
         } catch (error) {
             return sendError(res, error.message, 404);
@@ -69,7 +64,7 @@ class ReportController {
     static async generateSummary(req, res) {
         try {
             const { projectId } = req.params;
-            const report = await ReportService.generateProjectSummary(projectId, req.user.id, req.user.role);
+            const report = await ReportService.generateProjectSummary(projectId, req.user.id);
             return sendSuccess(res, 'Project summary generated successfully', report, 201);
         } catch (error) {
             return sendError(res, error.message, 400);

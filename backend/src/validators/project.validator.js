@@ -10,11 +10,9 @@ class ProjectValidator {
         return [
             { field: 'name', required: true, type: 'string' },
             { field: 'description', required: true, type: 'string' },
-            { field: 'teamId', required: true },
-            { field: 'projectManagerId', required: false, type: 'string' },
             { field: 'startDate', required: true, type: 'date' },
             { field: 'endDate', required: true, type: 'date' },
-            { field: 'priority', required: false, enum: ['low', 'medium', 'high', 'critical'] },
+            { field: 'priority', required: false, enum: ['low', 'medium', 'high'] },
             { field: 'status', required: false, enum: ['planning', 'active', 'on_hold', 'completed'] }
         ];
     }
@@ -26,8 +24,7 @@ class ProjectValidator {
         return [
             { field: 'name', required: false, type: 'string' },
             { field: 'description', required: false, type: 'string' },
-            { field: 'projectManagerId', required: false, type: 'string' },
-            { field: 'priority', required: false, enum: ['low', 'medium', 'high', 'critical'] },
+            { field: 'priority', required: false, enum: ['low', 'medium', 'high'] },
             { field: 'status', required: false, enum: ['planning', 'active', 'on_hold', 'completed'] }
         ];
     }

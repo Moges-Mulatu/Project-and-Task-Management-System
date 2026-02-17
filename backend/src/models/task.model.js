@@ -108,51 +108,40 @@ class Task {
    */
   static async findAll(options = {}) {
     const connection = getDBConnection();
-    let query = 'SELECT t.* FROM tasks t';
+    let query = 'SELECT * FROM tasks WHERE isActive = 1';
     const values = [];
 
-    if (options.projectManagerId) {
-      query += ' JOIN projects p ON t.projectId = p.id';
-    }
-
-    query += ' WHERE t.isActive = 1';
-
-    if (options.projectManagerId) {
-      query += ' AND p.projectManagerId = ?';
-      values.push(options.projectManagerId);
-    }
-
     if (options.projectId) {
-      query += ' AND t.projectId = ?';
+      query += ' AND projectId = ?';
       values.push(options.projectId);
     }
 
     if (options.assignedTo) {
-      query += ' AND t.assignedTo = ?';
+      query += ' AND assignedTo = ?';
       values.push(options.assignedTo);
     }
 
     if (options.status) {
-      query += ' AND t.status = ?';
+      query += ' AND status = ?';
       values.push(options.status);
     }
 
     if (options.priority) {
-      query += ' AND t.priority = ?';
+      query += ' AND priority = ?';
       values.push(options.priority);
     }
 
     if (options.type) {
-      query += ' AND t.type = ?';
+      query += ' AND type = ?';
       values.push(options.type);
     }
 
     if (options.parentTaskId) {
-      query += ' AND t.parentTaskId = ?';
+      query += ' AND parentTaskId = ?';
       values.push(options.parentTaskId);
     }
 
-    query += ' ORDER BY t.createdAt DESC';
+    query += ' ORDER BY createdAt DESC';
 
     if (options.limit) {
       query += ' LIMIT ?';
@@ -198,11 +187,9 @@ class Task {
       updateData.comments = JSON.stringify(updateData.comments);
     }
 
-    // Set completedAt and progress when status is completed
-    if (updateData.status === 'completed') {
-      if (this.status !== 'completed') {
-        updateData.completedAt = new Date();
-      }
+    // Set completedAt when status is completed
+    if (updateData.status === 'completed' && this.status !== 'completed') {
+      updateData.completedAt = new Date();
       updateData.progress = 100;
     }
 

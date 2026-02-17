@@ -1,7 +1,6 @@
 import Report from '../models/report.model.js';
 import Project from '../models/project.model.js';
 import Task from '../models/task.model.js';
-import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Report Service
@@ -35,28 +34,16 @@ class ReportService {
     }
 
     /**
-     * Get report by ID with ownership check
+     * Get report by ID
      * @param {string} id - Report ID
-     * @param {string} requesterId - ID of the user making the request
-     * @param {string} requesterRole - Role of the user making the request
      * @returns {Promise<Report>} Report instance
      */
-    static async getReportById(id, requesterId, requesterRole) {
+    static async getReportById(id) {
         try {
             const report = await Report.findById(id);
             if (!report) {
                 throw new Error('Report not found');
             }
-
-            // Ownership check for PMs
-            if (requesterRole === ROLES.PROJECT_MANAGER && report.projectId) {
-                const project = await Project.findById(report.projectId);
-                if (project && project.projectManagerId !== requesterId) {
-                    throw new Error('You can only view reports for projects you manage');
-                }
-            }
-            // Admin can view any report
-
             return report;
         } catch (error) {
             throw error;
@@ -84,21 +71,14 @@ class ReportService {
      * Generate a real-time project summary report
      * @param {string} projectId - Project ID
      * @param {string} generatedBy - User ID who requested the report
-     * @param {string} requesterRole - Role of the user making the request
      * @returns {Promise<Report>} The generated report record
      */
-    static async generateProjectSummary(projectId, generatedBy, requesterRole) {
+    static async generateProjectSummary(projectId, generatedBy) {
         try {
             const project = await Project.findById(projectId);
             if (!project) {
                 throw new Error('Project not found');
             }
-
-            // Ownership check for PMs
-            if (requesterRole === ROLES.PROJECT_MANAGER && project.projectManagerId !== generatedBy) {
-                throw new Error('You can only generate reports for projects you manage');
-            }
-            // Admin can generate reports for any project
 
             const tasks = await Task.findAll({ projectId });
 

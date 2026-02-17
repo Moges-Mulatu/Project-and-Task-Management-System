@@ -66,8 +66,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [updatingRole, setUpdatingRole] = useState(false);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -220,55 +219,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
     );
   };
 
-  const handleReactivateUser = async (userId, userName) => {
-    showAlert(
-      "confirm",
-      "Reactivate User",
-      `Are you sure you want to reactivate ${userName}?`,
-      {
-        confirmText: "Reactivate",
-        onConfirm: async () => {
-          try {
-            await api.reactivateUser(userId);
-            setShowUserModal(false);
-            setSelectedUser(null);
-            loadData();
-            showAlert(
-              "success",
-              "Success",
-              `${userName} has been reactivated.`,
-            );
-          } catch (err) {
-            showAlert(
-              "error",
-              "Error",
-              err.message || "Failed to reactivate user",
-            );
-          }
-        },
-      },
-    );
-  };
 
-  const handleUpdateRole = async (newRole) => {
-    if (!selectedUser) return;
-    setUpdatingRole(true);
-    try {
-      await api.updateUserRole(selectedUser.id, newRole);
-      setShowRoleModal(false);
-      setSelectedUser({ ...selectedUser, role: newRole });
-      loadData();
-      showAlert(
-        "success",
-        "Success",
-        `Role updated to ${getRoleLabel(newRole)}.`,
-      );
-    } catch (err) {
-      showAlert("error", "Error", err.message || "Failed to update role");
-    } finally {
-      setUpdatingRole(false);
-    }
-  };
 
   const resetNewUser = () => {
     setNewUser({
@@ -299,7 +250,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
     setCreatingUser(true);
     try {
-      await api.createUser({
+      await api.register({
         firstName: newUser.firstName.trim(),
         lastName: newUser.lastName.trim(),
         email: newUser.email.trim().toLowerCase(),
@@ -658,134 +609,32 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
               {/* Actions */}
               {currentUser?.role === "admin" &&
-                selectedUser.id !== currentUser?.id && (
+                selectedUser.id !== currentUser?.id &&
+                selectedUser.isActive !== false && (
                   <View style={styles.actionsSection}>
-                    {/* Role Change Button */}
                     <TouchableOpacity
-                      style={styles.roleChangeButton}
-                      onPress={() => setShowRoleModal(true)}
+                      style={styles.deactivateButton}
+                      onPress={() =>
+                        handleDeactivateUser(
+                          selectedUser.id,
+                          `${selectedUser.firstName} ${selectedUser.lastName}`,
+                        )
+                      }
                     >
                       <Ionicons
-                        name="shield-checkmark"
+                        name="person-remove"
                         size={20}
-                        color={theme.colors.brandBlue}
+                        color={theme.colors.danger}
                       />
-                      <AppText style={styles.roleChangeButtonText}>
-                        Change Role
+                      <AppText style={styles.deactivateButtonText}>
+                        Deactivate User
                       </AppText>
                     </TouchableOpacity>
-
-                    {selectedUser.isActive !== false ? (
-                      <TouchableOpacity
-                        style={styles.deactivateButton}
-                        onPress={() =>
-                          handleDeactivateUser(
-                            selectedUser.id,
-                            `${selectedUser.firstName} ${selectedUser.lastName}`,
-                          )
-                        }
-                      >
-                        <Ionicons
-                          name="person-remove"
-                          size={20}
-                          color={theme.colors.danger}
-                        />
-                        <AppText style={styles.deactivateButtonText}>
-                          Deactivate User
-                        </AppText>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.reactivateButton}
-                        onPress={() =>
-                          handleReactivateUser(
-                            selectedUser.id,
-                            `${selectedUser.firstName} ${selectedUser.lastName}`,
-                          )
-                        }
-                      >
-                        <Ionicons
-                          name="person-add"
-                          size={20}
-                          color={theme.colors.brandGreen}
-                        />
-                        <AppText style={styles.reactivateButtonText}>
-                          Reactivate User
-                        </AppText>
-                      </TouchableOpacity>
-                    )}
                   </View>
                 )}
 
               <View style={{ height: 40 }} />
             </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
-  // Role Selection Modal
-  const renderRoleModal = () => {
-    if (!selectedUser) return null;
-
-    return (
-      <Modal
-        visible={showRoleModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowRoleModal(false)}
-      >
-        <View style={styles.roleModalOverlay}>
-          <View style={styles.roleModalContent}>
-            <AppText variant="h3" style={styles.roleModalTitle}>
-              Change Role
-            </AppText>
-            <AppText style={styles.roleModalSubtitle}>
-              Select a new role for {selectedUser.firstName}
-            </AppText>
-
-            {ROLE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.roleOption,
-                  selectedUser.role === option.id && styles.roleOptionCurrent,
-                ]}
-                onPress={() => handleUpdateRole(option.id)}
-                disabled={updatingRole || selectedUser.role === option.id}
-              >
-                <View
-                  style={[
-                    styles.roleOptionDot,
-                    { backgroundColor: option.color },
-                  ]}
-                />
-                <AppText
-                  style={[
-                    styles.roleOptionText,
-                    selectedUser.role === option.id &&
-                      styles.roleOptionTextCurrent,
-                  ]}
-                >
-                  {option.label}
-                  {selectedUser.role === option.id && " (Current)"}
-                </AppText>
-                {updatingRole && selectedUser.role !== option.id && (
-                  <ActivityIndicator
-                    size="small"
-                    color={theme.colors.brandBlue}
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity
-              style={styles.roleModalCancel}
-              onPress={() => setShowRoleModal(false)}
-            >
-              <AppText style={styles.roleModalCancelText}>Cancel</AppText>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1095,7 +944,6 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       )}
 
       {renderUserModal()}
-      {renderRoleModal()}
       {renderCreateModal()}
     </ScreenContainer>
   );

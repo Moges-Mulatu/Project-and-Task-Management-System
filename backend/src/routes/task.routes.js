@@ -3,8 +3,6 @@ import TaskController from '../controllers/task.controller.js';
 import TaskValidator from '../validators/task.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
-import { validateUUID } from '../middlewares/paramValidator.middleware.js';
-import { ROLES } from '../constants/roles.constants.js';
 
 const router = express.Router();
 
@@ -13,17 +11,13 @@ router.use(protect);
 
 // Basic CRUD
 router.get('/', TaskController.getAll);
-router.get('/:id', validateUUID('id'), TaskController.getById);
-router.post('/', restrictTo(ROLES.ADMIN, ROLES.PROJECT_MANAGER), validate(TaskValidator.create), TaskController.create);
-
-// Task updates - PM, Admin and team members can update
-router.patch('/:id', validateUUID('id'), restrictTo(ROLES.ADMIN, ROLES.PROJECT_MANAGER, ROLES.TEAM_MEMBER), validate(TaskValidator.update), TaskController.update);
-
-// Task deletion - PM and Admin
-router.delete('/:id', validateUUID('id'), restrictTo(ROLES.ADMIN, ROLES.PROJECT_MANAGER), TaskController.delete);
+router.post('/', restrictTo('project_manager', 'admin'), validate(TaskValidator.create), TaskController.create);
+router.get('/:id', TaskController.getById);
+router.patch('/:id', validate(TaskValidator.update), TaskController.update);
+router.delete('/:id', restrictTo('project_manager', 'admin'), TaskController.delete);
 
 // Collaboration items
-router.post('/:id/comments', validateUUID('id'), validate(TaskValidator.addComment), TaskController.addComment);
-router.post('/:id/attachments', validateUUID('id'), validate(TaskValidator.addAttachment), TaskController.addAttachment);
+router.post('/:id/comments', validate(TaskValidator.addComment), TaskController.addComment);
+router.post('/:id/attachments', TaskController.addAttachment);
 
 export default router;

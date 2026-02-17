@@ -1,7 +1,7 @@
 export const ROLES = {
-    ADMIN: "admin",
-    PROJECT_MANAGER: "project_manager",
-    TEAM_MEMBER: "team_member",
+    ADMIN: "ADMIN",
+    PROJECT_MANAGER: "PROJECT_MANAGER",
+    TEAM_MEMBER: "TEAM_MEMBER",
 };
 
 export default ROLES;

@@ -8,14 +8,6 @@ import { sendError } from '../utils/response.util.js';
 export const validate = (rules) => {
     return (req, res, next) => {
         const errors = [];
-        const allowedFields = rules.map(r => r.field);
-        const receivedFields = Object.keys(req.body);
-
-        // Check for unknown fields
-        const unknownFields = receivedFields.filter(field => !allowedFields.includes(field));
-        if (unknownFields.length > 0) {
-            errors.push(`Unknown fields not allowed: ${unknownFields.join(', ')}`);
-        }
 
         rules.forEach(rule => {
             const value = req.body[rule.field];
@@ -49,15 +41,6 @@ export const validate = (rules) => {
         if (errors.length > 0) {
             return sendError(res, `Validation failed: ${errors.join('; ')}`, 400);
         }
-
-        // Strip unknown fields from req.body (defense in depth)
-        const sanitizedBody = {};
-        allowedFields.forEach(field => {
-            if (req.body[field] !== undefined) {
-                sanitizedBody[field] = req.body[field];
-            }
-        });
-        req.body = sanitizedBody;
 
         next();
     };
