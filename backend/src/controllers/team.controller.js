@@ -51,7 +51,7 @@ class TeamController {
      */
     static async update(req, res) {
         try {
-            const team = await TeamService.updateTeam(req.params.id, req.body);
+            const team = await TeamService.updateTeam(req.params.id, req.body, req.user.id, req.user.role);
             return sendSuccess(res, 'Team updated successfully', team);
         } catch (error) {
             return sendError(res, error.message, 400);

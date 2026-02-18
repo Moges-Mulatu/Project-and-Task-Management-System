@@ -22,6 +22,9 @@ class TeamMember {
     this.assignedBy = data.assignedBy || null;
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
+
+    // Retain extra fields from JOINs (like firstName, lastName, etc.)
+    Object.assign(this, data);
   }
 
   /**

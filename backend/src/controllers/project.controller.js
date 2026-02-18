@@ -1,5 +1,7 @@
 import ProjectService from '../services/project.service.js';
 import { sendSuccess, sendError } from '../utils/response.util.js';
+import { getDBConnection } from '../config/db.config.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Project Controller
@@ -13,7 +15,8 @@ class ProjectController {
         try {
             const projectData = {
                 ...req.body,
-                projectManagerId: req.user.id // Default to the creator as PM
+                // PMs can only create projects for themselves
+                projectManagerId: req.user.id
             };
             const project = await ProjectService.createProject(projectData);
             return sendSuccess(res, 'Project created successfully', project, 201);
@@ -23,14 +26,29 @@ class ProjectController {
     }
 
     /**
-     * Get all projects
+     * Get all projects with role-based visibility
      */
     static async getAll(req, res) {
         try {
+            let userTeamIds = [];
+
+            // For team_members, fetch their team memberships from database
+            if (req.user.role === ROLES.TEAM_MEMBER) {
+                const connection = getDBConnection();
+                const [rows] = await connection.execute(
+                    'SELECT teamId FROM team_members WHERE userId = ? AND isActive = 1',
+                    [req.user.id]
+                );
+                userTeamIds = rows.map(row => row.teamId);
+            }
+
             const filters = {
                 teamId: req.query.teamId,
                 status: req.query.status,
-                priority: req.query.priority
+                priority: req.query.priority,
+                userRole: req.user.role,
+                userTeamIds: userTeamIds,
+                projectManagerId: req.user.role === ROLES.PROJECT_MANAGER ? req.user.id : undefined
             };
             const projects = await ProjectService.getProjects(filters);
             return sendSuccess(res, 'Projects retrieved successfully', projects);
@@ -44,7 +62,19 @@ class ProjectController {
      */
     static async getById(req, res) {
         try {
-            const project = await ProjectService.getProjectById(req.params.id);
+            let userTeamIds = [];
+
+            // For team_members, fetch their team memberships from database
+            if (req.user.role === ROLES.TEAM_MEMBER) {
+                const connection = getDBConnection();
+                const [rows] = await connection.execute(
+                    'SELECT teamId FROM team_members WHERE userId = ? AND isActive = 1',
+                    [req.user.id]
+                );
+                userTeamIds = rows.map(row => row.teamId);
+            }
+
+            const project = await ProjectService.getProjectById(req.params.id, req.user.id, req.user.role, userTeamIds);
             return sendSuccess(res, 'Project retrieved successfully', project);
         } catch (error) {
             return sendError(res, error.message, 404);
@@ -56,7 +86,7 @@ class ProjectController {
      */
     static async update(req, res) {
         try {
-            const project = await ProjectService.updateProject(req.params.id, req.body);
+            const project = await ProjectService.updateProject(req.params.id, req.body, req.user.id, req.user.role);
             return sendSuccess(res, 'Project updated successfully', project);
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -68,7 +98,7 @@ class ProjectController {
      */
     static async delete(req, res) {
         try {
-            await ProjectService.deleteProject(req.params.id);
+            await ProjectService.deleteProject(req.params.id, req.user.id, req.user.role);
             return sendSuccess(res, 'Project deleted successfully');
         } catch (error) {
             return sendError(res, error.message, 400);
@@ -80,7 +110,7 @@ class ProjectController {
      */
     static async refreshProgress(req, res) {
         try {
-            const project = await ProjectService.refreshProgress(req.params.id);
+            const project = await ProjectService.refreshProgress(req.params.id, req.user.id, req.user.role);
             return sendSuccess(res, 'Project progress updated', { progress: project.progress });
         } catch (error) {
             return sendError(res, error.message, 400);

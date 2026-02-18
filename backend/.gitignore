@@ -3,3 +3,66 @@
 
 # Ignore node modules
 node_modules/
+
+# Logs and test results
+*.txt
+*.log
+results/
+*_results.txt
+
+# Temporary scripts and debugging tools
+admin_step1.js
+admin_test_roles.js
+direct_test.js
+test_conn.js
+test_output.txt
+hash.txt
+scripts/check-users.js
+scripts/seed.js
+scripts/test-admin.js
+scripts/test-pm.js
+scripts/test-member.js
+scripts/test-api.js
+super_audit.js
+test_db.js
+TEST_CASES.md
+scripts/super-audit.js
+audit_summary.txt
+
+# Additional test files and scripts
+visibility_test_results.txt
+test-output.txt
+test-hash.js
+test-data.js
+test_results.txt
+test_output.txt
+test_db.js
+test_conn.js
+TEST_CASES.md
+super_audit.js
+README.md
+quickfix.mjs
+pm_results.txt
+output.txt
+migration_output.txt
+member_results.txt
+hash-gen.js
+get-hash.cjs
+generate-hash.mjs
+gen-hashes.js
+gen-hash.mjs
+gen-hash.js
+gen-hash-simple.js
+final_audit_results.txt
+direct_test.js
+create-user.js
+audit_summary.txt
+AUDIT_REPORT.md
+API_TESTING_GUIDE.md
+admin-automated-test.mjs
+admin_test_roles.js
+admin_step1.js
+admin_results.txt
+
+# Ignore all scripts directory
+scripts/
