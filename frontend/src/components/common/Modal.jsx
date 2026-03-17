@@ -13,8 +13,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             />
 
             {/* Modal Content */}
-            <div className="relative bg-background-secondary border border-card-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="flex items-center justify-between p-6 border-b border-card-border">
+            <div className="relative bg-background-secondary border border-card-border w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
+                <div className="flex items-center justify-between p-6 border-b border-card-border flex-shrink-0">
                     <h3 className="text-xl font-bold text-text-primary">{title}</h3>
                     <button
                         onClick={onClose}
@@ -24,7 +24,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     </button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 flex-1 overflow-y-auto">
                     {children}
                 </div>
             </div>

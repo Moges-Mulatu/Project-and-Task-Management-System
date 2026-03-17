@@ -7,7 +7,8 @@ const CreateTeamModal = ({ isOpen, onClose, onSuccess }) => {
     const [formData, setFormData] = useState({
         name: '',
         department: '',
-        teamLeadId: ''
+        teamLeadId: '',
+        memberIds: []
     });
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -24,7 +25,22 @@ const CreateTeamModal = ({ isOpen, onClose, onSuccess }) => {
         setLoading(true);
         setError('');
         try {
-            await api.createTeam(formData);
+            // Create team first
+            const teamResponse = await api.createTeam({
+                name: formData.name,
+                department: formData.department,
+                teamLeadId: formData.teamLeadId
+            });
+            
+            const teamId = teamResponse.data.id;
+            
+            // Add team members (excluding the team lead who is already assigned)
+            const membersToAdd = formData.memberIds.filter(id => id !== formData.teamLeadId);
+            
+            for (const memberId of membersToAdd) {
+                await api.addTeamMember(teamId, memberId);
+            }
+            
             onSuccess();
             onClose();
         } catch (err) {
@@ -72,6 +88,40 @@ const CreateTeamModal = ({ isOpen, onClose, onSuccess }) => {
                             <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.role.replace('_', ' ')})</option>
                         ))}
                     </select>
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Team Members</label>
+                    <div className="max-h-32 overflow-y-auto bg-background-tertiary border border-card-border rounded-xl p-3 space-y-2">
+                        {users.map(u => (
+                            <label key={u.id} className="flex items-center space-x-2 cursor-pointer hover:bg-background-secondary p-1 rounded">
+                                <input
+                                    type="checkbox"
+                                    className="rounded border-card-border text-brand-blue focus:ring-brand-blue"
+                                    checked={formData.memberIds.includes(u.id)}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setFormData({ 
+                                                ...formData, 
+                                                memberIds: [...formData.memberIds, u.id] 
+                                            });
+                                        } else {
+                                            setFormData({ 
+                                                ...formData, 
+                                                memberIds: formData.memberIds.filter(id => id !== u.id) 
+                                            });
+                                        }
+                                    }}
+                                />
+                                <span className="text-sm text-text-primary">
+                                    {u.firstName} {u.lastName} ({u.role.replace('_', ' ')})
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                    <p className="text-xs text-text-muted">
+                        Selected: {formData.memberIds.length} member{formData.memberIds.length !== 1 ? 's' : ''}
+                    </p>
                 </div>
 
                 {error && <p className="text-error text-xs font-medium bg-error/10 p-3 rounded-lg border border-error/20">{error}</p>}

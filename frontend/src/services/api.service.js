@@ -64,7 +64,12 @@ class ApiService {
     getProfile() { return this.request('/users/me'); }
     updateProfile(data) { return this.request('/users/me', { method: 'PATCH', body: JSON.stringify(data) }); }
     getTeams() { return this.request('/teams'); }
+    getTeam(id) { return this.request(`/teams/${id}`); }
+    updateTeam(id, data) { return this.request(`/teams/${id}`, { method: 'PATCH', body: JSON.stringify(data) }); }
+    deleteTeam(id) { return this.request(`/teams/${id}`, { method: 'DELETE' }); }
     getTeamMembers(teamId) { return this.request(`/teams/${teamId}/members`); }
+    addTeamMember(teamId, userId) { return this.request(`/teams/${teamId}/members`, { method: 'POST', body: JSON.stringify({ userId }) }); }
+    removeTeamMember(teamId, userId) { return this.request(`/teams/${teamId}/members/${userId}`, { method: 'DELETE' }); }
     getReports() { return this.request('/reports'); }
     createTeam(data) { return this.request('/teams', { method: 'POST', body: JSON.stringify(data) }); }
 }

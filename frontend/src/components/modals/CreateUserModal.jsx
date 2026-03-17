@@ -10,9 +10,7 @@ const CreateUserModal = ({ isOpen, onClose, onSuccess }) => {
         lastName: '',
         email: '',
         password: '',
-        role: ROLES.TEAM_MEMBER,
-        department: '',
-        position: ''
+        role: ROLES.TEAM_MEMBER
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -68,9 +66,24 @@ const CreateUserModal = ({ isOpen, onClose, onSuccess }) => {
                     <input
                         required
                         type="email"
+                        autoComplete="off"
                         className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-green outline-none"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="newuser@company.com"
+                    />
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Initial Password</label>
+                    <input
+                        required
+                        type="password"
+                        autoComplete="new-password"
+                        className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-green outline-none"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        placeholder="Enter initial password for new user"
                     />
                 </div>
 

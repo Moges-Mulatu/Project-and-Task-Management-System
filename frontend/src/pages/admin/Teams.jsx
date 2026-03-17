@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api.service';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
-import { Plus, Network, Users as UsersIcon } from 'lucide-react';
+import { Plus, Network, Users as UsersIcon, Edit, Trash2 } from 'lucide-react';
 import CreateTeamModal from '../../components/modals/CreateTeamModal';
+import EditTeamModal from '../../components/modals/EditTeamModal';
 
 const Teams = () => {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingTeamId, setEditingTeamId] = useState(null);
 
     const fetchTeams = async () => {
         setLoading(true);
@@ -25,6 +28,21 @@ const Teams = () => {
     useEffect(() => {
         fetchTeams();
     }, []);
+
+    const handleEdit = (teamId) => {
+        setEditingTeamId(teamId);
+        setIsEditModalOpen(true);
+    };
+
+    const handleDelete = async (teamId) => {
+        if (!window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) return;
+        try {
+            await api.deleteTeam(teamId);
+            fetchTeams();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -44,6 +62,23 @@ const Teams = () => {
                     [1, 2].map(i => <div key={i} className="h-64 bg-card-background animate-pulse rounded-2xl"></div>)
                 ) : teams.map(team => (
                     <Card key={team.id} className="relative group overflow-hidden border-2 border-transparent hover:border-brand-blue/30 transition-all">
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
+                            <button
+                                onClick={() => handleEdit(team.id)}
+                                className="p-2 bg-background-tertiary border border-card-border rounded-lg hover:bg-brand-blue/10 hover:border-brand-blue/30 transition-all"
+                                title="Edit Team"
+                            >
+                                <Edit size={16} className="text-brand-blue" />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(team.id)}
+                                className="p-2 bg-background-tertiary border border-card-border rounded-lg hover:bg-error/10 hover:border-error/30 transition-all"
+                                title="Delete Team"
+                            >
+                                <Trash2 size={16} className="text-error" />
+                            </button>
+                        </div>
+
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center space-x-4">
                                 <div className="p-4 rounded-2xl bg-brand-blue/10 text-brand-blue shadow-inner">
@@ -81,6 +116,16 @@ const Teams = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={fetchTeams}
+            />
+            
+            <EditTeamModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setEditingTeamId(null);
+                }}
+                onSuccess={fetchTeams}
+                teamId={editingTeamId}
             />
         </div>
     );
