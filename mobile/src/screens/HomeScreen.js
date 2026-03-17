@@ -532,8 +532,8 @@ const HomeScreen = ({ navigation, user }) => {
             </View>
           </TouchableOpacity>
 
-          {/* PM + Admin: Reports (Monitor Progress) */}
-          {(user?.role === "project_manager" || user?.role === "admin") && (
+          {/* PM Only: Reports (Monitor Progress) */}
+          {user?.role === "project_manager" && (
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate("Reports")}
@@ -570,30 +570,27 @@ const HomeScreen = ({ navigation, user }) => {
             </TouchableOpacity>
           )}
 
-          {/* Admin Only: Manage Users - half-width to complete 2x2 grid */}
+          {/* Admin Only: Manage Users - Full width as last item */}
           {user?.role === "admin" && (
             <TouchableOpacity
-              style={styles.actionCard}
+              style={styles.actionCardFull}
               onPress={() => navigation.navigate("Users")}
               activeOpacity={0.8}
             >
               <View
                 style={[
-                  styles.actionGlowLine,
+                  styles.actionGlowLineFull,
                   { backgroundColor: theme.colors.accentPink },
                 ]}
               />
-              <View
-                style={[
-                  styles.actionGlowEffect,
-                  { shadowColor: theme.colors.accentPink },
-                ]}
-              />
-              <View style={styles.actionCardContent}>
+              <View style={styles.actionCardContentFull}>
                 <View
                   style={[
                     styles.actionIconLarge,
-                    { backgroundColor: theme.colors.accentPink + "30" },
+                    {
+                      backgroundColor: theme.colors.accentPink + "30",
+                      marginBottom: 0,
+                    },
                   ]}
                 >
                   <Ionicons
@@ -602,8 +599,10 @@ const HomeScreen = ({ navigation, user }) => {
                     color={theme.colors.accentPink}
                   />
                 </View>
-                <AppText style={styles.actionCardTitle}>Users</AppText>
-                <AppText style={styles.actionCardSub}>Manage roles</AppText>
+                <View style={styles.actionTextContainer}>
+                  <AppText style={styles.actionCardTitle}>Users</AppText>
+                  <AppText style={styles.actionCardSub}>Manage roles</AppText>
+                </View>
               </View>
             </TouchableOpacity>
           )}

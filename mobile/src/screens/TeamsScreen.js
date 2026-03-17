@@ -5,8 +5,8 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "../components/AppText";
@@ -69,22 +69,30 @@ const TeamsScreen = ({ navigation, user }) => {
   );
 
   const handleDeleteTeam = useCallback(async (team) => {
-    showAlert(
-      "confirm",
+    Alert.alert(
       "Delete Team",
       `Are you sure you want to delete "${team.name}"? This action cannot be undone.`,
-      {
-        confirmText: "Delete",
-        onConfirm: async () => {
-          try {
-            await api.deleteTeam(team.id);
-            setTeams((prevTeams) => prevTeams.filter((t) => t.id !== team.id));
-            showAlert("success", "Success", "Team deleted successfully");
-          } catch (err) {
-            showAlert("error", "Error", err.message || "Failed to delete team");
-          }
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
         },
-      },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteTeam(team.id);
+              setTeams((prevTeams) =>
+                prevTeams.filter((t) => t.id !== team.id),
+              );
+              Alert.alert("Success", "Team deleted successfully");
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to delete team");
+            }
+          },
+        },
+      ],
     );
   }, []);
 

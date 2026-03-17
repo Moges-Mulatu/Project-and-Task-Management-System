@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://10.0.2.2:5000/api/v1";
 
 const TOKEN_KEY = "debo_auth_token";
 const USER_KEY = "debo_auth_user";
@@ -23,12 +23,6 @@ const loadAuth = async () => {
 const clearAuth = async () => {
   await AsyncStorage.removeItem(TOKEN_KEY);
   await AsyncStorage.removeItem(USER_KEY);
-};
-
-// Callback invoked when a 401 is received (set by App.js to force logout)
-let _onUnauthorized = null;
-const setOnUnauthorized = (cb) => {
-  _onUnauthorized = cb;
 };
 
 const request = async (path, options = {}) => {
@@ -56,14 +50,11 @@ const request = async (path, options = {}) => {
     if (!response.ok) {
       // If rate limited, show friendly message
       if (response.status === 429) {
-        throw new Error(
-          data.message || "Too many attempts. Please try again later.",
-        );
+        throw new Error(data.message || "Too many attempts. Please try again later.");
       }
-      // If unauthorized, clear auth and trigger logout
-      if (response.status === 401 && !path.startsWith("/auth/")) {
-        await clearAuth();
-        if (_onUnauthorized) _onUnauthorized();
+      // If unauthorized, token might be expired - clear it
+      if (response.status === 401) {
+        console.log("Auth failed - token may be expired");
       }
       throw new Error(data.message || "Request failed");
     }
@@ -96,11 +87,6 @@ const api = {
       body: JSON.stringify(payload),
     }),
   getProfile: () => request("/users/me"),
-  updateProfile: (payload) =>
-    request("/users/me", {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    }),
   getProjects: () => request("/projects"),
   getProject: (id) => request(`/projects/${id}`),
   createProject: (payload) =>
@@ -142,10 +128,6 @@ const api = {
     request(`/teams/${teamId}/members`, {
       method: "POST",
       body: JSON.stringify(payload),
-    }),
-  removeTeamMember: (teamId, userId) =>
-    request(`/teams/${teamId}/members/${userId}`, {
-      method: "DELETE",
     }),
   // Reports
   getReports: (params) => request(`/reports${buildQuery(params)}`),
@@ -193,4 +175,4 @@ const api = {
   getSystemStats: () => request("/system-stats"),
 };
 
-export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth, setOnUnauthorized };
+export { API_BASE_URL, api, saveAuth, loadAuth, clearAuth };

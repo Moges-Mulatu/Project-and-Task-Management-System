@@ -8,8 +8,8 @@ import {
   TextInput,
   Modal,
   ScrollView,
+  Alert,
 } from "react-native";
-import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -66,7 +66,8 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
-
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -182,44 +183,76 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
   const handleDeactivateUser = (userId, userName) => {
     if (userId === currentUser?.id) {
-      showAlert(
-        "warning",
+      Alert.alert(
         "Cannot Deactivate",
         "You cannot deactivate your own account.",
       );
       return;
     }
 
-    showAlert(
-      "confirm",
+    Alert.alert(
       "Deactivate User",
       `Are you sure you want to deactivate ${userName}? They will no longer be able to access the system.`,
-      {
-        confirmText: "Deactivate",
-        onConfirm: async () => {
-          try {
-            await api.deactivateUser(userId);
-            setShowUserModal(false);
-            setSelectedUser(null);
-            loadData();
-            showAlert(
-              "success",
-              "Success",
-              `${userName} has been deactivated.`,
-            );
-          } catch (err) {
-            showAlert(
-              "error",
-              "Error",
-              err.message || "Failed to deactivate user",
-            );
-          }
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Deactivate",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deactivateUser(userId);
+              setShowUserModal(false);
+              setSelectedUser(null);
+              loadData(); // Refresh the list
+              Alert.alert("Success", `${userName} has been deactivated.`);
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to deactivate user");
+            }
+          },
         },
-      },
+      ],
     );
   };
 
+  const handleReactivateUser = async (userId, userName) => {
+    Alert.alert(
+      "Reactivate User",
+      `Are you sure you want to reactivate ${userName}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reactivate",
+          onPress: async () => {
+            try {
+              await api.reactivateUser(userId);
+              setShowUserModal(false);
+              setSelectedUser(null);
+              loadData();
+              Alert.alert("Success", `${userName} has been reactivated.`);
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to reactivate user");
+            }
+          },
+        },
+      ],
+    );
+  };
 
+  const handleUpdateRole = async (newRole) => {
+    if (!selectedUser) return;
+    setUpdatingRole(true);
+    try {
+      await api.updateUserRole(selectedUser.id, newRole);
+      setShowRoleModal(false);
+      setSelectedUser({ ...selectedUser, role: newRole });
+      loadData();
+      Alert.alert("Success", `Role updated to ${getRoleLabel(newRole)}.`);
+    } catch (err) {
+      Alert.alert("Error", err.message || "Failed to update role");
+    } finally {
+      setUpdatingRole(false);
+    }
+  };
 
   const resetNewUser = () => {
     setNewUser({
@@ -240,17 +273,13 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       !newUser.email ||
       !newUser.password
     ) {
-      showAlert(
-        "warning",
-        "Missing Fields",
-        "Please fill all required fields.",
-      );
+      Alert.alert("Missing Fields", "Please fill all required fields.");
       return;
     }
 
     setCreatingUser(true);
     try {
-      await api.register({
+      await api.createUser({
         firstName: newUser.firstName.trim(),
         lastName: newUser.lastName.trim(),
         email: newUser.email.trim().toLowerCase(),
@@ -262,9 +291,9 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       setShowCreateModal(false);
       resetNewUser();
       loadData();
-      showAlert("success", "Success", "User created successfully.");
+      Alert.alert("Success", "User created successfully.");
     } catch (err) {
-      showAlert("error", "Error", err.message || "Failed to create user");
+      Alert.alert("Error", err.message || "Failed to create user");
     } finally {
       setCreatingUser(false);
     }
@@ -609,32 +638,134 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
 
               {/* Actions */}
               {currentUser?.role === "admin" &&
-                selectedUser.id !== currentUser?.id &&
-                selectedUser.isActive !== false && (
+                selectedUser.id !== currentUser?.id && (
                   <View style={styles.actionsSection}>
+                    {/* Role Change Button */}
                     <TouchableOpacity
-                      style={styles.deactivateButton}
-                      onPress={() =>
-                        handleDeactivateUser(
-                          selectedUser.id,
-                          `${selectedUser.firstName} ${selectedUser.lastName}`,
-                        )
-                      }
+                      style={styles.roleChangeButton}
+                      onPress={() => setShowRoleModal(true)}
                     >
                       <Ionicons
-                        name="person-remove"
+                        name="shield-checkmark"
                         size={20}
-                        color={theme.colors.danger}
+                        color={theme.colors.brandBlue}
                       />
-                      <AppText style={styles.deactivateButtonText}>
-                        Deactivate User
+                      <AppText style={styles.roleChangeButtonText}>
+                        Change Role
                       </AppText>
                     </TouchableOpacity>
+
+                    {selectedUser.isActive !== false ? (
+                      <TouchableOpacity
+                        style={styles.deactivateButton}
+                        onPress={() =>
+                          handleDeactivateUser(
+                            selectedUser.id,
+                            `${selectedUser.firstName} ${selectedUser.lastName}`,
+                          )
+                        }
+                      >
+                        <Ionicons
+                          name="person-remove"
+                          size={20}
+                          color={theme.colors.danger}
+                        />
+                        <AppText style={styles.deactivateButtonText}>
+                          Deactivate User
+                        </AppText>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.reactivateButton}
+                        onPress={() =>
+                          handleReactivateUser(
+                            selectedUser.id,
+                            `${selectedUser.firstName} ${selectedUser.lastName}`,
+                          )
+                        }
+                      >
+                        <Ionicons
+                          name="person-add"
+                          size={20}
+                          color={theme.colors.brandGreen}
+                        />
+                        <AppText style={styles.reactivateButtonText}>
+                          Reactivate User
+                        </AppText>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
 
               <View style={{ height: 40 }} />
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  // Role Selection Modal
+  const renderRoleModal = () => {
+    if (!selectedUser) return null;
+
+    return (
+      <Modal
+        visible={showRoleModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowRoleModal(false)}
+      >
+        <View style={styles.roleModalOverlay}>
+          <View style={styles.roleModalContent}>
+            <AppText variant="h3" style={styles.roleModalTitle}>
+              Change Role
+            </AppText>
+            <AppText style={styles.roleModalSubtitle}>
+              Select a new role for {selectedUser.firstName}
+            </AppText>
+
+            {ROLE_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.roleOption,
+                  selectedUser.role === option.id && styles.roleOptionCurrent,
+                ]}
+                onPress={() => handleUpdateRole(option.id)}
+                disabled={updatingRole || selectedUser.role === option.id}
+              >
+                <View
+                  style={[
+                    styles.roleOptionDot,
+                    { backgroundColor: option.color },
+                  ]}
+                />
+                <AppText
+                  style={[
+                    styles.roleOptionText,
+                    selectedUser.role === option.id &&
+                      styles.roleOptionTextCurrent,
+                  ]}
+                >
+                  {option.label}
+                  {selectedUser.role === option.id && " (Current)"}
+                </AppText>
+                {updatingRole && selectedUser.role !== option.id && (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.brandBlue}
+                  />
+                )}
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity
+              style={styles.roleModalCancel}
+              onPress={() => setShowRoleModal(false)}
+            >
+              <AppText style={styles.roleModalCancelText}>Cancel</AppText>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -944,6 +1075,7 @@ const UsersScreen = ({ navigation, user: currentUser }) => {
       )}
 
       {renderUserModal()}
+      {renderRoleModal()}
       {renderCreateModal()}
     </ScreenContainer>
   );

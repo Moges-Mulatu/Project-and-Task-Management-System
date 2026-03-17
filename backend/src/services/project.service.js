@@ -1,4 +1,5 @@
 import Project from '../models/project.model.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 /**
  * Project Service
@@ -12,6 +13,24 @@ class ProjectService {
      */
     static async createProject(projectData) {
         try {
+            // Validate teamId exists
+            if (projectData.teamId) {
+                const Team = (await import('../models/team.model.js')).default;
+                const team = await Team.findById(projectData.teamId);
+                if (!team) {
+                    throw new Error('Team not found');
+                }
+            }
+
+            // Validate projectManagerId exists
+            if (projectData.projectManagerId) {
+                const User = (await import('../models/user.model.js')).default;
+                const pm = await User.findById(projectData.projectManagerId);
+                if (!pm) {
+                    throw new Error('Project manager not found');
+                }
+            }
+
             return await Project.create(projectData);
         } catch (error) {
             throw new Error(`Error creating project: ${error.message}`);
@@ -28,12 +47,12 @@ class ProjectService {
             let queryOptions = { ...options };
 
             // If user is team_member, restrict to their team's projects
-            if (options.userRole === 'team_member' && options.userTeamIds && options.userTeamIds.length > 0) {
+            if (options.userRole === ROLES.TEAM_MEMBER && options.userTeamIds && options.userTeamIds.length > 0) {
                 queryOptions.teamId = options.userTeamIds;
             }
 
             // If user is project_manager, restrict to projects they manage (optional)
-            if (options.userRole === 'project_manager' && options.projectManagerId) {
+            if (options.userRole === ROLES.PROJECT_MANAGER && options.projectManagerId) {
                 queryOptions.projectManagerId = options.projectManagerId;
             }
 
@@ -44,20 +63,44 @@ class ProjectService {
     }
 
     /**
-     * Get project by ID
+     * Get project by ID with role-based visibility check
      * @param {string} id - Project ID
+     * @param {string} requesterId - ID of the user making the request
+     * @param {string} requesterRole - Role of the user making the request
+     * @param {Array} userTeamIds - Array of team IDs the user belongs to (for team_member role)
      * @returns {Promise<Project>} Project instance
      */
-    static async getProjectById(id) {
+    static async getProjectById(id, requesterId, requesterRole, userTeamIds = []) {
         try {
             const project = await Project.findById(id);
             if (!project) {
                 throw new Error('Project not found');
             }
+
+            // Visibility check
+            if (requesterRole === ROLES.TEAM_MEMBER) {
+                if (!userTeamIds.includes(project.teamId)) {
+                    throw new Error('You can only view projects in your teams');
+                }
+            } else if (requesterRole === ROLES.PROJECT_MANAGER) {
+                if (project.projectManagerId !== requesterId) {
+                    throw new Error('You can only view projects you manage');
+                }
+            }
+            // Admin can view any project
+
             return project;
         } catch (error) {
             throw error;
         }
+    }
+
+    /**
+     * Get allowed update fields for projects
+     * @returns {Array} List of allowed field names
+     */
+    static getAllowedUpdateFields() {
+        return ['name', 'description', 'status', 'priority', 'startDate', 'endDate', 'estimatedEndDate', 'budget', 'repositoryUrl', 'documentationUrl', 'tags'];
     }
 
     /**
@@ -75,12 +118,27 @@ class ProjectService {
                 throw new Error('Project not found');
             }
 
-            // Ownership check: only admin or the assigned PM can update
-            if (requesterRole !== 'admin' && project.projectManagerId !== requesterId) {
+            // Ownership check: only the assigned PM can update
+            if (project.projectManagerId !== requesterId) {
                 throw new Error('You can only update projects you manage');
             }
 
-            return await project.update(updateData);
+            // Whitelist allowed fields
+            const allowedFields = this.getAllowedUpdateFields();
+            const filteredData = {};
+            for (const field of allowedFields) {
+                if (updateData[field] !== undefined) {
+                    filteredData[field] = updateData[field];
+                }
+            }
+
+            // Prevent changing projectManagerId or teamId through update
+            delete filteredData.projectManagerId;
+            delete filteredData.teamId;
+            delete filteredData.id;
+            delete filteredData.createdAt;
+
+            return await project.update(filteredData);
         } catch (error) {
             throw error;
         }
@@ -100,8 +158,8 @@ class ProjectService {
                 throw new Error('Project not found');
             }
 
-            // Ownership check: only admin or the assigned PM can delete
-            if (requesterRole !== 'admin' && project.projectManagerId !== requesterId) {
+            // Ownership check: only the assigned PM can delete
+            if (project.projectManagerId !== requesterId) {
                 throw new Error('You can only delete projects you manage');
             }
 
@@ -126,7 +184,7 @@ class ProjectService {
             }
 
             // Ownership check: only admin or the assigned PM can refresh progress
-            if (requesterRole !== 'admin' && project.projectManagerId !== requesterId) {
+            if (requesterRole !== ROLES.ADMIN && project.projectManagerId !== requesterId) {
                 throw new Error('You can only refresh progress for projects you manage');
             }
 

@@ -5,8 +5,8 @@ import {
   SectionList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { showAlert } from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "../components/AppText";
@@ -104,31 +104,35 @@ const TasksScreen = ({ navigation, user }) => {
   );
 
   const handleDeleteTask = (task) => {
-    showAlert(
-      "confirm",
+    Alert.alert(
       "Delete Task",
       `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
-      {
-        confirmText: "Delete",
-        onConfirm: async () => {
-          try {
-            await api.deleteTask(task.id);
-            setSections((prevSections) =>
-              prevSections
-                .map((section) => ({
-                  ...section,
-                  data: section.data.filter((t) => t.id !== task.id),
-                  taskCount: section.data.filter((t) => t.id !== task.id)
-                    .length,
-                }))
-                .filter((section) => section.data.length > 0),
-            );
-            setSelectedTaskId(null);
-          } catch (err) {
-            showAlert("error", "Error", err.message || "Failed to delete task");
-          }
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteTask(task.id);
+              // Remove task from sections locally
+              setSections((prevSections) =>
+                prevSections
+                  .map((section) => ({
+                    ...section,
+                    data: section.data.filter((t) => t.id !== task.id),
+                    taskCount: section.data.filter((t) => t.id !== task.id)
+                      .length,
+                  }))
+                  .filter((section) => section.data.length > 0),
+              );
+              setSelectedTaskId(null);
+            } catch (err) {
+              Alert.alert("Error", err.message || "Failed to delete task");
+            }
+          },
         },
-      },
+      ],
     );
   };
 
@@ -279,6 +283,7 @@ const TasksScreen = ({ navigation, user }) => {
     }
 
     const canDelete =
+      user?.role === "admin" ||
       user?.role === "project_manager" ||
       item.assignedBy === user?.id;
     const isSelected = selectedTaskId === item.id;

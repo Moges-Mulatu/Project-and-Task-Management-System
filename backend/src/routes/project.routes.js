@@ -3,6 +3,8 @@ import ProjectController from '../controllers/project.controller.js';
 import ProjectValidator from '../validators/project.validator.js';
 import { protect, restrictTo } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
+import { validateUUID } from '../middlewares/paramValidator.middleware.js';
+import { ROLES } from '../constants/roles.constants.js';
 
 const router = express.Router();
 
@@ -11,14 +13,16 @@ router.use(protect);
 
 // Publicly viewable for authenticated users
 router.get('/', ProjectController.getAll);
-router.get('/:id', ProjectController.getById);
+router.get('/:id', validateUUID('id'), ProjectController.getById);
 
-// PM and Admin only routes
-router.post('/', restrictTo('project_manager', 'admin'), validate(ProjectValidator.create), ProjectController.create);
-router.patch('/:id', restrictTo('project_manager', 'admin'), validate(ProjectValidator.update), ProjectController.update);
-router.delete('/:id', restrictTo('admin'), ProjectController.delete);
+// PM only routes for project management
+router.post('/', restrictTo(ROLES.PROJECT_MANAGER), validate(ProjectValidator.create), ProjectController.create);
+router.patch('/:id', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER), validate(ProjectValidator.update), ProjectController.update);
 
-// Progress management
-router.post('/:id/refresh-progress', restrictTo('project_manager', 'admin'), ProjectController.refreshProgress);
+// Admin only for deletion
+router.delete('/:id', validateUUID('id'), restrictTo(ROLES.ADMIN), ProjectController.delete);
+
+// Progress management - PM only
+router.post('/:id/refresh-progress', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER), ProjectController.refreshProgress);
 
 export default router;
