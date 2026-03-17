@@ -42,8 +42,12 @@ const Login = () => {
 
             <div className="w-full max-w-md z-10">
                 <div className="flex flex-col items-center mb-10">
-                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-green to-brand-blue flex items-center justify-center shadow-2xl mb-6">
-                        <span className="text-white font-bold text-4xl">D</span>
+                    <div className="w-32 h-32 mb-6 flex items-center justify-center">
+                        <img 
+                            src="/src/assets/Debo Engineering logo.jpg" 
+                            alt="Debo Engineering Logo" 
+                            className="w-full h-full object-contain drop-shadow-2xl"
+                        />
                     </div>
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight">Debo Engineering</h1>
                     <p className="text-brand-green font-bold tracking-[0.3em] uppercase text-xs mt-2">In Pursuit of Service</p>

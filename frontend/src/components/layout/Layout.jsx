@@ -60,8 +60,12 @@ const Layout = ({ children }) => {
             {/* Sidebar Desktop */}
             <aside className="hidden lg:flex flex-col w-64 bg-background-secondary border-r border-card-border p-4 h-full sticky top-0 flex-shrink-0">
                 <div className="flex items-center space-x-3 px-2 mb-10">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-brand-blue flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-xl">D</span>
+                    <div className="w-12 h-12 flex items-center justify-center">
+                        <img 
+                            src="/src/assets/Debo Engineering logo.jpg" 
+                            alt="Debo Engineering Logo" 
+                            className="w-full h-full object-contain"
+                        />
                     </div>
                     <div>
                         <h1 className="text-lg font-bold text-text-primary leading-tight">Debo</h1>
@@ -100,8 +104,12 @@ const Layout = ({ children }) => {
                 {/* Mobile Header */}
                 <header className="lg:hidden flex items-center justify-between p-4 bg-background-secondary border-b border-card-border">
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-green to-brand-blue flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">D</span>
+                        <div className="w-8 h-8 flex items-center justify-center">
+                            <img 
+                                src="/src/assets/Debo Engineering logo.jpg" 
+                                alt="Debo Logo" 
+                                className="w-full h-full object-contain"
+                            />
                         </div>
                         <span className="font-bold text-text-primary">Debo</span>
                     </div>
