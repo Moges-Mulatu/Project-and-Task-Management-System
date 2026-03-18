@@ -110,7 +110,7 @@ class TeamService {
     }
 
     /**
-     * Delete a team (soft delete) with validation
+     * Delete a team (soft delete) and automatically remove all active members
      * @param {string} id - Team ID
      * @returns {Promise<boolean>} Success status
      */
@@ -121,15 +121,18 @@ class TeamService {
                 throw new Error('Team not found');
             }
 
-            // Check if team has active members
+            // Remove all active members from the team first
             const activeMembers = await TeamMember.findByTeam(id);
             if (activeMembers && activeMembers.length > 0) {
-                throw new Error('Cannot delete team with active members. Remove all members first.');
+                // Remove all members by marking them as inactive
+                await Promise.all(
+                    activeMembers.map(async (member) => {
+                        await member.leave();
+                    })
+                );
             }
 
-            // Check if team has active projects (optional - can be added if Project model is imported)
-            // For now, we'll allow deletion but this could be enhanced
-
+            // Now delete the team
             return await team.delete();
         } catch (error) {
             throw error;

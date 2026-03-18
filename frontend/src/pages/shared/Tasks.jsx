@@ -7,12 +7,14 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../constants';
 import CreateTaskModal from '../../components/modals/CreateTaskModal';
 import UpdateTaskModal from '../../components/modals/UpdateTaskModal';
+import { useToast } from '../../hooks/useToast.jsx';
 
 const Tasks = () => {
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { error, ToastContainer } = useToast();
 
     const isPM = user?.role === ROLES.PROJECT_MANAGER;
 
@@ -48,7 +50,7 @@ const Tasks = () => {
             if (task.assignedTo === user.id) {
                 setSelectedTask(task);
             } else {
-                alert('Access Denied: You can only update tasks assigned to you.');
+                error('Access Denied: You can only update tasks assigned to you.');
             }
         } else {
             // Admin/PM view logic or general update
@@ -57,7 +59,9 @@ const Tasks = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <>
+            <ToastContainer />
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-text-primary">Operations Hub</h2>
@@ -162,6 +166,7 @@ const Tasks = () => {
                 />
             )}
         </div>
+        </>
     );
 };
 

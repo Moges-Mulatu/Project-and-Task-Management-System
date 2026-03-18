@@ -5,11 +5,16 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { UserPlus, Shield, UserX, Mail } from 'lucide-react';
 import CreateUserModal from '../../components/modals/CreateUserModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import { useToast } from '../../hooks/useToast.jsx';
 
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState(null);
+    const { success, error, ToastContainer } = useToast();
 
     const { user: currentUser } = useAuth();
 
@@ -30,12 +35,19 @@ const Users = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to deactivate this user?')) return;
+        setDeletingUserId(id);
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
         try {
-            await api.deleteUser(id);
+            await api.deleteUser(deletingUserId);
+            success('User deactivated successfully');
             fetchUsers();
         } catch (err) {
-            alert(err.message);
+            error(err.message || 'Failed to deactivate user');
+        } finally {
+            setDeletingUserId(null);
         }
     };
 
@@ -90,7 +102,9 @@ const Users = () => {
         ));
 
     return (
-        <div className="space-y-6">
+        <>
+            <ToastContainer />
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-text-primary">Personnel Directory</h2>
@@ -102,17 +116,28 @@ const Users = () => {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listContent}
-                {users.length === 0 && !loading && <div className="col-span-full py-10 text-center text-text-muted">No personnel identified in records.</div>}
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {listContent}
+                    {users.length === 0 && !loading && <div className="col-span-full py-10 text-center text-text-muted">No personnel identified in records.</div>}
+                </div>
 
-            <CreateUserModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSuccess={fetchUsers}
-            />
-        </div>
+                <CreateUserModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={fetchUsers}
+                />
+
+                <ConfirmModal
+                    isOpen={isConfirmModalOpen}
+                    onClose={() => setIsConfirmModalOpen(false)}
+                    onConfirm={confirmDelete}
+                    title="Deactivate User"
+                    message="Are you sure you want to deactivate this user? They will no longer have access to the system."
+                    confirmText="Deactivate User"
+                    type="danger"
+                />
+            </div>
+        </>
     );
 };
 

@@ -7,6 +7,8 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../constants';
 import CreateProjectModal from '../../components/modals/CreateProjectModal';
 import UpdateProjectModal from '../../components/modals/UpdateProjectModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import { useToast } from '../../hooks/useToast.jsx';
 
 const Projects = () => {
     const { user } = useAuth();
@@ -14,6 +16,9 @@ const Projects = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [deletingProjectId, setDeletingProjectId] = useState(null);
+    const { success, error, ToastContainer } = useToast();
 
     const isAdmin = user?.role === ROLES.ADMIN;
     const isPM = user?.role === ROLES.PROJECT_MANAGER;
@@ -43,17 +48,26 @@ const Projects = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Erase this project record? This action cannot be undone.')) return;
+        setDeletingProjectId(id);
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
         try {
-            await api.deleteProject(id);
+            await api.deleteProject(deletingProjectId);
+            success('Project deleted successfully');
             fetchProjects();
         } catch (err) {
-            alert(err.message);
+            error(err.message || 'Failed to delete project');
+        } finally {
+            setDeletingProjectId(null);
         }
     };
 
     return (
-        <div className="space-y-6">
+        <>
+            <ToastContainer />
+            <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-text-primary">Projects Portfolio</h2>
@@ -166,7 +180,18 @@ const Projects = () => {
                     onSuccess={fetchProjects}
                 />
             )}
+
+            <ConfirmModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Project"
+                message="Erase this project record? This action cannot be undone."
+                confirmText="Delete Project"
+                type="danger"
+            />
         </div>
+        </>
     );
 };
 

@@ -5,6 +5,8 @@ import Button from '../../components/common/Button';
 import { Plus, Network, Users as UsersIcon, Edit, Trash2 } from 'lucide-react';
 import CreateTeamModal from '../../components/modals/CreateTeamModal';
 import EditTeamModal from '../../components/modals/EditTeamModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import { useToast } from '../../hooks/useToast.jsx';
 
 const Teams = () => {
     const [teams, setTeams] = useState([]);
@@ -12,6 +14,9 @@ const Teams = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTeamId, setEditingTeamId] = useState(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [deletingTeamId, setDeletingTeamId] = useState(null);
+    const { success, error, ToastContainer } = useToast();
 
     const fetchTeams = async () => {
         setLoading(true);
@@ -35,17 +40,26 @@ const Teams = () => {
     };
 
     const handleDelete = async (teamId) => {
-        if (!window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) return;
+        setDeletingTeamId(teamId);
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
         try {
-            await api.deleteTeam(teamId);
+            await api.deleteTeam(deletingTeamId);
+            success('Team deleted successfully');
             fetchTeams();
         } catch (err) {
-            alert(err.message);
+            error(err.message || 'Failed to delete team');
+        } finally {
+            setDeletingTeamId(null);
         }
     };
 
     return (
-        <div className="space-y-6">
+        <>
+            <ToastContainer />
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-text-primary">Operational Units</h2>
@@ -127,7 +141,18 @@ const Teams = () => {
                 onSuccess={fetchTeams}
                 teamId={editingTeamId}
             />
+
+            <ConfirmModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Team"
+                message="Are you sure you want to delete this team? This action cannot be undone."
+                confirmText="Delete Team"
+                type="danger"
+            />
         </div>
+        </>
     );
 };
 
