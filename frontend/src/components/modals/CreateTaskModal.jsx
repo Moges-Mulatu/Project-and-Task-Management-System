@@ -142,7 +142,7 @@ const CreateTaskModal = ({ isOpen, onClose, onSuccess }) => {
                                 onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
                             >
                                 <option value="">Select Member...</option>
-                                {users.map(u => <option key={u.id} value={u.userId}>{u.firstName} {u.lastName}</option>)}
+                                {users.map(u => <option key={u.userId} value={u.userId}>{u.firstName} {u.lastName}</option>)}
                             </select>
                             <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                         </div>

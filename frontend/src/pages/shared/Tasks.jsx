@@ -100,7 +100,8 @@ const Tasks = () => {
                                             <div>
                                                 <p className="text-sm font-bold text-text-primary line-clamp-1">{task.title}</p>
                                                 <p className="text-xs text-text-muted flex items-center mt-0.5">
-                                                    <User size={10} className="mr-1" /> ID: {task.assignedTo || 'Unassigned'}
+                                                    <User size={10} className="mr-1" /> 
+                                                    {task.assignedUser ? `${task.assignedUser.firstName} ${task.assignedUser.lastName}` : 'Unassigned'}
                                                 </p>
                                             </div>
                                         </div>

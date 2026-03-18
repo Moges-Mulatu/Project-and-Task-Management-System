@@ -52,7 +52,7 @@ class TaskService {
     /**
      * Get all active tasks with optional filtering and role-based visibility
      * @param {Object} filters - Filter options (projectId, assignedTo, status, priority, type) and user context
-     * @returns {Promise<Array>} List of task instances
+     * @returns {Promise<Array>} List of task instances with user details
      */
     static async getTasks(filters = {}) {
         try {
@@ -69,7 +69,36 @@ class TaskService {
             }
 
             // PM and Admin can see broader task lists; optionally filter by projectId if provided
-            return await Task.findAll(queryOptions);
+            const tasks = await Task.findAll(queryOptions);
+
+            // Fetch user details for assigned users
+            const User = (await import('../models/user.model.js')).default;
+            const tasksWithUserDetails = await Promise.all(
+                tasks.map(async (task) => {
+                    let assignedUserDetails = null;
+                    if (task.assignedTo) {
+                        try {
+                            const assignedUser = await User.findById(task.assignedTo);
+                            if (assignedUser) {
+                                assignedUserDetails = {
+                                    id: assignedUser.id,
+                                    firstName: assignedUser.firstName,
+                                    lastName: assignedUser.lastName,
+                                    email: assignedUser.email
+                                };
+                            }
+                        } catch (error) {
+                            console.warn(`Failed to fetch user details for user ${task.assignedTo}:`, error.message);
+                        }
+                    }
+                    return {
+                        ...task,
+                        assignedUser: assignedUserDetails
+                    };
+                })
+            );
+
+            return tasksWithUserDetails;
         } catch (error) {
             throw new Error(`Error fetching tasks: ${error.message}`);
         }
