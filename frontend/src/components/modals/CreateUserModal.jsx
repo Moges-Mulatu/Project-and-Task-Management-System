@@ -12,7 +12,7 @@ const CreateUserModal = ({ isOpen, onClose, onSuccess }) => {
         password: '',
         role: ROLES.TEAM_MEMBER,
         department: '',
-        position: ''
+        phone: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -22,12 +22,15 @@ const CreateUserModal = ({ isOpen, onClose, onSuccess }) => {
         setLoading(true);
         setError('');
         try {
-            // basic trimming + normalization
+            // Only send fields backend accepts
             const payload = {
-                ...formData,
                 firstName: formData.firstName?.trim(),
                 lastName: formData.lastName?.trim(),
-                email: formData.email?.trim().toLowerCase()
+                email: formData.email?.trim().toLowerCase(),
+                password: formData.password,
+                role: formData.role,
+                department: formData.department?.trim() || null,
+                phone: formData.phone?.trim() || null
             };
             await api.createUser(payload);
             onSuccess();
@@ -71,6 +74,38 @@ const CreateUserModal = ({ isOpen, onClose, onSuccess }) => {
                         className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-green outline-none"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Password</label>
+                    <input
+                        required
+                        type="password"
+                        className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-green outline-none"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Department</label>
+                    <input
+                        className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-green outline-none"
+                        placeholder="e.g. Engineering"
+                        value={formData.department}
+                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    />
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Phone</label>
+                    <input
+                        type="tel"
+                        className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-green outline-none"
+                        placeholder="e.g. +2519xxxxxxxxx"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
                 </div>
 

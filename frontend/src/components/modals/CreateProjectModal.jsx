@@ -90,18 +90,6 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Assigned Team</label>
-                        <select
-                            required
-                            className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-blue outline-none appearance-none"
-                            value={formData.teamId}
-                            onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-                        >
-                            <option value="">Select Team...</option>
-                            {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
-                    </div>
-                    <div className="space-y-1">
                         <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Priority Level</label>
                         <select
                             className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-blue outline-none appearance-none"
@@ -112,6 +100,18 @@ const CreateProjectModal = ({ isOpen, onClose, onSuccess }) => {
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
                             <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Assigned Team</label>
+                        <select
+                            required
+                            className="w-full bg-background-tertiary border border-card-border rounded-xl px-4 py-2.5 text-text-primary focus:ring-1 focus:ring-brand-blue outline-none appearance-none"
+                            value={formData.teamId}
+                            onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
+                        >
+                            <option value="">Select Team...</option>
+                            {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                     </div>
                 </div>

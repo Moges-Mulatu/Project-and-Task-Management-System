@@ -61,10 +61,12 @@ class ApiService {
     getUsers() { return this.request('/users'); }
     createUser(data) { return this.request('/users', { method: 'POST', body: JSON.stringify(data) }); }
     deleteUser(id) { return this.request(`/users/${id}`, { method: 'DELETE' }); }
+    reactivateUser(id) { return this.request(`/users/${id}/reactivate`, { method: 'POST' }); }
     getProfile() { return this.request('/users/me'); }
     updateProfile(data) { return this.request('/users/me', { method: 'PATCH', body: JSON.stringify(data) }); }
     getTeams() { return this.request('/teams'); }
     getTeamMembers(teamId) { return this.request(`/teams/${teamId}/members`); }
+    addTeamMember(teamId, userId, role) { return this.request(`/teams/${teamId}/members`, { method: 'POST', body: JSON.stringify({ userId, role }) }); }
     getReports() { return this.request('/reports'); }
     createTeam(data) { return this.request('/teams', { method: 'POST', body: JSON.stringify(data) }); }
 }
