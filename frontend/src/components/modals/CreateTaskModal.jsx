@@ -52,8 +52,8 @@ const CreateTaskModal = ({ isOpen, onClose, onSuccess }) => {
         setError('');
         try {
             await api.createTask({
-                ...formData,
-                dueDate: formData.deadline // Map to backend field
+                ...formData
+                // Remove dueDate mapping - backend expects deadline field
             });
             onSuccess();
             onClose();
@@ -73,18 +73,22 @@ const CreateTaskModal = ({ isOpen, onClose, onSuccess }) => {
             }
             try {
                 // Find the project in our already loaded list to get the teamId
-                // This avoids an extra API call that might fail due to strict UUID validation on seed data
                 const selectedProj = projects.find(p => p.id === formData.projectId);
+                console.log('Selected project:', selectedProj);
                 const teamId = selectedProj?.teamId;
+                console.log('Team ID:', teamId);
 
                 if (teamId) {
                     const members = await api.getTeamMembers(teamId);
+                    console.log('Team members loaded:', members.data);
                     setUsers(members.data || []);
                 } else {
+                    console.log('No team ID found for project');
                     setUsers([]);
                 }
             } catch (err) {
                 console.error('Failed to load team members for project', err);
+                setUsers([]);
             }
         };
         loadMembers();

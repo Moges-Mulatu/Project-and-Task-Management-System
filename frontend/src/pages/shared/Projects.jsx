@@ -14,9 +14,22 @@ const Projects = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
     const isAdmin = user?.role === ROLES.ADMIN;
     const isPM = user?.role === ROLES.PROJECT_MANAGER;
+
+    // Status-based progress mapping for consistency
+    const getProgressByStatus = (status, currentProgress) => {
+        switch (status) {
+            case 'planning': return 0;
+            case 'active': return currentProgress || 0;
+            case 'on_hold': return currentProgress || 0;
+            case 'completed': return 100;
+            case 'cancelled': return currentProgress || 0;
+            default: return currentProgress || 0;
+        }
+    };
 
     const fetchProjects = async () => {
         setLoading(true);
@@ -43,13 +56,25 @@ const Projects = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Erase this project record? This action cannot be undone.')) return;
+        setDeleteConfirmation(id);
+    };
+    
+    const confirmDelete = async () => {
+        const projectId = deleteConfirmation;
+        setDeleteConfirmation(null);
         try {
-            await api.deleteProject(id);
-            fetchProjects();
+            console.log('Attempting to delete project:', projectId);
+            await api.deleteProject(projectId);
+            console.log('Delete successful, refreshing projects...');
+            await fetchProjects(); // Make sure fetch completes
         } catch (err) {
-            alert(err.message);
+            console.error('Delete failed:', err);
+            alert(`Failed to delete project: ${err.message || 'Unknown error'}`);
         }
+    };
+    
+    const cancelDelete = () => {
+        setDeleteConfirmation(null);
     };
 
     return (
@@ -88,8 +113,20 @@ const Projects = () => {
                     <Card key={project.id} className="group hover:border-brand-green/50 transition-colors">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex-1">
-                                <span className="text-[10px] font-bold text-brand-green uppercase tracking-widest bg-brand-green/10 px-2 py-0.5 rounded">
-                                    {project.status || 'Active'}
+                                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${
+                                    project.status === 'active' ? 'bg-brand-green/10 text-brand-green' :
+                                    project.status === 'planning' ? 'bg-blue-500/10 text-blue-400' :
+                                    project.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                                    project.status === 'on_hold' ? 'bg-orange-500/10 text-orange-400' :
+                                    project.status === 'cancelled' ? 'bg-red-500/10 text-red-400' :
+                                    'bg-gray-500/10 text-gray-400'
+                                }`}>
+                                    {project.status === 'active' ? 'Active' :
+                                     project.status === 'planning' ? 'Planning' :
+                                     project.status === 'completed' ? 'Completed' :
+                                     project.status === 'on_hold' ? 'On Hold' :
+                                     project.status === 'cancelled' ? 'Cancelled' :
+                                     project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                                 </span>
                                 <h3 className="text-lg font-bold text-text-primary mt-2">{project.name}</h3>
                             </div>
@@ -112,14 +149,15 @@ const Projects = () => {
                         </p>
 
                         <div className="space-y-3">
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-text-muted font-medium uppercase tracking-tighter">Velocity</span>
-                                <span className="text-text-primary font-bold">{project.progress || 0}%</span>
-                            </div>
                             <div className="w-full h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-brand-green to-brand-blue"
-                                    style={{ width: `${project.progress || 0}%` }}
+                                    className={`h-full transition-all duration-500 ${
+                                        project.status === 'completed' ? 'bg-green-500' :
+                                        project.status === 'cancelled' ? 'bg-red-500' :
+                                        project.status === 'on_hold' ? 'bg-orange-500' :
+                                        'bg-gradient-to-r from-brand-green to-brand-blue'
+                                    }`}
+                                    style={{ width: `${getProgressByStatus(project.status, project.progress)}%` }}
                                 />
                             </div>
                         </div>
@@ -165,6 +203,30 @@ const Projects = () => {
                     project={selectedProject}
                     onSuccess={fetchProjects}
                 />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmation && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-background-secondary border border-card-border rounded-xl p-6 max-w-md mx-4">
+                        <h3 className="text-lg font-bold text-text-primary mb-4">Delete Project</h3>
+                        <p className="text-text-secondary mb-6">Are you sure you want to delete this project? This action cannot be undone.</p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={cancelDelete}
+                                className="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 bg-error text-white hover:bg-error/90 rounded-lg transition-colors"
+                            >
+                                Delete Project
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

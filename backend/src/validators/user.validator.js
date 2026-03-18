@@ -12,7 +12,9 @@ class UserValidator {
             { field: 'lastName', required: true, type: 'string' },
             { field: 'email', required: true, type: 'email' },
             { field: 'password', required: true, type: 'string' },
-            { field: 'role', required: true, enum: ['admin', 'project_manager', 'team_member'] }
+            { field: 'role', required: true, enum: ['admin', 'project_manager', 'team_member'] },
+            { field: 'department', required: false, type: 'string' },
+            { field: 'phone', required: false, type: 'string' }
         ];
     }
 

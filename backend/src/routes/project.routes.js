@@ -18,9 +18,7 @@ router.get('/:id', validateUUID('id'), ProjectController.getById);
 // PM only routes for project management
 router.post('/', restrictTo(ROLES.PROJECT_MANAGER), validate(ProjectValidator.create), ProjectController.create);
 router.patch('/:id', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER), validate(ProjectValidator.update), ProjectController.update);
-
-// Admin only for deletion
-router.delete('/:id', validateUUID('id'), restrictTo(ROLES.ADMIN), ProjectController.delete);
+router.delete('/:id', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER), ProjectController.delete);
 
 // Progress management - PM only
 router.post('/:id/refresh-progress', validateUUID('id'), restrictTo(ROLES.PROJECT_MANAGER), ProjectController.refreshProgress);
